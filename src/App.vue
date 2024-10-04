@@ -1,12 +1,13 @@
 <template>
-  <v-app class="app global_bg" style="height:100%;">
-    <v-sheet style="height:100%;">
+  <v-app class="app global_bg" style="height: 100%">
+    <v-sheet style="height: 100%">
       <v-row no-gutters>
         <v-col cols="12" class="CommonTopContainer" v-if="!isHiddenPage">
+          <!-- CommonTopMenu에서 selected 이벤트 수신 -->
           <CommonTopMenu v-if="!isHiddenPage" @selected="handleSelected" />
         </v-col>
       </v-row>
-      <v-row no-gutters  style="height:100%;">
+      <v-row no-gutters style="height: 100%">
         <v-col cols="2" v-if="!isHiddenPage">
           <div class="d-flex innerMenuContainer">
             <InnerMenu v-if="!isHiddenPage" :selectedValue="selectedValue" />
@@ -30,12 +31,12 @@ export default {
   computed: {
     showHeaderAndSidebar() {
       const value = this.$route.meta.showHeaderAndSidebar !== false;
-      console.log("showHeaderAndSidebar:", value); // 추가
+      console.log("[App.vue]showHeaderAndSidebar:", value); // 추가
       return value;
     },
     isHiddenPage() {
       // 보이지 않아야 할 페이지 목록
-      const hiddenPages = ['/login', '/'];
+      const hiddenPages = ["/login", "/"];
       // 현재 경로가 목록에 포함되어 있는지 확인
       return hiddenPages.includes(this.$route.path);
     },
@@ -47,11 +48,16 @@ export default {
   },
   data() {
     return {
-      selectedValue: null,
+      selectedValue: null, // CommonTopMenu에서 전달받은 workspaceId 값을 저장
       workspaceInfo: [],
     };
   },
-  methods: {},
+  methods: {
+    handleSelected(value) {
+      console.log("[App.vue]Selected Value from CommonTopMenu:", value); // 로그 출력
+      this.selectedValue = value; // selectedValue에 값 할당
+    },
+  },
 };
 </script>
 
