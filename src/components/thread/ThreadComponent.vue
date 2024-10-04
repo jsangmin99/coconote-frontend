@@ -6,11 +6,11 @@
         v-for="(message,index) in messages.slice().reverse()"
         :key="message.id"
       >
-      <div v-if="index > 0 && this.isDifferentDay(message.createdTime,  messages.slice().reverse()[index-1].createdTime)">
-        <div style="display: flex; align-content: center; text-align: center; margin: auto;">
-            <hr style="width: 27%; margin:auto;"><span style="margin:auto;">{{this.getDay(message.createdTime)}}</span><hr style="width: 27%; margin:auto;">
+        <div v-if="index > 0 && this.isDifferentDay(message.createdTime,  messages.slice().reverse()[index-1].createdTime)">
+          <div style="display: flex; align-content: center; text-align: center; margin: auto;">
+              <hr style="width: 27%; margin:auto;"><span style="margin:auto;">{{this.getDay(message.createdTime)}}</span><hr style="width: 27%; margin:auto;">
+          </div>
         </div>
-    </div>
         <ThreadLineComponent
           :id="message.id"
           :image="message.image"
@@ -18,6 +18,7 @@
           :createdTime="this.getTime(message.createdTime)"
           :content="message.content"
           :files="message.files"
+          :updateMessage="updateMessage"
         />
       </li>
     </ul>
@@ -92,12 +93,13 @@ export default {
     this.roomId = this.id;
     this.getMessageList();
     this.connect();
-    this.scrollToBottom();
+    // this.scrollToBottom();
     // window.addEventListener('scroll', this.scrollPagination)
     // this.$refs.messageList.addEventListener('scroll', this.scrollPagination);
   },
   mounted() {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
+    this.scrollToBottom();
   },
   updated() {},
   beforeUnmount() {
@@ -117,6 +119,42 @@ export default {
   computed: {},
 
   methods: {
+    recvMessage(recv) {
+        if (recv.type === "UPDATE") {
+            // UPDATE일 경우, 해당 id의 메시지를 찾아 content를 업데이트
+            const messageToUpdate = this.messages.find(message => message.id === recv.id);
+
+            if (messageToUpdate) {
+                // 메시지가 존재할 경우 content 업데이트
+                messageToUpdate.content = recv.content;
+            }
+        } else {
+            // 새로운 메시지일 경우 기존 로직
+            this.messages.unshift({
+                id: recv.id,
+                memberName: recv.memberName,
+                content: recv.content,
+                image: recv.image,
+                createdTime: recv.createdTime,
+                files: recv.files,
+            });
+        }
+
+        this.scrollToBottom();
+    },
+    updateMessage(id, message){
+      const authToken = localStorage.getItem('accessToken');
+      this.ws.send(
+        "/pub/chat/message",
+        {Authorization: authToken},
+        JSON.stringify({
+          type: "UPDATE",
+          channelId: this.roomId,
+          threadId: id,
+          content: message,
+        })
+      );
+    },
     async sendMessage() {
       const authToken = localStorage.getItem('accessToken');
 
@@ -287,18 +325,6 @@ export default {
     deleteImage(index){
       this.fileList.splice(index, 1);
     },
-    
-    recvMessage(recv) {
-      this.messages.unshift({
-        id: recv.id,
-        memberName: recv.memberName,
-        content: recv.content,
-        image: recv.image,
-        createdTime: recv.createdTime,
-        files: recv.files,
-      });
-      this.scrollToBottom();
-    },
     connect() {
       this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
       this.ws = Stomp.over(this.sock);
@@ -379,9 +405,8 @@ export default {
 
 <style scoped>
 .container {
-  padding: 0 0 0 24px;
+  padding:  0 0 0 24px;
 }
-
 .list-group {
   flex-grow: 1; /* 리스트가 가능한 공간을 모두 차지 */
   overflow-y: auto; /* 세로 스크롤 가능 */
@@ -390,6 +415,7 @@ export default {
 }
 .list-group-item{
   gap: 10px;
+
 }
 .input-group {
   position: sticky;

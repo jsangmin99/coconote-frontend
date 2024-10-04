@@ -1,4 +1,5 @@
 <template>
+<div class="thread-wrapper">
     <div class="thread">
         <div>
             <div class="image">
@@ -12,6 +13,12 @@
                 <div class="tag">tag</div>
             </div>
             <div class="content">{{content}}</div>
+            <input
+                type="text"
+                class="form-control"
+                v-model="message"
+                v-on:keypress.enter="update"
+            />
             
             <div class="image-group">
                 <div v-for="(file, index) in this.files" :key="index">
@@ -23,22 +30,64 @@
             <div class="comment">comment</div>
         </div>
     </div>
+    <div class="more-btn">
+        <button>더보기</button>
+    </div>
+</div>
 </template>
   
 <script>
     export default {
-    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags'],
+    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage'],
+    // props: {
+    //     id: String,
+    //     type: String,
+    //     image: String,
+    //     nickName: String,
+    //     createdTime: String,
+    //     content: String,
+    //     files: Array,
+    //     childThreads: Array,
+    //     tags: Array,
+    //     updateMessage: Function,  // 부모로부터 받은 메서드를 prop으로 추가
+    // },
     data() {
-        return {};
+        return {
+            message: "",
+        };
     },
     computed: {},
-    created() {},
-    methods: {},
+    created() {
+        this.message=this.content
+    },
+    methods: {
+        update(){
+            this.updateMessage(this.id,this.message);
+        },
+    },
     };
 </script>
 <style scoped>
 .thread {
     display: flex;
+}
+.thread-wrapper {
+  position: relative;
+}
+
+.more-btn {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 20px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  transform: translateY(50%); /* 수직으로 중앙 정렬 */
+  z-index: 2;
+}
+.thread-wrapper:hover {
+  background-color: #f8f8f8;
+}
+.thread-wrapper:hover .more-btn {
+  display: block;
 }
 .image {
     margin: 10px;
