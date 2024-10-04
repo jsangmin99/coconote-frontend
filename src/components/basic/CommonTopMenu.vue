@@ -2,11 +2,14 @@
   <v-app-bar :elevation="2" class="topMenu" height="40">
     <v-app-bar-title class="title"> COCONOTE </v-app-bar-title>
     <template v-slot:append>
+      <v-form @submit.prevent="emitSelected">
         <v-row>
-          <v-col cols="auto" v-if="isLoading == true">
+          <v-col cols="auto">
             <v-select
-              v-model="workspaceId"
+              v-model="selectedValue"
               :items="items"
+              item-title="name"
+              item-value="workspaceId"
               outlined
               single-line
               hide-details
@@ -15,28 +18,51 @@
               style="font-size: 0.9rem"
             ></v-select>
           </v-col>
+          <v-col cols="auto">
+            <v-btn type="submit">이동</v-btn>
+          </v-col>
+          <v-col cols="auto">
+            <v-btn icon @click="showWorkspaceModal">
+              <v-icon>mdi-plus</v-icon>
+            </v-btn>
+          </v-col>
         </v-row>
+      </v-form>
+      <v-row>
+        <v-col cols="auto" v-if="isLoading == true">
+          <v-select
+            v-model="workspaceId"
+            :items="items"
+            outlined
+            single-line
+            hide-details
+            dense
+            class="inline"
+            style="font-size: 0.9rem"
+          ></v-select>
+        </v-col>
+      </v-row>
     </template>
   </v-app-bar>
-            <CreateWorkspaceModal 
-        v-model = "createWorkspace"
-        @update:dialog="createWorkspace = $event"
-        >
-          </CreateWorkspaceModal>
+  <CreateWorkspaceModal
+    v-model="createWorkspace"
+    @update:dialog="createWorkspace = $event"
+  >
+  </CreateWorkspaceModal>
 </template>
 
 <script>
 import axios from "axios";
-import CreateWorkspaceModal from '@/components/createSpaces/CreateWorkspaceModal.vue';
-import { mapGetters } from 'vuex';
+import CreateWorkspaceModal from "@/components/createSpaces/CreateWorkspaceModal.vue";
+import { mapGetters } from "vuex";
 
 export default {
   computed: {
-    ...mapGetters(['getWorkspaceId', 'getWorkspaceName']) // Vuex getter 매핑
+    ...mapGetters(["getWorkspaceId", "getWorkspaceName"]), // Vuex getter 매핑
   },
   name: "CommonTopMenu",
   components: {
-    CreateWorkspaceModal
+    CreateWorkspaceModal,
   },
   data() {
     return {
@@ -48,7 +74,7 @@ export default {
   },
   created() {
     this.selectedValue = this.$store.getters.getWorkspaceId;
-    console.log("selectedValue >> ", this.selectedValue)
+    console.log("selectedValue >> ", this.selectedValue);
     this.fetchMyWorkspaceList();
   },
   methods: {
@@ -61,20 +87,19 @@ export default {
 
         console.log(response.data.result);
 
-
         this.isLoading = true;
       } catch (e) {
         console.log(e);
       }
     },
     emitSelected() {
-      this.$emit('selected', this.selectedValue);
+      this.$emit("selected", this.selectedValue);
     },
-          showWorkspaceModal() {
-            this.createWorkspace = true;
-            console.log(this.createWorkspace);
-        }
-  }
+    showWorkspaceModal() {
+      this.createWorkspace = true;
+      console.log(this.createWorkspace);
+    },
+  },
 };
 </script>
 
