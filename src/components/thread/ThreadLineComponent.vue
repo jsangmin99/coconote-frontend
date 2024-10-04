@@ -30,8 +30,13 @@
             <div class="comment">comment</div>
         </div>
     </div>
-    <div class="more-btn">
+    <div class="more-btn" @click="toggleContextMenu">
         <button>더보기</button>
+    </div>
+    <div v-if="isContextMenuVisible" class="overlay"></div>
+    <div v-if="isContextMenuVisible" class="context-menu">
+      <button @click="editMessage">수정</button>
+      <button @click="deleteMessage">삭제</button>
     </div>
 </div>
 </template>
@@ -39,30 +44,43 @@
 <script>
     export default {
     props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage'],
-    // props: {
-    //     id: String,
-    //     type: String,
-    //     image: String,
-    //     nickName: String,
-    //     createdTime: String,
-    //     content: String,
-    //     files: Array,
-    //     childThreads: Array,
-    //     tags: Array,
-    //     updateMessage: Function,  // 부모로부터 받은 메서드를 prop으로 추가
-    // },
     data() {
         return {
             message: "",
+            isContextMenuVisible: false,
         };
     },
     computed: {},
     created() {
         this.message=this.content
     },
+    mounted() {
+        // 외부 클릭 감지 이벤트 리스너 등록
+        document.addEventListener("click", this.handleOutsideClick);
+    },
+    beforeUnmount() {
+        // 컴포넌트가 언마운트될 때 외부 클릭 감지 리스너 제거
+        document.removeEventListener("click", this.handleOutsideClick);
+    },
     methods: {
         update(){
             this.updateMessage(this.id,this.message);
+        },
+        toggleContextMenu(event) {
+        event.stopPropagation(); // 클릭 이벤트 전파 방지
+        this.isContextMenuVisible = !this.isContextMenuVisible;
+        },
+        handleOutsideClick() {
+        // 컨텍스트 메뉴 외부 클릭 시 닫힘 처리
+            this.isContextMenuVisible = false;
+        },
+        editMessage() {
+        // 메시지 수정 로직
+        console.log("메시지 수정");
+        },
+        deleteMessage() {
+        // 메시지 삭제 로직
+        console.log("메시지 삭제");
         },
     },
     };
@@ -113,6 +131,27 @@
 }
 .files {
     
+}
+.context-menu {
+  position: absolute;
+  top: 10px;
+  right: 70px;
+  background-color: white;
+  border: 1px solid #ccc;
+  z-index: 3;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0); /* 반투명 배경 */
+  z-index: 2; /* 컨텍스트 메뉴보다 아래에 위치 */
 }
 .image-group {
   display: flex;
