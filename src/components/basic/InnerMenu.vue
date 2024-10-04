@@ -2,46 +2,38 @@
   <v-navigation-drawer class="innerMenu" theme="dark" permanent rail>
     <v-list density="compact" nav>
       <!-- 기존 메뉴 항목 -->
+
+      <!-- 홈 하위 메뉴 버튼 -->
       <v-list-item
         prepend-icon="mdi-home"
         title="home"
         @click="selectedMenu = 'home'"
         :class="{ 'selected-item': selectedMenu === 'home' }"
       ></v-list-item>
+
+      <!-- 워크스페이스 멤버 리스트 하위 메뉴 버튼 -->
       <v-list-item
         prepend-icon="mdi-account-group"
         title="member"
         @click="selectedMenu = 'member'"
         :class="{ 'selected-item': selectedMenu === 'member' }"
       ></v-list-item>
-      <!-- 프로필 & 로그아웃 버튼 -->
-      <v-list-item prepend-icon="mdi-account" title="Profile & Logout">
-        <template v-slot:default="{ toggle }">
-          <v-btn icon @click="toggle" class="cursor-pointer">
-            <v-icon>mdi-account</v-icon>
-          </v-btn>
 
-          <!-- v-menu로 작은 팝업 메뉴 생성 -->
-          <v-menu
-            v-model="menu"
-            :close-on-content-click="false"
-            activator="parent"
-            offset-y
-            min-width="200"
-          >
-            <v-card>
-              <v-card-title>Profile & Logout</v-card-title>
-              <v-card-text>
-                <v-btn @click="viewProfile" block>View Profile</v-btn>
-                <v-btn color="red" @click="logout" block>Logout</v-btn>
-              </v-card-text>
-            </v-card>
-          </v-menu>
-        </template>
+      <!-- 프로필 & 로그아웃 버튼 -->
+      <v-list-item
+        prepend-icon="mdi-account"
+        title="Profile & Logout"
+        @click="dialog = true"
+        :class="{ 'selected-item': selectedMenu === 'profile' }"
+      >
       </v-list-item>
+
+      <!-- ModalProfileLogout 컴포넌트 호출 -->
+      <ModalProfileLogout :dialog="dialog" @update:dialog="dialog = $event" />
     </v-list>
   </v-navigation-drawer>
 
+  <!-- 하위 메뉴 컴포넌트 -->
   <InnerRelatedMenuHome v-if="selectedMenu === 'home'" :selectedValue="selectedValue" />
   <InnerRelatedMenuMember
     v-if="selectedMenu === 'member'"
@@ -50,35 +42,33 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 import InnerRelatedMenuHome from "@/components/basic/InnerRelatedMenuHome.vue";
 import InnerRelatedMenuMember from "@/components/basic/InnerRelatedMenuMember.vue";
+import ModalProfileLogout from "@/components/basic/ModalProfileLogout.vue"; // 모달 컴포넌트 import
 
 export default {
   props: {
+    // workspaceId
     selectedValue: {
       type: Number,
     },
+  },
+  computed: {
+    ...mapGetters(["getWorkspaceId", "getWorkspaceName"]), // Vuex getter 매핑
   },
   name: "InnerMenu",
   components: {
     InnerRelatedMenuHome,
     InnerRelatedMenuMember,
+    ModalProfileLogout, // 모달 컴포넌트 등록
   },
   data() {
     return {
-      selectedMenu: "home", // 기본값
       menu: false, // 작은 모달의 상태 관리
+      dialog: false, // 모달의 상태 관리
+      selectedMenu: "home", // 기본값
     };
-  },
-  methods: {
-    viewProfile() {
-      // 프로필 보기 로직 구현
-      alert("View Profile Clicked");
-    },
-    logout() {
-      // 로그아웃 로직 구현
-      alert("Logout Clicked");
-    },
   },
 };
 </script>
@@ -91,10 +81,6 @@ export default {
 
   .selected-item {
     background-color: #7280a2; /* 선택된 항목의 배경 색상 */
-  }
-
-  .cursor-pointer {
-    cursor: pointer !important;
   }
 }
 </style>
