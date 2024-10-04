@@ -1,6 +1,6 @@
 <template>
   <div class="channelInsideContainer">
-    <ChannelCommonMenu />
+    <ChannelCommonMenu :menu="'canvas'" :channelId="channelId" />
     <div class="channelInsideContentWrap">
       <v-row class="canvasContatiner ma-0">
         <v-col cols="2" class="canvasListContainer pa-0">
@@ -50,10 +50,13 @@
         </v-col>
         <v-col class="canvasDetailContainer pa-0">
           <v-progress-circular
-            v-if="canvasId == null"
+            v-if="isLoading && canvasId == null"
             indeterminate
             color="primary"
           ></v-progress-circular>
+          <div v-else-if="canvasId == null">
+            <h1>캔버스가 없습니다.</h1>
+          </div>
           <CanvasDetailComponent
             v-else
             :canvasId="canvasId"
@@ -71,6 +74,12 @@ import CanvasListComponent from "@/components/canvas/CanvasListComponent.vue";
 import CanvasDetailComponent from "@/components/canvas/CanvasDetailComponent.vue";
 
 export default {
+  props: {
+      channelId: {
+        type: String,
+        required: true,
+      },
+    },
   components: {
     ChannelCommonMenu,
     CanvasListComponent,
