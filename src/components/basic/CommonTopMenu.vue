@@ -41,7 +41,7 @@ export default {
   data() {
     return {
       items: [],
-      selectedValue: null,
+      workspaceId: null,
       isLoading : false,
       createWorkspace:false,
     };

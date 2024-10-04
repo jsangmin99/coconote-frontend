@@ -70,7 +70,7 @@ export default {
           this.locationHome()
           break;
         case "member":
-          this.$router.push("/member");
+          this.$router.push(`/member/${this.getWorkspaceId}`);
           break;
         case "search":
           this.$router.push(`/workspace/${this.getWorkspaceId}/search`);
