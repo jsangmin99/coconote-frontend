@@ -12,13 +12,15 @@
                 <div class="createdTime">{{createdTime}}</div>
                 <div class="tag">tag</div>
             </div>
-            <div class="content">{{content}}</div>
-            <input
+            <div v-if="!isUpdate" class="content">{{content}}</div>
+            <div v-if="isUpdate" class="update-group">
+              <input
                 type="text"
                 class="form-control"
                 v-model="message"
                 v-on:keypress.enter="update"
-            />
+              />
+            </div>
             
             <div class="image-group">
                 <div v-for="(file, index) in this.files" :key="index">
@@ -48,6 +50,7 @@
         return {
             message: "",
             isContextMenuVisible: false,
+            isUpdate: false,
         };
     },
     computed: {},
@@ -65,6 +68,7 @@
     methods: {
         update(){
             this.updateMessage(this.id,this.message);
+            this.isUpdate = false
         },
         toggleContextMenu(event) {
         event.stopPropagation(); // 클릭 이벤트 전파 방지
@@ -75,8 +79,9 @@
             this.isContextMenuVisible = false;
         },
         editMessage() {
-        // 메시지 수정 로직
-        console.log("메시지 수정");
+            // 메시지 수정 로직
+            console.log("메시지 수정");
+            this.isUpdate = true
         },
         deleteMessage() {
         // 메시지 삭제 로직
@@ -111,7 +116,8 @@
     margin: 10px;
 }
 .thread-content {
-    gap: 10px;
+  gap: 10px;
+  width: 100%;
 }
 .title {
     display: flex;
@@ -167,6 +173,12 @@
 }
 .comment {
     
+}
+.update-group{
+  border: 1px solid;
+}
+.form-control {
+  width: 80%;
 }
 </style>
 
