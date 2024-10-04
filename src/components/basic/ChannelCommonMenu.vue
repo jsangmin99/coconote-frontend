@@ -1,72 +1,120 @@
 <template>
   <div class="channelMenuContainer">
     <div class="top">
-      <!-- ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ 여기부터 시작 > 채널별 공통 상단메뉴 -->
       <div class="titleArea">
-        <div>
-          <v-icon icon="mdi-star" class="star active" />
+        <div class="col">
+          <div>
+            <v-icon
+              icon="mdi-star"
+              class="star active"
+              @click="toggleBookmark"
+            />
+          </div>
+          <h1>{{ getChannelName }}</h1>
+          <div>
+            <v-icon icon="mdi-pencil-outline" class="pencil" />
+          </div>
         </div>
-        <h1># 공지사항</h1>
-        <div>
-          <v-icon icon="mdi-pencil-outline" class="pencil" />
+        <div class="col">
+          <v-icon icon="mdi-plus" @click="openChannelMemberInviteModal">
+          </v-icon>
+          <v-icon icon="mdi-dots-vertical">
+          </v-icon>
         </div>
       </div>
-      <p>우리의 공지가 들어갑니다.</p>
+      <p>{{ getChannelDesc }}</p>
     </div>
     <div class="menuBtns">
-      <button @click="moveMenu('thread')" :class="{ active: menu === 'thread' }" >쓰레드</button>
-      <button @click="moveMenu('canvas')" :class="{ active: menu === 'canvas' }" >캔버스</button>
-      <button @click="moveMenu('drive')" :class="{ active: menu === 'drive' }" >드라이브</button>
+      <button
+        @click="moveMenu('thread')"
+        :class="{ active: menu === 'thread' }"
+      >
+        쓰레드
+      </button>
+      <button
+        @click="moveMenu('canvas')"
+        :class="{ active: menu === 'canvas' }"
+      >
+        캔버스
+      </button>
+      <button @click="moveMenu('drive')" :class="{ active: menu === 'drive' }">
+        드라이브
+      </button>
       <button class="badge">
         2분할 보기 <v-icon icon="mdi-eye-outline" class="eye" />
       </button>
-      <button class="invteChannelMember" @click="openChannelMemberInviteModal">멤버 초대</button>
     </div>
 
     <!-- 모달 컴포넌트 -->
-    <ChannelMemberModal v-if="isChannelMemberModalOpen" :channelId="getChannelId" :workspaceId="getWorkspaceId"
-      @closeModal="closeChannelMemberInviteModal" />
+    <ChannelMemberModal
+      v-if="isChannelMemberModalOpen"
+      :channelId="getChannelId"
+      :workspaceId="getWorkspaceId"
+      @closeModal="closeChannelMemberInviteModal"
+    />
   </div>
 </template>
 
 <script>
-import ChannelMemberModal from '@/components/ChannelMemberInviteModal.vue';  // 모달 컴포넌트 추가
-import { mapGetters } from 'vuex';
-
+import ChannelMemberModal from "@/components/ChannelMemberInviteModal.vue"; // 모달 컴포넌트 추가
+import { mapGetters } from "vuex";
+import axios from "axios";
 
 export default {
-  props: ['menu'],
+  props: ["menu"],
   name: "ChannelCommonMenu",
   components: {
     ChannelMemberModal, // 모달 컴포넌트 등록
   },
   computed: {
-    ...mapGetters(['getChannelId', 'getChannelName', 'getWorkspaceId', 'getWorkspaceName'])
+    ...mapGetters([
+      "getChannelId",
+      "getChannelName",
+      "getChannelDesc",
+      "getWorkspaceId",
+      "getWorkspaceName",
+    ]),
   },
   data() {
     return {
       isChannelMemberModalOpen: false,
+      toggleBookmarkIsLoading: false,
     };
   },
-  methods:{
-    moveMenu(name){
-      this.$router.push(`/channel/${this.$store.getters.getChannelId}/${name}/view`)
+  methods: {
+    moveMenu(name) {
+      this.$router.push(
+        `/channel/${this.$store.getters.getChannelId}/${name}/view`
+      );
     },
     openChannelMemberInviteModal() {
-      this.isChannelMemberModalOpen = true;  // 모달 열기
-      console.log('openInviteModal');
+      this.isChannelMemberModalOpen = true; // 모달 열기
+      console.log("openInviteModal");
     },
     closeChannelMemberInviteModal() {
-      this.isChannelMemberModalOpen = false;  // 모달 닫기
-      console.log('closeInviteModal');
-    }
-  }
+      this.isChannelMemberModalOpen = false; // 모달 닫기
+      console.log("closeInviteModal");
+    },
+    async toggleBookmark() {
+      this.toggleBookmarkIsLoading = true;
+      try {
+        const response = await axios.patch(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/member/bookmark/${this.channelId}`
+        );
+        console.log("toggleBookmark", response);
+      } catch (error) {
+        console.error("bookmark 토글 중 오류 발생", error);
+      } finally {
+        this.toggleBookmarkIsLoading = false;
+      }
+    },
+  },
 };
 </script>
 
 <style lang="scss">
 .channelMenuContainer {
-  $gray_font : #A4A4A4;
+  $gray_font: #a4a4a4;
   padding-top: 24px;
 
   .top {
@@ -75,11 +123,17 @@ export default {
     .titleArea {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      .col{
+        display: flex;
+        align-items: center;
+        color: #A4A4A4;
+      }
       .star {
         color: $gray_font;
         font-size: 24px;
         &.active {
-          color: #FFBB00;
+          color: #ffbb00;
         }
       }
       h1 {
@@ -127,7 +181,7 @@ export default {
       margin-bottom: -1px;
 
       &.active {
-        border-bottom: 3px solid #69A0F2;
+        border-bottom: 3px solid #69a0f2;
       }
 
       &.badge {
