@@ -12,7 +12,6 @@ axios.interceptors.request.use(
       config.headers.Authorization = `Bearer ${accessToken}`;
       // console.log('Authorization Header:', config.headers.Authorization); // 디버깅 로그
     }
-
     // withCredentials 설정을 추가하여 자격 증명 포함
     config.withCredentials = true;
 

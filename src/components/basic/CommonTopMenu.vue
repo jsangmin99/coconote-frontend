@@ -28,6 +28,20 @@
           </v-col>
         </v-row>
       </v-form>
+      <v-row>
+        <v-col cols="auto" v-if="isLoading == true">
+          <v-select
+            v-model="workspaceId"
+            :items="items"
+            outlined
+            single-line
+            hide-details
+            dense
+            class="inline"
+            style="font-size: 0.9rem"
+          ></v-select>
+        </v-col>
+      </v-row>
     </template>
   </v-app-bar>
   <CreateWorkspaceModal
@@ -40,8 +54,12 @@
 <script>
 import axios from "axios";
 import CreateWorkspaceModal from "@/components/createSpaces/CreateWorkspaceModal.vue";
+import { mapGetters } from "vuex";
 
 export default {
+  computed: {
+    ...mapGetters(["getWorkspaceId", "getWorkspaceName"]), // Vuex getter 매핑
+  },
   name: "CommonTopMenu",
   components: {
     CreateWorkspaceModal,
@@ -51,20 +69,25 @@ export default {
       items: [],
       selectedValue: null,
       createWorkspace: false,
+      isLoading: false,
     };
   },
   created() {
+    this.selectedValue = this.$store.getters.getWorkspaceId;
+    console.log("selectedValue >> ", this.selectedValue);
     this.fetchMyWorkspaceList();
   },
   methods: {
     async fetchMyWorkspaceList() {
       try {
-        console.log(`${process.env.VUE_APP_API_BASE_URL}/workspace/list`);
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/workspace/list`
         );
         this.items = response.data.result; // 내 워크스페이스 목록 가져오기
-        console.log("workspace list :" + response.data.result);
+
+        console.log(response.data.result);
+
+        this.isLoading = true;
       } catch (e) {
         console.log(e);
       }
