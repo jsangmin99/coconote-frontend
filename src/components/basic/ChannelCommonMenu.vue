@@ -20,35 +20,55 @@
       <button class="badge">
         2분할 보기 <v-icon icon="mdi-eye-outline" class="eye" />
       </button>
+      <button class="invteChannelMember" @click="openChannelMemberInviteModal">멤버 초대</button>
     </div>
+
+    <!-- 모달 컴포넌트 -->
+    <ChannelMemberModal v-if="isChannelMemberModalOpen" :channelId="getChannelId" :workspaceId="getWorkspaceId"
+      @closeModal="closeChannelMemberInviteModal" />
   </div>
 </template>
 
 <script>
+import ChannelMemberModal from '@/components/ChannelMemberInviteModal.vue';  // 모달 컴포넌트 추가
 import { mapGetters } from 'vuex';
+
 
 export default {
   props: ['menu'],
   name: "ChannelCommonMenu",
-  components: {},
+  components: {
+    ChannelMemberModal, // 모달 컴포넌트 등록
+  },
   computed: {
-    ...mapGetters(['getChannelId', 'getChannelName'])
+    ...mapGetters(['getChannelId', 'getChannelName', 'getWorkspaceId', 'getWorkspaceName'])
   },
   data() {
-    return {};
+    return {
+      isChannelMemberModalOpen: false,
+    };
   },
   methods:{
     moveMenu(name){
       this.$router.push(`/channel/${this.$store.getters.getChannelId}/${name}/view`)
     },
+    openChannelMemberInviteModal() {
+      this.isChannelMemberModalOpen = true;  // 모달 열기
+      console.log('openInviteModal');
+    },
+    closeChannelMemberInviteModal() {
+      this.isChannelMemberModalOpen = false;  // 모달 닫기
+      console.log('closeInviteModal');
+    }
   }
 };
 </script>
 
 <style lang="scss">
 .channelMenuContainer {
-  $gray_font: #a4a4a4;
+  $gray_font : #A4A4A4;
   padding-top: 24px;
+
   .top {
     margin-bottom: 16px;
     padding: 0 24px;
@@ -59,7 +79,7 @@ export default {
         color: $gray_font;
         font-size: 24px;
         &.active {
-          color: #ffbb00;
+          color: #FFBB00;
         }
       }
       h1 {
@@ -75,7 +95,23 @@ export default {
       color: $gray_font;
       font-size: 12px;
     }
+
+    .right-buttons {
+      display: flex;
+      align-items: center;
+
+      .invite-btn {
+        margin-left: 16px;
+        padding: 4px 12px;
+        font-size: 12px;
+        background-color: #69a0f2;
+        color: white;
+        border-radius: 30px;
+        border: none;
+      }
+    }
   }
+
   .menuBtns {
     display: flex;
     flex-direction: row;
@@ -83,14 +119,17 @@ export default {
     align-items: center;
     border-bottom: 1px solid #e6e6e6;
     padding: 0 24px;
+
     button {
       padding: 8px 16px;
       border-bottom: 1px solid #8b8b8b;
       background: none;
       margin-bottom: -1px;
+
       &.active {
-        border-bottom: 3px solid #69a0f2;
+        border-bottom: 3px solid #69A0F2;
       }
+
       &.badge {
         margin-left: 8px;
         border-bottom: none;
@@ -99,6 +138,7 @@ export default {
         border-radius: 30px;
         border: 1px solid #cecece;
         padding: 4px 8px;
+
         .eye {
           color: #919191;
         }
