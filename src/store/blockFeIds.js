@@ -4,11 +4,12 @@ function initState() {
     };
 }
 
-const blockFe = {
+const blockFeIds = {
     state: initState(),
     mutations: {
         setDefaultBlockFeIds(state, newIds) {
             state.defaultBlockFeIds = newIds;
+            console.error("block 전체 set 완료!!", state.defaultBlockFeIds)
         },
         pushBlockFeIds(state, newId) {
             state.defaultBlockFeIds.push(newId);
@@ -18,7 +19,7 @@ const blockFe = {
             if (index > -1) {
                 state.defaultBlockFeIds.splice(index, 1);
                 return true;
-            }else{
+            } else {
                 return false;
             }
         }
@@ -28,27 +29,40 @@ const blockFe = {
             commit('setDefaultBlockFeIds', newIds);
         },
         pushBlockFeIdsActions({ commit }, newId) {
-            commit('setDefaultBlockFeIds', newId);
+            commit('pushBlockFeIds', newId);
         },
-        deleteBlockTargetFeIdActions({ commit }, deleteId){
+        deleteBlockTargetFeIdActions({ commit }, deleteId) {
             commit('deleteBlockTargetFeId', deleteId);
         }
     },
     getters: {
         getAllBlockFeIds: state => state.defaultBlockFeIds,
+        getBlockFeId: (state) => (targetId) => {
+            return state.defaultBlockFeIds.find(
+                (element) => element == targetId
+            );
+        },
         getBlockFeIdIndex: (state) => (targetId) => {
             return state.defaultBlockFeIds.indexOf(targetId);
         },
+        getTargetBlockPrevFeId: (state) => (targetId) => {
+            let targetPrevFeId = state.defaultBlockFeIds.indexOf(targetId) - 1;
+            if (targetPrevFeId > -1) {
+                return targetPrevFeId;
+            } else {
+                return null;
+            }
+        },
         getTargetBlockPrevFeIdIndex: (state) => (targetId) => {
-            let targetPrevFeId = state.defaultBlockFeIds.indexOf(targetId) -1;
-            if(targetPrevFeId > -1){
+            let targetPrevFeId = state.defaultBlockFeIds.indexOf(targetId) - 1;
+            if (targetPrevFeId > -1) {
                 return state.defaultBlockFeIds[targetPrevFeId];
-            }else{
+            } else {
                 return null;
             }
         }
     }
 }
 
-export default blockFe;
+export default blockFeIds;
 

@@ -34,6 +34,8 @@ import axios from "axios";
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 
+import { mapGetters, mapActions } from "vuex";
+
 export default {
   name: "CanvasDetailComponent",
   props: {
@@ -49,6 +51,9 @@ export default {
   },
   components: {
     TipTabEditor,
+  },
+  computed: {
+    ...mapGetters(["getBlockFeId","getBlockFeIdIndex", "getTargetBlockPrevFeIdIndex"]),
   },
   data() {
     return {
@@ -67,7 +72,6 @@ export default {
       canvas: {},
       blocks: [],
 
-      defaultBlockFeIds: [],
       activeBlockId: null,
       editorContent: null,
       parentUpdateEditorContent: "초기 값",
@@ -80,6 +84,11 @@ export default {
     this.handleCanvasIdChange(this.canvasId);
   },
   methods: {
+    ...mapActions([
+      "setDefaultBlockFeIdsActions",
+      "pushBlockFeIdsActions",
+      "deleteBlockTargetFeIdActions",
+    ]),
     handleCanvasIdChange(newCanvasId) {
       console.error("생성중...222 >>", newCanvasId);
       this.detailCanvasId = newCanvasId;
@@ -100,7 +109,7 @@ export default {
         `${process.env.VUE_APP_API_BASE_URL}/block/${this.detailCanvasId}/list`
       );
       this.blocks = blockResponse.data.result;
-      this.defaultBlockFeIds = blockResponse.data.result.map((el) => {
+      this.setDefaultBlockFeIdsActions = blockResponse.data.result.map((el) => {
         return el.feId;
       });
 
@@ -261,10 +270,10 @@ export default {
 
     // tiptabEditor method
     deleteBlock(blockFeId) {
-      const index = this.defaultBlockFeIds.indexOf(blockFeId);
-      if (index !== -1) { // 기존 값에 있다면 해당 아이디가
-      const prevBlockId = (index != 0) ? this.defaultBlockFeIds[index - 1] : null;
-        this.defaultBlockFeIds.splice(index, 1); // 배열에서 해당 값을 삭제
+
+      const isDeleteBlock = this.$store.dispatch('blockFe/deleteBlockTargetFeIdActions', blockFeId);
+      if (isDeleteBlock) { // 기존 값에 있어서 삭제했다면
+      const prevBlockId = this.$store.getTargetBlockPrevFeId;
         this.message = {
           method: "delete",
           canvasId: this.canvasId,
@@ -307,29 +316,14 @@ export default {
       this.sendMessage();
     },
     checkBlockMethod(targetBlockFeId) {
-      const found = this.defaultBlockFeIds.find(
-        (element) => element == targetBlockFeId
-      );
-
-      // delete 했을 때의 라인값이 잡히지 않아서, 최근 수정한 값, 현재 값을 비교하면서 진행
-      // if (
-      //   this.recentKeyboardKey == 8 && //현재 키보드가 지우기(backspace)
-      //   this.lastBlockId != targetBlockFeId && // 마지막 block id와 현 active block id가 다를 때
-      //   this.lastBlockContent == "" // 마지막 block content가 비어있을 때
-      // ) {
-      //   const index = this.defaultBlockFeIds.indexOf(this.lastBlockId);
-      //   if (index !== -1) {
-      //     this.defaultBlockFeIds.splice(index, 1); // 배열에서 해당 값을 삭제
-      //   }
-      //   return "delete";
-      // }
+      const found = this.getBlockFeId(targetBlockFeId);
 
       if (found) {
         // block의 생성, 수정, 삭제 (create, update, delete)
         // console.error("찾은거 하기...", this.recentKeyboardKey);
         return "update";
       } else {
-        this.defaultBlockFeIds.push(targetBlockFeId);
+        this.pushBlockFeIdsActions(targetBlockFeId);
         return "create";
       }
     },
