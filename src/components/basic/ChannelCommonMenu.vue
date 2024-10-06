@@ -4,11 +4,7 @@
       <div class="titleArea">
         <div class="col">
           <div>
-            <v-icon
-              icon="mdi-star"
-              class="star active"
-              @click="toggleBookmark"
-            />
+            <v-icon icon="mdi-star" class="star active" @click="toggleBookmark" />
           </div>
           <h1>{{ getChannelName }}</h1>
           <div>
@@ -25,16 +21,10 @@
       <p>{{ getChannelDesc }}</p>
     </div>
     <div class="menuBtns">
-      <button
-        @click="moveMenu('thread')"
-        :class="{ active: menu === 'thread' }"
-      >
+      <button @click="moveMenu('thread')" :class="{ active: menu === 'thread' }">
         쓰레드
       </button>
-      <button
-        @click="moveMenu('canvas')"
-        :class="{ active: menu === 'canvas' }"
-      >
+      <button @click="moveMenu('canvas')" :class="{ active: menu === 'canvas' }">
         캔버스
       </button>
       <button @click="moveMenu('drive')" :class="{ active: menu === 'drive' }">
@@ -43,15 +33,13 @@
       <button class="badge">
         2분할 보기 <v-icon icon="mdi-eye-outline" class="eye" />
       </button>
+      <button class="invteChannelMember" @click="openChannelMemberInviteModal">멤버 초대</button>
+
     </div>
 
     <!-- 모달 컴포넌트 -->
-    <ChannelMemberModal
-      v-if="isChannelMemberModalOpen"
-      :channelId="getChannelId"
-      :workspaceId="getWorkspaceId"
-      @closeModal="closeChannelMemberInviteModal"
-    />
+    <ChannelMemberModal v-if="isChannelMemberModalOpen" :channelId="getChannelId" :workspaceId="getWorkspaceId"
+      @closeModal="closeChannelMemberInviteModal" />
   </div>
 </template>
 
@@ -88,8 +76,11 @@ export default {
       );
     },
     openChannelMemberInviteModal() {
-      this.isChannelMemberModalOpen = true; // 모달 열기
-      console.log("openInviteModal");
+      this.isChannelMemberModalOpen = false; // 일단 false로 설정하여 초기화
+      this.$nextTick(() => {
+        this.isChannelMemberModalOpen = true; // 모달 열기
+        console.log("openInviteModal");
+      });
     },
     closeChannelMemberInviteModal() {
       this.isChannelMemberModalOpen = false; // 모달 닫기
@@ -120,31 +111,38 @@ export default {
   .top {
     margin-bottom: 16px;
     padding: 0 24px;
+
     .titleArea {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      .col{
+
+      .col {
         display: flex;
         align-items: center;
         color: #A4A4A4;
       }
+
       .star {
         color: $gray_font;
         font-size: 24px;
+
         &.active {
           color: #ffbb00;
         }
       }
+
       h1 {
         font-size: 24px;
         padding: 0 10px;
       }
+
       .pencil {
         color: $gray_font;
         font-size: 16px;
       }
     }
+
     p {
       color: $gray_font;
       font-size: 12px;
