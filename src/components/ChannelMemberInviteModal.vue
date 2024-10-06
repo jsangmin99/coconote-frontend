@@ -6,7 +6,12 @@
         <button @click="closeModal">X</button>
       </header>
       <div class="search-bar">
-        <input type="text" v-model="searchKeyword" placeholder="멤버 찾기" @input="searchMembers" />
+        <input
+          type="text"
+          v-model="searchKeyword"
+          placeholder="멤버 찾기"
+          @input="debouncedSearchMembers"
+        />
       </div>
       <div class="member-list">
         <!-- 현재 채널에 있는 멤버 목록 -->
@@ -49,6 +54,7 @@
 
 <script>
 import axios from 'axios';
+import { debounce } from 'lodash'; // lodash의 debounce를 import
 
 export default {
   data() {
@@ -141,6 +147,10 @@ export default {
         console.error('멤버 초대 중 오류 발생', error);
       }
     }
+  },
+  created() {
+    // searchMembers 메서드에 debounce 적용 (300ms 지연)
+    this.debouncedSearchMembers = debounce(this.searchMembers, 300);
   },
   mounted() {
     this.fetchChannelMembers(); // 모달이 열릴 때 채널 멤버 목록 불러오기
