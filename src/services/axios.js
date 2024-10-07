@@ -12,7 +12,8 @@ axios.interceptors.request.use(
     }
 
     // withCredentials 설정을 추가하여 자격 증명 포함
-    config.withCredentials = true;
+    // s3에러로 인해 주석처리
+    // config.withCredentials = true;
 
     return config;
   },
