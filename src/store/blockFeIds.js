@@ -16,6 +16,7 @@ const blockFeIds = {
         },
         deleteBlockTargetFeId(state, targetId) {
             const index = state.defaultBlockFeIds.indexOf(targetId);
+            console.log("STORE :: deleteFeId >> ",index, " || ",state.defaultBlockFeIds)
             if (index > -1) {
                 state.defaultBlockFeIds.splice(index, 1);
                 return true;
@@ -31,8 +32,10 @@ const blockFeIds = {
         pushBlockFeIdsActions({ commit }, newId) {
             commit('pushBlockFeIds', newId);
         },
-        deleteBlockTargetFeIdActions({ commit }, deleteId) {
+        deleteBlockTargetFeIdActions({ commit, state }, deleteId) {
             commit('deleteBlockTargetFeId', deleteId);
+            // 상태를 확인해 true/false를 반환
+            return state.defaultBlockFeIds.indexOf(deleteId) === -1;
         }
     },
     getters: {
@@ -48,7 +51,7 @@ const blockFeIds = {
         getTargetBlockPrevFeId: (state) => (targetId) => {
             let targetPrevFeId = state.defaultBlockFeIds.indexOf(targetId) - 1;
             if (targetPrevFeId > -1) {
-                return targetPrevFeId;
+                return state.defaultBlockFeIds[targetPrevFeId];
             } else {
                 return null;
             }
@@ -56,7 +59,7 @@ const blockFeIds = {
         getTargetBlockPrevFeIdIndex: (state) => (targetId) => {
             let targetPrevFeId = state.defaultBlockFeIds.indexOf(targetId) - 1;
             if (targetPrevFeId > -1) {
-                return state.defaultBlockFeIds[targetPrevFeId];
+                return targetPrevFeId;
             } else {
                 return null;
             }

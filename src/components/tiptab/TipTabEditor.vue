@@ -256,6 +256,8 @@ export default {
       //   editor
       // );
 
+      // 처음부터 delete 엎어서 진행해보기.....
+
       const selectedNode = editor.state.selection;
       let isReturn = true;
 
@@ -290,7 +292,8 @@ export default {
       console.error(
         originTargetBlockId,
         originTargetBlockContents,
-        updateBlockID
+        updateBlockID,
+        "<< 삭제여부 확인용"
       );
       if (
         originTargetBlockContents == undefined &&

@@ -53,7 +53,12 @@ export default {
     TipTabEditor,
   },
   computed: {
-    ...mapGetters(["getBlockFeId","getBlockFeIdIndex", "getTargetBlockPrevFeIdIndex"]),
+    ...mapGetters([
+      "getBlockFeId",
+      "getBlockFeIdIndex",
+      "getTargetBlockPrevFeId",
+      "getTargetBlockPrevFeIdIndex",
+    ]),
   },
   data() {
     return {
@@ -109,9 +114,12 @@ export default {
         `${process.env.VUE_APP_API_BASE_URL}/block/${this.detailCanvasId}/list`
       );
       this.blocks = blockResponse.data.result;
-      this.setDefaultBlockFeIdsActions = blockResponse.data.result.map((el) => {
-        return el.feId;
-      });
+
+      this.setDefaultBlockFeIdsActions(
+        blockResponse.data.result.map((el) => {
+          return el.feId;
+        })
+      );
 
       this.settingEditorContent();
       // this.editorContent = ``;
@@ -270,23 +278,26 @@ export default {
 
     // tiptabEditor method
     deleteBlock(blockFeId) {
+      const prevBlockId = this.$store.getters.getTargetBlockPrevFeId(blockFeId); //삭제전 prev block id 검색
+      console.log("prevBlockId :: ", prevBlockId)
+      this.deleteBlockTargetFeIdActions(blockFeId).then((isDeleteBlock) => {
+        console.log("isDeleteBlock :: ", isDeleteBlock);
+        if (isDeleteBlock) {
+          // 기존 값에 있어서 삭제했다면
+          this.message = {
+            method: "delete",
+            canvasId: this.canvasId,
+            prevBlockId: prevBlockId,
+            parentBlockId: null,
+            contents: "z",
+            type: "paragraph", //삭제여서 타입 관계 X
+            feId: blockFeId,
+            member: this.sender, // 현재 접속한 user ⭐ 추후 변경
+          };
 
-      const isDeleteBlock = this.$store.dispatch('blockFe/deleteBlockTargetFeIdActions', blockFeId);
-      if (isDeleteBlock) { // 기존 값에 있어서 삭제했다면
-      const prevBlockId = this.$store.getTargetBlockPrevFeId;
-        this.message = {
-          method: "delete",
-          canvasId: this.canvasId,
-          prevBlockId: prevBlockId,
-          parentBlockId: null,
-          contents: "z",
-          type: "paragraph", //삭제여서 타입 관계 X
-          feId: blockFeId,
-          member: this.sender, // 현재 접속한 user ⭐ 추후 변경
-        };
-
-        this.sendMessage();
-      }
+          this.sendMessage();
+        }
+      });
     },
     updateBlock(blockFeId, blockElType, blockContent, previousId, parentId) {
       if (!blockFeId) {
