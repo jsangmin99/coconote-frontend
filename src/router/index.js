@@ -38,7 +38,7 @@ const routes = [
         component: OAuth2Success, // 컴포넌트 경로를 실제 파일로 변경해 주세요.
     },
     {
-        path: '/member',
+        path: '/member/:workspaceId',
         name: 'MemberView',
         component: MemberView,
         props: true

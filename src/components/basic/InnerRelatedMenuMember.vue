@@ -22,16 +22,10 @@
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
-  <CreateWorkspaceMemberModal 
-    v-model = "sendMail"
-    @update:dialog="sendMail = $event"
-    :selectedValue="selectedValue" 
-  />
 </template>
 
 <script>
 import axios from "axios";
-import CreateWorkspaceMemberModal from '@/components/basic/CreateWorkspaceMemberModal.vue';
 
 export default {
     props: {
@@ -40,9 +34,6 @@ export default {
     }
   },
   name: "InnerRelatedMenuHome",
-  components: {
-    CreateWorkspaceMemberModal
-  },
   updated() {
     this.fetchWorkspaceInfo();
   },
@@ -50,7 +41,6 @@ export default {
     return {
       workspaceMemberList: {},
       workspaceName: "",
-      sendMail:false,
       
     };
   },
@@ -65,10 +55,6 @@ export default {
         console.log(e);
       }
     },
-    showMailSender() {
-      this.sendMail = true;
-      console.log(this.sendMail);
-    }
   },
 };
 </script>
