@@ -122,6 +122,12 @@ import { mapGetters } from "vuex";
 import { mapActions } from "vuex";
 
 export default {
+  props: {
+    // workspaceId
+    selectedValue: {
+      type: Number,
+    },
+  },
   name: "InnerRelatedMenuHome",
   components: {},
   computed: {

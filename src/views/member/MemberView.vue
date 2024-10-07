@@ -14,8 +14,6 @@
       <v-chip
         :color="getChipColor(member.wsRole)">
                     {{ member.wsRole }}</v-chip>
-      <!-- <v-btn text="권한 부여" color="blue"></v-btn>
-      <v-btn text="강퇴" color="grey"></v-btn> -->
       </v-list-item>
     </v-list>
   </div>
@@ -52,7 +50,7 @@
           <v-list-item>소속    {{ this.workspaceMemberInfo.field }}</v-list-item>
           <v-list-item>직급    {{ this.workspaceMemberInfo.position }}</v-list-item>
           <v-list-item>권한    {{ this.workspaceMemberInfo.wsRole }}</v-list-item>
-         </v-list>      
+         </v-list>
       </v-card-text>
       <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn>
     </v-card>

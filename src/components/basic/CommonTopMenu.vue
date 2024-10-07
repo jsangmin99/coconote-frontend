@@ -28,20 +28,6 @@
           </v-col>
         </v-row>
       </v-form>
-      <v-row>
-        <v-col cols="auto" v-if="isLoading == true">
-          <v-select
-            v-model="workspaceId"
-            :items="items"
-            outlined
-            single-line
-            hide-details
-            dense
-            class="inline"
-            style="font-size: 0.9rem"
-          ></v-select>
-        </v-col>
-      </v-row>
     </template>
   </v-app-bar>
   <CreateWorkspaceModal
@@ -53,8 +39,8 @@
 
 <script>
 import axios from "axios";
-import CreateWorkspaceModal from "@/components/createSpaces/CreateWorkspaceModal.vue";
-import { mapGetters } from "vuex";
+import CreateWorkspaceModal from "@/components/basic/CreateWorkspaceModal.vue";
+import { mapGetters, mapMutations } from "vuex";
 
 export default {
   computed: {
@@ -67,7 +53,7 @@ export default {
   data() {
     return {
       items: [],
-      workspaceId: null,
+      selectedValue: null,
       isLoading : false,
       createWorkspace:false,
     };
@@ -78,6 +64,7 @@ export default {
     this.fetchMyWorkspaceList();
   },
   methods: {
+    ...mapMutations(["setWorkspaceInfo", "setWorkspaceNameInfo"]),
     async fetchMyWorkspaceList() {
       try {
         const response = await axios.get(
@@ -92,8 +79,11 @@ export default {
         console.log(e);
       }
     },
-    emitSelected() {
+    async emitSelected() {
       this.$emit("selected", this.selectedValue);
+      this.setWorkspaceInfo(this.selectedValue);
+      
+      this.setWorkspaceNameInfo();
     },
     showWorkspaceModal() {
       this.createWorkspace = true;
