@@ -68,8 +68,7 @@ export default {
         };
         axios
           .post(`${process.env.VUE_APP_API_BASE_URL}/canvas/create`, params)
-          .then((response) => {
-            alert(response.data.title + "방 개설에 성공하였습니다.");
+          .then(() => {
             this.canvasName = "";
             this.findAllRoom();
           })
