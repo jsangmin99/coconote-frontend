@@ -18,9 +18,11 @@
           :createdTime="this.getTime(message.createdTime)"
           :content="message.content"
           :files="message.files"
+          :tags="message.tags"
           :updateMessage="updateMessage"
           :deleteMessage="deleteMessage"
           :deleteFile="deleteFile"
+          :addTag="addTag"
         />
       </div>
     </div>
@@ -135,6 +137,17 @@ export default {
             // 메시지가 존재할 경우 content 업데이트
             messageToUpdate.content = recv.content;
         }
+      } else if(recv.type === "ADD_TAG"){
+        
+        const messageToUpdate = this.messages.find(message => message.id === recv.id);
+        if(messageToUpdate){
+          if(!messageToUpdate.tags || messageToUpdate.tags.length === 0){
+            messageToUpdate.tags = [{id:recv.tagId, name:recv.tagName, color:recv.tagColor}]
+          }else{
+            messageToUpdate.tags.push({id:recv.tagId, name:recv.tagName, color:recv.tagColor});
+          }
+        }
+
       } else if(recv.type === "DELETE"){
         // DELETE일 경우, messages에서 해당 id의 메시지를 제거
         this.messages = this.messages.filter(message => message.id !== recv.id);
@@ -159,6 +172,20 @@ export default {
         });
       }
       this.scrollToBottom();
+    },
+    addTag(id, tagName, tagColor){
+      const authToken = localStorage.getItem('accessToken');
+      this.ws.send(
+        "/pub/chat/message",
+        {Authorization: authToken},
+        JSON.stringify({
+          type: "ADD_TAG",
+          channelId: this.roomId,
+          threadId: id,
+          tagName: tagName,
+          tagColor: tagColor,
+        })
+      );
     },
     updateMessage(id, message){
       const authToken = localStorage.getItem('accessToken');
@@ -317,7 +344,7 @@ export default {
         this.currentPage++;
         this.isLastPage = response.data.result.last;
         // this.messages = [...this.messages, ...response.data.result.content]
-
+        
         // 기존 메시지의 ID 집합을 생성
         const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
 

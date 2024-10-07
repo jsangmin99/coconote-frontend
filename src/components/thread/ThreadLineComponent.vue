@@ -11,10 +11,14 @@
                 <div class="nickName">{{nickName}}</div>
                 <div class="createdTime">{{createdTime}}</div>
                 <div class="tag-group">
+                  <div v-for="(tag,index) in this.tags" :key="index">
+                    <span class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</span>
+                  </div>
                   <input type="text"
-                    class="tag"
+                    class="tag-input"
                     placeholder="tags"
-                    v-model="tag"
+                    v-model="tagName"
+                    v-on:keypress.enter="createTag"
                   >
                 </div>
             </div>
@@ -57,13 +61,14 @@
   
 <script>
   export default {
-    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile'],
+    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile','addTag'],
     data() {
         return {
             message: "",
             isContextMenuVisible: false,
             isUpdate: false,
-            tag: "",
+            tagName: "",
+            tagColor: "#3296FF",
         };
     },
     computed: {
@@ -83,6 +88,10 @@
         document.removeEventListener("click", this.handleOutsideClick);
     },
     methods: {
+      createTag(){
+        this.addTag(this.id, this.tagName, this.tagColor);
+        this.tagName = ""
+      },
       handleKeydown(event) {
         if (event.key === 'Enter') {
           if (event.shiftKey) {
@@ -165,7 +174,9 @@
     
 }
 .tag-group {
-
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 }
 .tag {
     
