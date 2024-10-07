@@ -11,8 +11,8 @@
                 <div class="nickName">{{nickName}}</div>
                 <div class="createdTime">{{createdTime}}</div>
                 <div class="tag-group">
-                  <div v-for="(tag,index) in this.tags" :key="index">
-                    <span class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</span>
+                  <div class="tag-container" v-for="(tag,index) in this.tags" :key="index" >
+                    <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
                   </div>
                   <input type="text"
                     class="tag-input"
@@ -186,8 +186,14 @@
   flex-direction: row;
   gap: 10px;
 }
+.tag-container {
+  
+}
 .tag {
-    
+  border-radius: 5px;
+  padding: 2px 5px;
+  color: white;
+  font-size: 11px;
 }
 .content {
   white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */
