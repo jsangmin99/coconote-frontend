@@ -16,14 +16,25 @@
           </div>
         </div>
         <div class="col">
-          <v-icon icon="mdi-plus" @click="openChannelMemberInviteModal">
-          </v-icon>
-          <v-icon icon="mdi-dots-vertical">
+          <v-icon icon="mdi-plus" @click="openChannelMemberInviteModal"></v-icon>
+          <!-- 클릭 이벤트로 드롭다운 토글 -->
+          <v-icon icon="mdi-dots-vertical" @click="toggleDropdown">
+            <!-- 클릭 시 로깅 -->
+            <span @click="console.log('dots clicked')"></span>
           </v-icon>
         </div>
       </div>
       <p>{{ getChannelDesc }}</p>
     </div>
+
+    <!-- 드롭다운 메뉴 -->
+    <div v-if="isDropdownOpen" class="dropdown-menu">
+      <ul>
+        <li @click="editChannel">채널 수정</li>
+        <li @click="deleteChannel">채널 삭제</li>
+      </ul>
+    </div>
+
     <div class="menuBtns">
       <button
         @click="moveMenu('thread')"
@@ -56,7 +67,7 @@
 </template>
 
 <script>
-import ChannelMemberModal from "@/components/ChannelMemberInviteModal.vue"; // 모달 컴포넌트 추가
+import ChannelMemberModal from "@/components/ChannelMemberInviteModal.vue";
 import { mapGetters } from "vuex";
 import axios from "axios";
 
@@ -64,7 +75,14 @@ export default {
   props: ["menu"],
   name: "ChannelCommonMenu",
   components: {
-    ChannelMemberModal, // 모달 컴포넌트 등록
+    ChannelMemberModal,
+  },
+  data() {
+    return {
+      isChannelMemberModalOpen: false,
+      isDropdownOpen: false, // 드롭다운 상태 관리
+      toggleBookmarkIsLoading: false,
+    };
   },
   computed: {
     ...mapGetters([
@@ -75,32 +93,42 @@ export default {
       "getWorkspaceName",
     ]),
   },
-  data() {
-    return {
-      isChannelMemberModalOpen: false,
-      toggleBookmarkIsLoading: false,
-    };
-  },
   methods: {
     moveMenu(name) {
-      this.$router.push(
-        `/channel/${this.$store.getters.getChannelId}/${name}/view`
-      );
+      this.$router.push(`/channel/${this.$store.getters.getChannelId}/${name}/view`);
     },
     openChannelMemberInviteModal() {
       this.isChannelMemberModalOpen = true; // 모달 열기
       console.log("openInviteModal");
     },
     closeChannelMemberInviteModal() {
-      this.isChannelMemberModalOpen = false; // 모달 닫기
-      console.log("closeInviteModal");
+      this.isChannelMemberModalOpen = false;
+    },
+    toggleDropdown() {
+      // 드롭다운이 열리고 닫히는지 로그 확인
+      console.log("Dropdown toggle");
+      this.isDropdownOpen = !this.isDropdownOpen;
+    },
+    async deleteChannel() {
+      if (confirm("정말로 채널을 삭제하시겠습니까?")) {
+        try {
+          await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/channel/delete/${this.getChannelId}`);
+          alert("채널이 성공적으로 삭제되었습니다.");
+          this.$router.push("/workspace").then(() => {
+            location.reload(); // Force page reload after changing the URL
+          });
+        } catch (error) {
+          console.error("채널 삭제 중 오류 발생", error);
+        }
+      }
+    },
+    editChannel() {
+      console.log("채널 수정 클릭됨");
     },
     async toggleBookmark() {
       this.toggleBookmarkIsLoading = true;
       try {
-        const response = await axios.patch(
-          `${process.env.VUE_APP_API_BASE_URL}/channel/member/bookmark/${this.channelId}`
-        );
+        const response = await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/bookmark/${this.channelId}`);
         console.log("toggleBookmark", response);
       } catch (error) {
         console.error("bookmark 토글 중 오류 발생", error);
@@ -149,21 +177,6 @@ export default {
       color: $gray_font;
       font-size: 12px;
     }
-
-    .right-buttons {
-      display: flex;
-      align-items: center;
-
-      .invite-btn {
-        margin-left: 16px;
-        padding: 4px 12px;
-        font-size: 12px;
-        background-color: #69a0f2;
-        color: white;
-        border-radius: 30px;
-        border: none;
-      }
-    }
   }
 
   .menuBtns {
@@ -198,6 +211,34 @@ export default {
         }
       }
     }
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    z-index: 100;
+    top: 40px;
+    /* 위치 조정 */
+    right: 0px;
+  }
+
+  .dropdown-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .dropdown-menu ul li {
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  .dropdown-menu ul li:hover {
+    background-color: #f3f3f3;
   }
 }
 </style>
