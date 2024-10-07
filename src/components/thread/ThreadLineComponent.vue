@@ -23,10 +23,15 @@
             </div>
             
             <div class="image-group">
-                <div v-for="(file, index) in this.files" :key="index">
-                    <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
-                    <p class="custom-contents">{{file.fileName}}</p>
+              <div v-for="(file, index) in this.files" :key="index">
+                <div class="file-group">
+                  <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+                  <p class="custom-contents">{{file.fileName}}</p>
+                  <div class="more-btn-file">
+                    <button @click="deleteF(file.fileId)">파일삭제</button>
+                  </div>
                 </div>
+              </div>
             </div>
             
             <div class="comment">comment</div>
@@ -44,8 +49,8 @@
 </template>
   
 <script>
-    export default {
-    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage'],
+  export default {
+    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile'],
     data() {
         return {
             message: "",
@@ -73,6 +78,9 @@
         deleteM(){
           this.deleteMessage(this.id);
         },
+        deleteF(fileId){
+          this.deleteFile(this.id,fileId);
+        },
         toggleContextMenu(event) {
           event.stopPropagation(); // 클릭 이벤트 전파 방지
           this.isContextMenuVisible = !this.isContextMenuVisible;
@@ -87,7 +95,7 @@
           this.isUpdate = true
         },
     },
-    };
+  };
 </script>
 <style scoped>
 .thread {
@@ -163,6 +171,21 @@
   flex-direction: row;
   width: 120px;
   max-height: 180px;
+  gap: 10px;
+}
+.file-group{
+  position: relative;
+}
+.file-group:hover .more-btn-file {
+  display: block;
+}
+.more-btn-file{
+  background: #f8f8f8;
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  z-index: 2;
 }
 .custom-contents{
   max-width: 120px; /* 제목의 최대 너비를 설정 */

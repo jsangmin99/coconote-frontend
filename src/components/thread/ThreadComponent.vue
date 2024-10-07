@@ -20,6 +20,7 @@
           :files="message.files"
           :updateMessage="updateMessage"
           :deleteMessage="deleteMessage"
+          :deleteFile="deleteFile"
         />
       </li>
     </ul>
@@ -132,6 +133,14 @@ export default {
       } else if(recv.type === "DELETE"){
         // DELETE일 경우, messages에서 해당 id의 메시지를 제거
         this.messages = this.messages.filter(message => message.id !== recv.id);
+
+      } else if(recv.type === "DELETE_FILE"){
+        // DELETE_File일 경우, messages.files에서 해당 id의 파일을 제거
+        const messageToUpdate = this.messages.find(message => message.id === recv.id);
+
+        if(messageToUpdate){
+          messageToUpdate.files = messageToUpdate.files.filter(file => file.fileId !== recv.fileId);
+        }
       }
       else {
         // 새로운 메시지일 경우 기존 로직
@@ -168,6 +177,19 @@ export default {
           type: "DELETE",
           channelId: this.roomId,
           threadId: id,
+        })
+      );
+    },
+    deleteFile(id, fileId){
+      const authToken = localStorage.getItem('accessToken');
+      this.ws.send(
+        "/pub/chat/message",
+        {Authorization: authToken},
+        JSON.stringify({
+          type: "DELETE_FILE",
+          channelId: this.roomId,
+          threadId: id,
+          fileId: fileId,
         })
       );
     },
