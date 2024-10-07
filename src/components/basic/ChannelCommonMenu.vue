@@ -4,11 +4,7 @@
       <div class="titleArea">
         <div class="col">
           <div>
-            <v-icon
-              icon="mdi-star"
-              class="star active"
-              @click="toggleBookmark"
-            />
+            <v-icon icon="mdi-star" class="star active" @click="toggleBookmark" />
           </div>
           <h1>{{ getChannelName }}</h1>
           <div>
@@ -36,16 +32,10 @@
     </div>
 
     <div class="menuBtns">
-      <button
-        @click="moveMenu('thread')"
-        :class="{ active: menu === 'thread' }"
-      >
+      <button @click="moveMenu('thread')" :class="{ active: menu === 'thread' }">
         쓰레드
       </button>
-      <button
-        @click="moveMenu('canvas')"
-        :class="{ active: menu === 'canvas' }"
-      >
+      <button @click="moveMenu('canvas')" :class="{ active: menu === 'canvas' }">
         캔버스
       </button>
       <button @click="moveMenu('drive')" :class="{ active: menu === 'drive' }">
@@ -57,12 +47,8 @@
     </div>
 
     <!-- 모달 컴포넌트 -->
-    <ChannelMemberModal
-      v-if="isChannelMemberModalOpen"
-      :channelId="getChannelId"
-      :workspaceId="getWorkspaceId"
-      @closeModal="closeChannelMemberInviteModal"
-    />
+    <ChannelMemberModal v-if="isChannelMemberModalOpen" :channelId="getChannelId" :workspaceId="getWorkspaceId"
+      @closeModal="closeChannelMemberInviteModal" />
   </div>
 </template>
 
@@ -110,18 +96,33 @@ export default {
       this.isDropdownOpen = !this.isDropdownOpen;
     },
     async deleteChannel() {
-      if (confirm("정말로 채널을 삭제하시겠습니까?")) {
-        try {
+      try {
+        // 섹션 리스트에서 전체 채널 목록을 가져오기
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
+        );
+
+        // 모든 섹션의 채널 리스트 합치기
+        const allChannels = response.data.result.flatMap(section => section.channelList);
+
+        if (allChannels.length <= 1) {
+          alert("마지막 채널은 삭제할 수 없습니다.");
+          return; // 마지막 채널이면 삭제를 중단
+        }
+
+        // 삭제 확인
+        if (confirm("정말로 채널을 삭제하시겠습니까?")) {
           await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/channel/delete/${this.getChannelId}`);
           alert("채널이 성공적으로 삭제되었습니다.");
           this.$router.push("/workspace").then(() => {
-            location.reload(); // Force page reload after changing the URL
+            location.reload(); // URL 변경 후 페이지 새로고침
           });
-        } catch (error) {
-          console.error("채널 삭제 중 오류 발생", error);
         }
+      } catch (error) {
+        console.error("채널 리스트를 가져오거나 삭제하는 중 오류 발생", error);
       }
     },
+
     editChannel() {
       console.log("채널 수정 클릭됨");
     },
@@ -148,31 +149,38 @@ export default {
   .top {
     margin-bottom: 16px;
     padding: 0 24px;
+
     .titleArea {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      .col{
+
+      .col {
         display: flex;
         align-items: center;
         color: #A4A4A4;
       }
+
       .star {
         color: $gray_font;
         font-size: 24px;
+
         &.active {
           color: #ffbb00;
         }
       }
+
       h1 {
         font-size: 24px;
         padding: 0 10px;
       }
+
       .pencil {
         color: $gray_font;
         font-size: 16px;
       }
     }
+
     p {
       color: $gray_font;
       font-size: 12px;
