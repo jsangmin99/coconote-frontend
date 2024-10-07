@@ -1,7 +1,7 @@
 <template>
   <div class="container">
-    <ul class="list-group" ref="messageList" id="list-group">
-      <li
+    <div class="list-group" ref="messageList" id="list-group">
+      <div
         class="list-group-item"
         v-for="(message,index) in messages.slice().reverse()"
         :key="message.id"
@@ -22,8 +22,8 @@
           :deleteMessage="deleteMessage"
           :deleteFile="deleteFile"
         />
-      </li>
-    </ul>
+      </div>
+    </div>
     
     <div class="input-group">
 
@@ -37,11 +37,12 @@
         
       <div class="text-group">
         <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
-        <input
+        <textarea
           type="text"
           class="form-control"
           v-model="message"
           v-on:keypress.enter="sendMessage"
+          @keydown="handleKeydown"
         />
         <div class="input-group-append">
           <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList.length === 0">보내기</button>
@@ -367,6 +368,19 @@ export default {
     deleteImage(index){
       this.fileList.splice(index, 1);
     },
+    handleKeydown(event) {
+      if (event.key === 'Enter') {
+        if (event.shiftKey) {
+          // Shift + Enter일 경우 개행 추가
+          this.message += '\n';
+          event.preventDefault(); // 기본 동작 방지
+        } else {
+          // Enter만 누를 경우 메시지 전송
+          this.sendMessage();
+          event.preventDefault(); // 기본 동작 방지
+        }
+      }
+    },
     connect() {
       this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
       this.ws = Stomp.over(this.sock);
@@ -485,6 +499,7 @@ export default {
 }
 .form-control {
     width: 100%;
+    white-space: pre-line;
 }
 
 </style>

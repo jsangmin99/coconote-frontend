@@ -10,15 +10,17 @@
             <div class="title">
                 <div class="nickName">{{nickName}}</div>
                 <div class="createdTime">{{createdTime}}</div>
-                <div class="tag">tag</div>
+                <div class="tag-group">
+                  tag
+                </div>
             </div>
-            <div v-if="!isUpdate" class="content">{{content}}</div>
+            <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
             <div v-if="isUpdate" class="update-group">
-              <input
+              <textarea
                 type="text"
                 class="form-control"
                 v-model="message"
-                v-on:keypress.enter="update"
+                @keydown="handleKeydown"
               />
             </div>
             
@@ -58,7 +60,11 @@
             isUpdate: false,
         };
     },
-    computed: {},
+    computed: {
+      formattedContent() {
+        return this.content.replace(/\n/g, '<br />'); // 개행 문자를 <br>로 변환
+      }
+    },
     created() {
         this.message=this.content
     },
@@ -71,29 +77,42 @@
         document.removeEventListener("click", this.handleOutsideClick);
     },
     methods: {
-        update(){
-          this.updateMessage(this.id,this.message);
-          this.isUpdate = false
-        },
-        deleteM(){
-          this.deleteMessage(this.id);
-        },
-        deleteF(fileId){
-          this.deleteFile(this.id,fileId);
-        },
-        toggleContextMenu(event) {
-          event.stopPropagation(); // 클릭 이벤트 전파 방지
-          this.isContextMenuVisible = !this.isContextMenuVisible;
-        },
-        handleOutsideClick() {
-        // 컨텍스트 메뉴 외부 클릭 시 닫힘 처리
-            this.isContextMenuVisible = false;
-        },
-        editMessage() {
-          // 메시지 수정 로직
-          console.log("메시지 수정");
-          this.isUpdate = true
-        },
+      handleKeydown(event) {
+        if (event.key === 'Enter') {
+          if (event.shiftKey) {
+            // Shift + Enter일 경우 개행 추가
+            this.message += '\n';
+            event.preventDefault(); // 기본 동작 방지
+          } else {
+            // Enter만 누를 경우 메시지 전송
+            this.update();
+            event.preventDefault(); // 기본 동작 방지
+          }
+        }
+      },
+      update(){
+        this.updateMessage(this.id,this.message);
+        this.isUpdate = false
+      },
+      deleteM(){
+        this.deleteMessage(this.id);
+      },
+      deleteF(fileId){
+        this.deleteFile(this.id,fileId);
+      },
+      toggleContextMenu(event) {
+        event.stopPropagation(); // 클릭 이벤트 전파 방지
+        this.isContextMenuVisible = !this.isContextMenuVisible;
+      },
+      handleOutsideClick() {
+      // 컨텍스트 메뉴 외부 클릭 시 닫힘 처리
+          this.isContextMenuVisible = false;
+      },
+      editMessage() {
+        // 메시지 수정 로직
+        console.log("메시지 수정");
+        this.isUpdate = true
+      },
     },
   };
 </script>
@@ -136,11 +155,14 @@
 .createdTime {
     
 }
+.tag-group {
+
+}
 .tag {
     
 }
 .content {
-    
+  white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */
 }
 .files {
     
