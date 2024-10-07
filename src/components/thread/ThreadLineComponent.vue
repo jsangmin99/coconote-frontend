@@ -16,9 +16,12 @@
                   </div>
                   <input type="text"
                     class="tag-input"
-                    placeholder="tags"
+                    placeholder="#"
                     v-model="tagName"
                     v-on:keypress.enter="createTag"
+                    v-on:input="adjustWidth"
+                    ref="tagInput"
+                    :style="{ width: inputWidth + 'px' }"
                   >
                 </div>
             </div>
@@ -68,7 +71,8 @@
             isContextMenuVisible: false,
             isUpdate: false,
             tagName: "",
-            tagColor: "#3296FF",
+            tagColor: "",
+            inputWidth: 20,
         };
     },
     computed: {
@@ -88,9 +92,16 @@
         document.removeEventListener("click", this.handleOutsideClick);
     },
     methods: {
+      adjustWidth() {
+        this.inputWidth = this.$refs.tagInput.scrollWidth; // 입력 필드의 콘텐츠 너비를 기반으로 조정
+      },
       createTag(){
+        if (!this.tagName.trim()) {
+          return;
+        }
         this.addTag(this.id, this.tagName, this.getRandomColor());
         this.tagName = ""
+        this.inputWidth = 20
       },
       getRandomColor() {
         const letters = '0123456789ABCDEF';
@@ -184,14 +195,14 @@
 .tag-group {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 5px;
 }
 .tag-container {
   
 }
 .tag {
   border-radius: 5px;
-  padding: 2px 5px;
+  padding: 0 5px 1px 5px;
   color: white;
   font-size: 11px;
 }
