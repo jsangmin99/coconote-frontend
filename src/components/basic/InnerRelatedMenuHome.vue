@@ -13,9 +13,17 @@
         <v-list-item
           v-for="channel in section.channelList"
           :key="channel.channelId"
-          :class="{ 'selected-item': selectedMenuId == channel.channelId }"
+          :class="{
+            'selected-item': selectedChannelMenuId == channel.channelId,
+          }"
           class="channel-item"
-          @click="changeChannel(channel.channelId)"
+          @click="
+            changeChannel(
+              channel.channelId,
+              channel.channelName,
+              channel.channelInfo
+            )
+          "
         >
           <template v-slot:prepend>
             <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
@@ -111,6 +119,7 @@
 <script>
 import axios from "axios";
 import { mapGetters } from "vuex";
+import { mapActions } from "vuex";
 
 export default {
   name: "InnerRelatedMenuHome",
@@ -125,13 +134,15 @@ export default {
 
       handler(newChannelId) {
         console.error(newChannelId);
-        this.selectedChannelMenuId = newChannelId;
-        this.changeChannel(newChannelId);
+        if (newChannelId != this.selectedChannelMenuId) {
+          this.selectedChannelMenuId = newChannelId;
+          this.changeChannel(newChannelId);
+        }
       },
     },
   },
   created() {
-    this.selectedChannelMenuId = this.$route.params.channelId;
+    // this.selectedChannelMenuId = this.$route.params.channelId;
   },
   mounted() {
     this.getSectionData();
@@ -140,6 +151,7 @@ export default {
   data() {
     return {
       sections: [],
+      selectedMenuId: null,
       selectedChannelMenuId: null,
       sectionDialog: false,
       channelDialog: false,
@@ -153,16 +165,36 @@ export default {
     };
   },
   methods: {
+    ...mapActions([
+      "setChannelInfoActions",
+      "setChannelNameInfoActions",
+      "setChannelDescInfoActions",
+    ]),
     async getSectionData() {
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
       );
-      console.log(response);
+      console.log("/section/list/workspaceId", response);
       this.sections = response.data.result;
     },
-    changeChannel(id) {
-      this.selectedMenuId = id;
-      this.$router.push(`/channel/${id}`);
+    async changeChannel(id, name, desc) {
+      this.selectedChannelMenuId = id;
+      // window.location.href = `/channel/${id}`;
+      this.setChannelInfoActions(id); // Vuex store에 업데이트
+      this.setChannelNameInfoActions(name); // Vuex store에 업데이트
+      this.setChannelDescInfoActions(desc); // Vuex store에 업데이트
+
+      const response = await axios.get(
+        `${process.env.VUE_APP_API_BASE_URL}/channel/${this.$store.getters.getChannelId}/isjoin`
+      );
+
+      const isJoin = response.data.result;
+
+      if (isJoin) {
+        this.$router.push(`/channel/${id}/thread/view`);
+      } else {
+        this.$router.push(`/channel/${id}`);
+      }
     },
     async createSection() {
       try {

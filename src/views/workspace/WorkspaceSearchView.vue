@@ -11,6 +11,7 @@
     </v-card>
   </v-dialog>
 </template>
+
 <script>
 import axios from "axios";
 import { mapActions } from "vuex";
@@ -28,7 +29,13 @@ export default {
     this.getMyFirstWorkspace();
   },
   methods: {
-    ...mapActions(["setWorkspaceInfoActions", "setWorkspaceNameInfoActions"]),
+    ...mapActions([
+      "setWorkspaceInfoActions",
+      "setWorkspaceNameInfoActions",
+      "setMemberInfoActions", // 추가: 멤버 정보를 저장하는 Vuex 액션
+    ]),
+
+    // 워크스페이스 정보를 가져오는 메소드
     async getMyFirstWorkspace() {
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/workspace/first`
@@ -40,18 +47,48 @@ export default {
         return false;
       }
       const firstData = response.data.result;
-      this.workspaceId = firstData.workspaceId
-      this.setWorkspaceInfoActions(firstData.workspaceId); // Vuex store에 업데이트
-      this.setWorkspaceNameInfoActions(firstData.name); // Vuex store에 업데이트
+      this.workspaceId = firstData.workspaceId;
+
+      // Vuex store에 워크스페이스 정보 업데이트
+      this.setWorkspaceInfoActions(firstData.workspaceId);
+      this.setWorkspaceNameInfoActions(firstData.name);
+
+      // 멤버 정보 가져오기 추가
+      await this.getMemberInfo();
+
+      // 첫 번째 채널 정보 가져오기
       this.getMyFirstChannelInWorkspace();
     },
+
+    // 멤버 정보를 가져와 Vuex에 저장하는 메소드 추가
+    async getMemberInfo() {
+      try {
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/workspace/member/${this.workspaceId}`
+        );
+
+        if (response.data.result) {
+          const memberInfo = {
+            nickname: response.data.result.nickname,
+            workspaceMemberId: response.data.result.workspaceMemberId,
+            profileImage: response.data.result.profileImage,
+          };
+          this.setMemberInfoActions(memberInfo); // Vuex에 멤버 정보 저장
+        }
+      } catch (error) {
+        console.error("Error fetching member info:", error);
+      }
+    },
+
+    // 채널 정보를 가져오는 메소드
     async getMyFirstChannelInWorkspace() {
       const response = await axios.get(
-        `${process.env.VUE_APP_API_BASE_URL}/${this.workspaceId}/channel/first` // ⭐ 추후 API 수정
+        `${process.env.VUE_APP_API_BASE_URL}/${this.workspaceId}/channel/first` // 채널 정보 API
       );
-
       this.$router.push(`/channel/${response.data.result.channelId}`);
     },
+
+    // 홈으로 리다이렉트
     locationToHomeRouter() {
       this.$router.push(`/`);
     },

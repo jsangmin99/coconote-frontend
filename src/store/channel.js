@@ -2,6 +2,7 @@ function initState(){
     return {
         channelId : null, //현 접속한 channelId
         channelName : null,
+        channelDesc : null,
     };
 }
 
@@ -10,9 +11,15 @@ const channel = {
     mutations: {
         setChannelInfo(state, channelValue) {
             state.channelId = channelValue;
+            localStorage.setItem("channelId", channelValue);
         },
         setChannelNameInfo(state, channelNameValue) {
             state.channelName = channelNameValue;
+            localStorage.setItem("channelName", channelNameValue);
+        },
+        setChannelDescInfo(state, channelDescValue) {
+            state.channelDesc = channelDescValue;
+            localStorage.setItem("channelDesc", channelDescValue);
         }
     },
     actions: {
@@ -21,11 +28,48 @@ const channel = {
         },
         setChannelNameInfoActions({ commit }, channelNameValue) {
             commit('setChannelNameInfo', channelNameValue);
+        },
+        setChannelDescInfoActions({ commit }, channelDescValue) {
+            commit('setChannelDescInfo', channelDescValue);
         }
     },
     getters: {
-        getChannelId: state => state.channelId,
-        getChannelName: state => state.channelName,
+        getChannelId(state){
+            let returnState = null;
+            returnState = (state.channelId == null) ? localStorage.getItem("channelId") : state.channelId
+            console.log("getChannelName",returnState)
+            if(returnState == null || returnState == undefined){
+                setTimeout(() => {
+                    return (state.channelId == null) ? localStorage.getItem("channelId") : state.channelId
+                }, 100);
+                return false;
+            }
+            return returnState;
+        },
+        getChannelName(state){
+            let returnState = null;
+            returnState = (state.channelName == null) ? localStorage.getItem("channelName") : state.channelName
+            console.log("getChannelName",returnState)
+            if(returnState == null || returnState == undefined){
+                setTimeout(() => {
+                    return (state.channelName == null) ? localStorage.getItem("channelName") : state.channelName
+                }, 100);
+                return false;
+            }
+            return returnState;
+        },
+        getChannelDesc(state){
+            let returnState = null;
+            returnState = (state.channelDesc == null) ? localStorage.getItem("channelDesc") : state.channelDesc
+            console.log("getChannelName",returnState)
+            if(returnState == null){
+                setTimeout(() => {
+                    return (state.channelDesc == null) ? localStorage.getItem("channelDesc") : state.channelDesc
+                }, 100);
+                return false;
+            }
+            return returnState;
+        },
     }
 }
 
