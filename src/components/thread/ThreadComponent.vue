@@ -19,6 +19,7 @@
           :content="message.content"
           :files="message.files"
           :updateMessage="updateMessage"
+          :deleteMessage="deleteMessage"
         />
       </li>
     </ul>
@@ -120,27 +121,30 @@ export default {
 
   methods: {
     recvMessage(recv) {
-        if (recv.type === "UPDATE") {
-            // UPDATE일 경우, 해당 id의 메시지를 찾아 content를 업데이트
-            const messageToUpdate = this.messages.find(message => message.id === recv.id);
+      if (recv.type === "UPDATE") {
+        // UPDATE일 경우, 해당 id의 메시지를 찾아 content를 업데이트
+        const messageToUpdate = this.messages.find(message => message.id === recv.id);
 
-            if (messageToUpdate) {
-                // 메시지가 존재할 경우 content 업데이트
-                messageToUpdate.content = recv.content;
-            }
-        } else {
-            // 새로운 메시지일 경우 기존 로직
-            this.messages.unshift({
-                id: recv.id,
-                memberName: recv.memberName,
-                content: recv.content,
-                image: recv.image,
-                createdTime: recv.createdTime,
-                files: recv.files,
-            });
+        if (messageToUpdate) {
+            // 메시지가 존재할 경우 content 업데이트
+            messageToUpdate.content = recv.content;
         }
-
-        this.scrollToBottom();
+      } else if(recv.type === "DELETE"){
+        // DELETE일 경우, messages에서 해당 id의 메시지를 제거
+        this.messages = this.messages.filter(message => message.id !== recv.id);
+      }
+      else {
+        // 새로운 메시지일 경우 기존 로직
+        this.messages.unshift({
+            id: recv.id,
+            memberName: recv.memberName,
+            content: recv.content,
+            image: recv.image,
+            createdTime: recv.createdTime,
+            files: recv.files,
+        });
+      }
+      this.scrollToBottom();
     },
     updateMessage(id, message){
       const authToken = localStorage.getItem('accessToken');
@@ -152,6 +156,18 @@ export default {
           channelId: this.roomId,
           threadId: id,
           content: message,
+        })
+      );
+    },
+    deleteMessage(id){
+      const authToken = localStorage.getItem('accessToken');
+      this.ws.send(
+        "/pub/chat/message",
+        {Authorization: authToken},
+        JSON.stringify({
+          type: "DELETE",
+          channelId: this.roomId,
+          threadId: id,
         })
       );
     },

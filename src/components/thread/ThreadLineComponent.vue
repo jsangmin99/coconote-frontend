@@ -38,14 +38,14 @@
     <div v-if="isContextMenuVisible" class="overlay"></div>
     <div v-if="isContextMenuVisible" class="context-menu">
       <button @click="editMessage">수정</button>
-      <button @click="deleteMessage">삭제</button>
+      <button @click="deleteM">삭제</button>
     </div>
 </div>
 </template>
   
 <script>
     export default {
-    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage'],
+    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage'],
     data() {
         return {
             message: "",
@@ -67,25 +67,24 @@
     },
     methods: {
         update(){
-            this.updateMessage(this.id,this.message);
-            this.isUpdate = false
+          this.updateMessage(this.id,this.message);
+          this.isUpdate = false
+        },
+        deleteM(){
+          this.deleteMessage(this.id);
         },
         toggleContextMenu(event) {
-        event.stopPropagation(); // 클릭 이벤트 전파 방지
-        this.isContextMenuVisible = !this.isContextMenuVisible;
+          event.stopPropagation(); // 클릭 이벤트 전파 방지
+          this.isContextMenuVisible = !this.isContextMenuVisible;
         },
         handleOutsideClick() {
         // 컨텍스트 메뉴 외부 클릭 시 닫힘 처리
             this.isContextMenuVisible = false;
         },
         editMessage() {
-            // 메시지 수정 로직
-            console.log("메시지 수정");
-            this.isUpdate = true
-        },
-        deleteMessage() {
-        // 메시지 삭제 로직
-        console.log("메시지 삭제");
+          // 메시지 수정 로직
+          console.log("메시지 수정");
+          this.isUpdate = true
         },
     },
     };
