@@ -12,10 +12,21 @@
           </div>
         </div>
         <div class="col">
-          <v-icon icon="mdi-plus" @click="openChannelMemberInviteModal"></v-icon>
+          <!-- + 아이콘 -->
+          <div class="icon-container" @click="openChannelMemberInviteModal">
+            <!-- + 아이콘 -->
+            <v-icon icon="mdi-plus" class="plus-icon"></v-icon>
+            <!-- 첫 번째 프로필 이미지 -->
+            <div v-if="channelMembers.length > 0" class="circle blue-circle">
+              <img :src="channelMembers[0].profileImageUrl || defaultProfileImage" alt="Profile" />
+            </div>
+            <!-- 두 번째 프로필 이미지 (있을 경우) -->
+            <div v-if="channelMembers.length > 1" class="circle green-circle">
+              <img :src="channelMembers[1].profileImageUrl || defaultProfileImage" alt="Profile" />
+            </div>
+          </div>
           <!-- 클릭 이벤트로 드롭다운 토글 -->
           <v-icon icon="mdi-dots-vertical" @click="toggleDropdown">
-            <!-- 클릭 시 로깅 -->
             <span @click="console.log('dots clicked')"></span>
           </v-icon>
         </div>
@@ -44,8 +55,6 @@
       <button class="badge">
         2분할 보기 <v-icon icon="mdi-eye-outline" class="eye" />
       </button>
-      <button class="invteChannelMember" @click="openChannelMemberInviteModal">멤버 초대</button>
-
     </div>
 
     <!-- 모달 컴포넌트 -->
@@ -67,9 +76,11 @@ export default {
   },
   data() {
     return {
+      channelMembers: [], // 채널 멤버 리스트를 위한 배열 초기화
       isChannelMemberModalOpen: false,
       isDropdownOpen: false, // 드롭다운 상태 관리
       toggleBookmarkIsLoading: false,
+      defaultProfileImage: 'https://via.placeholder.com/40', // 기본 프로필 이미지 설정
     };
   },
   computed: {
@@ -81,7 +92,18 @@ export default {
       "getWorkspaceName",
     ]),
   },
+  mounted() {
+    this.loadChannelMembers(); // 컴포넌트가 마운트되면 채널 멤버를 불러옴
+  },
   methods: {
+    async loadChannelMembers() {
+      try {
+        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/channel/member/list/${this.getChannelId}`);
+        this.channelMembers = response.data.result; // 채널 멤버 데이터 설정
+      } catch (error) {
+        console.error('채널 멤버 불러오기 중 오류 발생', error);
+      }
+    },
     moveMenu(name) {
       this.$router.push(`/channel/${this.$store.getters.getChannelId}/${name}/view`);
     },
@@ -252,6 +274,43 @@ export default {
 
   .dropdown-menu ul li:hover {
     background-color: #f3f3f3;
+  }
+  .icon-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+    cursor: pointer;
+
+    .circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .blue-circle {
+      background-color: #4285f4;
+      margin-left: 10px;
+    }
+
+    .green-circle {
+      background-color: #a4e4a9;
+      margin-left: 5px;
+    }
+  }
+
+  .plus-icon {
+    font-size: 24px;
+    color: #a4a4a4;
   }
 }
 </style>

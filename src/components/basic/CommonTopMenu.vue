@@ -54,8 +54,8 @@ export default {
     return {
       items: [],
       selectedValue: null,
-      isLoading : false,
-      createWorkspace:false,
+      createWorkspace: false,
+      isLoading: false,
     };
   },
   created() {
