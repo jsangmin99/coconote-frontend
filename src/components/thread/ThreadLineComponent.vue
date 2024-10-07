@@ -89,8 +89,16 @@
     },
     methods: {
       createTag(){
-        this.addTag(this.id, this.tagName, this.tagColor);
+        this.addTag(this.id, this.tagName, this.getRandomColor());
         this.tagName = ""
+      },
+      getRandomColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
       },
       handleKeydown(event) {
         if (event.key === 'Enter') {
