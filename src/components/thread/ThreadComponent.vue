@@ -199,6 +199,10 @@ export default {
       );
     },
     async sendMessage() {
+      // 메시지가 비어있거나 공백 문자만 포함된 경우
+      if (!this.message.trim() && this.fileList.length === 0) {
+        return; // 함수 종료
+      }
       const authToken = localStorage.getItem('accessToken');
 
       if(this.fileList.length>0) {

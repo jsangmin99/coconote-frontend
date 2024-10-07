@@ -11,7 +11,11 @@
                 <div class="nickName">{{nickName}}</div>
                 <div class="createdTime">{{createdTime}}</div>
                 <div class="tag-group">
-                  tag
+                  <input type="text"
+                    class="tag"
+                    placeholder="tags"
+                    v-model="tag"
+                  >
                 </div>
             </div>
             <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
@@ -20,6 +24,7 @@
                 type="text"
                 class="form-control"
                 v-model="message"
+                v-on:keypress.enter="update"
                 @keydown="handleKeydown"
               />
             </div>
@@ -58,6 +63,7 @@
             message: "",
             isContextMenuVisible: false,
             isUpdate: false,
+            tag: "",
         };
     },
     computed: {
@@ -91,6 +97,9 @@
         }
       },
       update(){
+        if (!this.message.trim()) {
+          return; // 함수 종료
+        }
         this.updateMessage(this.id,this.message);
         this.isUpdate = false
       },
