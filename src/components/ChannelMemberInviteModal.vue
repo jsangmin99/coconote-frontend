@@ -1,6 +1,6 @@
 <template>
-  <div v-if="isModalOpen" class="modal">
-    <div class="modal-content">
+  <div v-if="isModalOpen" class="modal" @click="closeModal">
+    <div class="modal-content" @click.stop>
       <header>
         <h2>#멤버 초대</h2>
         <button @click="closeModal">X</button>
@@ -188,6 +188,21 @@ export default {
   border-radius: 5px;
   width: 400px;
   max-width: 90%;
+  position: relative; /* 버튼을 위치시키기 위한 기준 요소 */
+}
+
+.modal-content header {
+  position: relative; /* 부모 요소가 위치 기준이 됨 */
+}
+
+.modal-content button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
 }
 
 .search-bar input {
