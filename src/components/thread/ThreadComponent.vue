@@ -93,6 +93,7 @@ export default {
       fileList: [],
       // uploadProgress: [], // 업로드 진행 상황
       filesRes: null,
+      tagList: [],
     };
   },
   created() {

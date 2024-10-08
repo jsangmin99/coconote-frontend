@@ -1,64 +1,73 @@
 <template>
 <div class="thread-wrapper">
-    <div class="thread">
-        <div>
-            <div class="image">
-                {{ id }}
+  <div class="thread">
+    <div>
+      <div class="image">
+          {{ id }}
+      </div>
+    </div>
+    <div class="thread-content">
+      <div class="title">
+        <div class="nickName">{{nickName}}</div>
+        <div class="createdTime">{{createdTime}}</div>
+
+        <div class="tag-group">
+          <div class="tag-container" v-for="(tag,index) in this.tags" :key="index" >
+            <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+          </div>
+          <button @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
+          <div class="tag-toggle">
+            <input
+              v-if="isTagMenuVisible"
+              type="text"
+              class="tag-input"
+              placeholder="tags"
+              v-model="tagName"
+              v-on:keypress.enter="createTag"
+              v-on:input="adjustWidth"
+              ref="tagInput"
+              :style="{ width: inputWidth + 'px'}"
+            >
+            <div class="more-tag">
+              
             </div>
+          </div>
         </div>
-        <div class="thread-content">
-            <div class="title">
-                <div class="nickName">{{nickName}}</div>
-                <div class="createdTime">{{createdTime}}</div>
-                <div class="tag-group">
-                  <div class="tag-container" v-for="(tag,index) in this.tags" :key="index" >
-                    <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
-                  </div>
-                  <input type="text"
-                    class="tag-input"
-                    placeholder="#"
-                    v-model="tagName"
-                    v-on:keypress.enter="createTag"
-                    v-on:input="adjustWidth"
-                    ref="tagInput"
-                    :style="{ width: inputWidth + 'px' }"
-                  >
-                </div>
+      </div>
+      <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
+      <div v-if="isUpdate" class="update-group">
+        <textarea
+          type="text"
+          class="form-control"
+          v-model="message"
+          v-on:keypress.enter="update"
+          @keydown="handleKeydown"
+        />
+      </div>
+      
+      <div class="image-group">
+        <div v-for="(file, index) in this.files" :key="index">
+          <div class="file-group">
+            <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+            <p class="custom-contents">{{file.fileName}}</p>
+            <div class="more-btn-file">
+              <button @click="deleteF(file.fileId)">파일삭제</button>
             </div>
-            <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
-            <div v-if="isUpdate" class="update-group">
-              <textarea
-                type="text"
-                class="form-control"
-                v-model="message"
-                v-on:keypress.enter="update"
-                @keydown="handleKeydown"
-              />
-            </div>
-            
-            <div class="image-group">
-              <div v-for="(file, index) in this.files" :key="index">
-                <div class="file-group">
-                  <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
-                  <p class="custom-contents">{{file.fileName}}</p>
-                  <div class="more-btn-file">
-                    <button @click="deleteF(file.fileId)">파일삭제</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="comment">comment</div>
+          </div>
         </div>
-    </div>
-    <div class="more-btn" @click="toggleContextMenu">
-        <button>더보기</button>
-    </div>
-    <div v-if="isContextMenuVisible" class="overlay"></div>
-    <div v-if="isContextMenuVisible" class="context-menu">
-      <button @click="editMessage">수정</button>
-      <button @click="deleteM">삭제</button>
-    </div>
+      </div>
+      
+      <div class="comment">comment</div>
+  </div>
+  </div>
+  <div class="more-btn" @click="toggleContextMenu">
+      <button>더보기</button>
+  </div>
+  <div v-if="isContextMenuVisible || isTagMenuVisible" class="overlay"></div>
+  <div v-if="isContextMenuVisible" class="context-menu">
+    <button @click="editMessage">수정</button>
+    <button @click="deleteM">삭제</button>
+  </div>
 </div>
 </template>
   
@@ -72,7 +81,8 @@
             isUpdate: false,
             tagName: "",
             tagColor: "",
-            inputWidth: 20,
+            inputWidth: 35,
+            isTagMenuVisible: false,
         };
     },
     computed: {
@@ -101,7 +111,10 @@
         }
         this.addTag(this.id, this.tagName, this.getRandomColor());
         this.tagName = ""
-        this.inputWidth = 20
+        this.inputWidth = 35
+      },
+      addT(){
+
       },
       getRandomColor() {
         const letters = '0123456789ABCDEF';
@@ -141,9 +154,19 @@
         event.stopPropagation(); // 클릭 이벤트 전파 방지
         this.isContextMenuVisible = !this.isContextMenuVisible;
       },
+      toggleTagMenu(event) {
+        event.stopPropagation(); // 클릭 이벤트 전파 방지
+        this.isTagMenuVisible = !this.isTagMenuVisible;
+        this.$nextTick(() => {
+        if (this.isTagMenuVisible) {
+            this.$refs.tagInput.focus(); // 포커스 주기
+          }
+        });
+      },
       handleOutsideClick() {
       // 컨텍스트 메뉴 외부 클릭 시 닫힘 처리
           this.isContextMenuVisible = false;
+          this.isTagMenuVisible = false;
       },
       editMessage() {
         // 메시지 수정 로직
@@ -183,8 +206,8 @@
   width: 100%;
 }
 .title {
-    display: flex;
-    gap: 10px;
+  display: flex;
+  gap: 5px;
 }
 .nickName {
 
@@ -205,6 +228,9 @@
   padding: 0 5px 1px 5px;
   color: white;
   font-size: 11px;
+}
+.tag-toggle{
+  z-index: 3;
 }
 .content {
   white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */
@@ -268,6 +294,9 @@
 }
 .form-control {
   width: 80%;
+}
+input:focus {
+  outline: none;
 }
 </style>
 
