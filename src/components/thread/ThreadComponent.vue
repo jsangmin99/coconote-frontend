@@ -178,8 +178,8 @@ export default {
             createdTime: recv.createdTime,
             files: recv.files,
         });
+        this.scrollToBottom();
       }
-      this.scrollToBottom();
     },
     createAndAddTag(id, tagName, tagColor){
       const authToken = localStorage.getItem('accessToken');

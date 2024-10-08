@@ -103,7 +103,11 @@
       },
       filteredTagList() {
         // tags에 포함되지 않은 tagList의 태그를 필터링
-        return this.tagList.filter(tag => !this.tags.some(t => t.id === tag.id));
+        if(!this.tags || this.tags.length === 0){
+          return this.tagList
+        }else{
+          return this.tagList.filter(tag => !this.tags.some(t => t.id === tag.id));
+        }
       }
     },
     created() {
