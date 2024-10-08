@@ -1,6 +1,7 @@
 <template>
 <div class="thread-wrapper">
   <div class="thread">
+    <!-- 프로필 이미지 -->
     <div>
       <div class="image">
           {{ id }}
@@ -8,9 +9,12 @@
     </div>
     <div class="thread-content">
       <div class="title">
+
+        <!-- 닉네임 생성일 -->
         <div class="nickName">{{nickName}}</div>
         <div class="createdTime">{{createdTime}}</div>
 
+        <!-- 태그 -->
         <div class="tag-group">
           <div class="tag-container" v-for="(tag,index) in this.tags" :key="index" >
             <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
@@ -28,12 +32,16 @@
               ref="tagInput"
               :style="{ width: inputWidth + 'px'}"
             >
-            <div class="more-tag">
-              
+            <div class="more-tag" v-if="isTagMenuVisible">
+              <div v-for="(tag,index) in tagList" :key="index" class="tag-list" @click="addT(tag.id)">
+                <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- 내용 -->
       <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
       <div v-if="isUpdate" class="update-group">
         <textarea
@@ -45,6 +53,7 @@
         />
       </div>
       
+      <!-- 파일 -->
       <div class="image-group">
         <div v-for="(file, index) in this.files" :key="index">
           <div class="file-group">
@@ -57,9 +66,12 @@
         </div>
       </div>
       
+      <!-- 댓글 -->
       <div class="comment">comment</div>
+    </div>
   </div>
-  </div>
+
+  <!-- 더보기 메뉴 -->
   <div class="more-btn" @click="toggleContextMenu">
       <button>더보기</button>
   </div>
@@ -73,7 +85,7 @@
   
 <script>
   export default {
-    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile','addTag'],
+    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag'],
     data() {
         return {
             message: "",
@@ -109,12 +121,12 @@
         if (!this.tagName.trim()) {
           return;
         }
-        this.addTag(this.id, this.tagName, this.getRandomColor());
+        this.createAndAddTag(this.id, this.tagName, this.getRandomColor());
         this.tagName = ""
         this.inputWidth = 35
       },
-      addT(){
-
+      addT(tagId){
+        this.addTag(this.id, tagId)
       },
       getRandomColor() {
         const letters = '0123456789ABCDEF';
@@ -231,6 +243,27 @@
 }
 .tag-toggle{
   z-index: 3;
+  position: relative;
+}
+.tag-list{
+  justify-content: center;
+  align-items: center;
+}
+.tag-list:hover {
+  background-color: #f0f0f0;
+}
+.more-tag{
+  position: absolute;
+  top: 25px;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 150px;
+  height: 250px;
+  overflow: scroll;
 }
 .content {
   white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */

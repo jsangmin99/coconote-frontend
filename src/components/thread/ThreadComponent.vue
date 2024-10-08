@@ -22,6 +22,8 @@
           :updateMessage="updateMessage"
           :deleteMessage="deleteMessage"
           :deleteFile="deleteFile"
+          :createAndAddTag="createAndAddTag"
+          :tagList="tagList"
           :addTag="addTag"
         />
       </div>
@@ -100,6 +102,7 @@ export default {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
     this.getMessageList();
+    this.getTagList();
     this.connect();
     // this.scrollToBottom();
     // window.addEventListener('scroll', this.scrollPagination)
@@ -129,6 +132,10 @@ export default {
   },
 
   methods: {
+    async getTagList(){
+      const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/tag/list/${this.id}`);
+      this.tagList = response.data.result
+    },
     recvMessage(recv) {
       if (recv.type === "UPDATE") {
         // UPDATE일 경우, 해당 id의 메시지를 찾아 content를 업데이트
@@ -174,7 +181,7 @@ export default {
       }
       this.scrollToBottom();
     },
-    addTag(id, tagName, tagColor){
+    createAndAddTag(id, tagName, tagColor){
       const authToken = localStorage.getItem('accessToken');
       this.ws.send(
         "/pub/chat/message",
@@ -185,6 +192,19 @@ export default {
           threadId: id,
           tagName: tagName,
           tagColor: tagColor,
+        })
+      );
+    },
+    addTag(id, tagId){
+      const authToken = localStorage.getItem('accessToken');
+      this.ws.send(
+        "/pub/chat/message",
+        {Authorization: authToken},
+        JSON.stringify({
+          type: "ADD_TAG",
+          channelId: this.roomId,
+          threadId: id,
+          tagId: tagId,
         })
       );
     },
