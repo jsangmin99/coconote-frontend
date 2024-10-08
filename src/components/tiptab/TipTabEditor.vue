@@ -130,6 +130,11 @@
         </button>
       </div>
     </div> -->
+    <!-- 이미지 업로드 버튼 -->
+    <div class="image-upload-container">
+      <input type="file" ref="fileInput" @change="handleImageUpload" hidden />
+      <v-btn @click="triggerFileInput" color="primary">이미지 업로드</v-btn>
+    </div>
     <div id="editorArea">
       <editor-content :editor="editor" />
     </div>
@@ -143,6 +148,7 @@
 </template>
 
 <script>
+import axios from "axios";
 import StarterKit from "@tiptap/starter-kit";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import CustomBlock from "@/components/tiptab/CustomBlock"; // CustomBlock 가져오기
@@ -152,6 +158,8 @@ import DragHandle from "@tiptap-pro/extension-drag-handle";
 import NodeRange from "@tiptap-pro/extension-node-range";
 // import { isChangeOrigin } from "@tiptap/extension-collaboration";
 import DraggableItem from "@/components/tiptab/DraggableItem";
+import Image from "@tiptap/extension-image"; // 이미지 추가용
+
 import { mapGetters, mapActions } from "vuex";
 
 export default {
@@ -185,6 +193,13 @@ export default {
       updateEditorContent: this.parentUpdateEditorContent,
 
       dragCheckEditorJson: null,
+
+      dragCheckSelectionNode: null,
+      tempDragCheckSelectionNode: null,
+
+      // image 업로드 용
+      fileList: [], // 업로드할 파일 리스트
+      tempFilesRes: null, // 서버에 저장된 파일 메타데이터 응답
     };
   },
   watch: {
@@ -194,8 +209,12 @@ export default {
     },
   },
   mounted() {
+    let uuid = crypto.randomUUID();
+    console.log("uuid >> ", uuid);
+
     this.editor = new Editor({
       extensions: [
+        Image,
         StarterKit.configure({
           bulletList: false, // ol, ul, li 형식 허용 X
           orderedList: false,
@@ -204,7 +223,7 @@ export default {
         CustomBlock,
         DraggableItem,
         UniqueID.configure({
-          types: ["heading", "paragraph"],
+          types: ["heading", "paragraph", "image"],
         }),
         NodeRange.configure({
           key: null,
@@ -217,8 +236,15 @@ export default {
             // 드래그 시작 시
             element.addEventListener("dragstart", (event) => {
               console.log("dragstart :: ", event);
-              this.dragCheckEditorJson = this.getIdOrder(
-                this.editor.getJSON().content
+              this.dragCheckSelectionNode = this.tempDragCheckSelectionNode;
+              console.log("현 선택자 :: ", this.dragCheckSelectionNode);
+              this.dragCheckEditorJson = this.selectedNodePrevAndNext(
+                this.editor.getJSON().content,
+                this.dragCheckSelectionNode.attrs.id
+              );
+              console.log(
+                "현 선택자에 대한 이전 이후 값 >> ",
+                this.dragCheckEditorJson
               );
             });
 
@@ -226,31 +252,59 @@ export default {
             element.addEventListener("dragend", (e) => {
               console.log("Drag ended :: ", e);
               // 드래그가 끝나면 상태를 초기화하는 로직 추가 가능
-              const prevJson = this.getIdOrder(this.editor.getJSON().content);
-              const result = this.compareIdOrders(
-                this.dragCheckEditorJson,
-                prevJson
+              const recentSelectorJson = this.selectedNodePrevAndNext(
+                this.editor.getJSON().content,
+                this.dragCheckSelectionNode.attrs.id
               );
 
-              const tempBlock = [
-                result.currentId,
-                "paragraph",
-                result.currentContent[0].text == "" ? "" : result.currentContent[0].text,
-                result.previousOfCurrentId,
-                null
-              ]
-              console.log("tempBlock", tempBlock,result)
+              console.log("종료 후 이전 이후 값 >> >> ", recentSelectorJson);
 
-              this.$parent.updateBlock(
-                result.currentId,
-                "paragraph",
-                result.currentContent[0].text == "" ? "" : result.currentContent[0].text,
-                result.previousOfCurrentId,
-                null
+              this.$parent.changeOrderBlock(
+                recentSelectorJson
               );
+              this.dragCheckEditorJson = null;
+              this.dragCheckSelectionNode = null;
+
+              // const result = this.compareIdOrders(
+              //   this.dragCheckEditorJson,
+              //   prevJson
+              // );
+
+              // const tempBlock = [
+              //   result.currentId,
+              //   "paragraph",
+              //   result.currentContent[0].text == ""
+              //     ? ""
+              //     : result.currentContent[0].text,
+              //   result.previousOfCurrentId,
+              //   null,
+              // ];
+              // console.log("tempBlock", tempBlock, result);
+
+              // this.$parent.changeOrderBlock(
+              //   result.currentId,
+              //   result.previousOfCurrentId,
+              //   result.nextBlockId,
+              //   null
+              // );
+              // this.dragCheckEditorJson = null;
+              // this.dragCheckSelectionNode = null;
             });
 
             return element;
+          },
+          onNodeChange: ({ node }) => {
+            if (this.dragCheckSelectionNode != null) {
+              return false;
+            }
+            if (!node) {
+              this.tempDragCheckSelectionNode = null;
+              return;
+            }
+            this.tempDragCheckSelectionNode = node;
+            // Do something with the node
+            console.log("selectedNode :: ", this.tempDragCheckSelectionNode);
+            console.log("----------------------------");
           },
         }),
       ],
@@ -341,10 +395,15 @@ export default {
       }
 
       // 내용 차이 확인
-      const filteredItems = this.localJSON?.content.filter((item) => item.attrs.id === updateBlockID);
-      console.log(filteredItems)
+      const filteredItems = this.localJSON?.content.filter(
+        (item) => item.attrs.id === updateBlockID
+      );
+      console.log(filteredItems);
       if (filteredItems.length > 0) {
-        if(filteredItems[0].content != undefined && filteredItems[0].content[0].text == updateContent){
+        if (
+          filteredItems[0].content != undefined &&
+          filteredItems[0].content[0].text == updateContent
+        ) {
           isReturn = false; // 값이 동일하다면 보내지 않음
         }
       }
@@ -359,7 +418,7 @@ export default {
         updateBlockID
       );
 
-      if(searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0){
+      if (searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0) {
         return false;
       }
 
@@ -504,6 +563,109 @@ export default {
 
       return firstChangedId;
     },
+
+    // 선택자의 앞 뒤 값 갖고오기
+    selectedNodePrevAndNext(editorJson, targetId) {
+      const idGroupObj = {
+        prevBlockId: null,
+        nextBlockId: null,
+        feId: targetId,
+        parentBlockId: null, // 부모블록. 사용X
+      };
+      for (let i = 0; i < editorJson.length; i++) {
+        if (editorJson[i].attrs.id == targetId) {
+          idGroupObj.prevBlockId = i > 0 ? editorJson[i - 1].attrs.id : null;
+          idGroupObj.nextBlockId =
+            i < editorJson.length ? editorJson[i + 1].attrs.id : null;
+          break;
+        }
+      }
+      return idGroupObj;
+    },
+
+    // S3 Presigned URL 생성 및 파일 업로드
+    async handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      this.fileList.push(file);
+
+      // Presigned URL 요청
+      try {
+        const presignedUrls = await this.getPresignedURL(file.name);
+        const s3Url = await this.uploadFileToS3(file, presignedUrls[file.name]);
+
+        // 성공적으로 업로드된 파일의 URL에서 ? 이전 부분만 추출
+        const uploadedUrl = this.extractS3Url(s3Url);
+
+        // 업로드된 파일의 URL을 메타데이터로 저장
+        await this.saveFileMetadata([uploadedUrl]);
+      } catch (error) {
+        console.error("Image upload failed:", error);
+      }
+    },
+
+    async getPresignedURL(fileName) {
+      const reqFiles = [{ fileName }];
+      const response = await axios.post(
+        `${process.env.VUE_APP_API_BASE_URL}/files/presigned-urls`,
+        reqFiles
+      );
+      return response.data.result;
+    },
+
+    async uploadFileToS3(file, presignedUrl) {
+      try {
+        const config = {
+          headers: {
+            "Content-Type": file.type,
+          },
+        };
+        await axios.put(presignedUrl, file, config);
+        return presignedUrl;
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        throw error;
+      }
+    },
+
+    extractS3Url(presignedUrl) {
+      return presignedUrl.split("?")[0];
+    },
+
+    // 서버에 파일 메타데이터 저장
+    async saveFileMetadata(uploadedFileUrls) {
+      const metadataDto = {
+        // mapGetters로 channelId 가져와야 될것 같은데....
+        channelId: this.$store.getters.getChannelId,
+        fileType: "CANVAS", // FileType Enum으로 'CANVAS' 지정
+        fileSaveListDto: uploadedFileUrls.map((url, index) => ({
+          fileName: this.fileList[index].name, // 파일 이름
+          fileUrl: url, // S3 URL
+        })),
+      };
+      const response = await axios.post(
+        `${process.env.VUE_APP_API_BASE_URL}/files/metadata`,
+        metadataDto
+      );
+      console.log(response.data.result);
+      this.tempFilesRes = response.data.result[0].fileUrl;
+      // 에디터에 이미지 삽입
+      this.insertImageToEditor(this.tempFilesRes);
+    },
+
+    // TipTap 에디터에 이미지 삽입
+    insertImageToEditor(imageUrl) {
+      if (this.editor) {
+        if (imageUrl) {
+          this.editor.chain().focus().setImage({ src: imageUrl }).run();
+        }
+      }
+    },
+
+    triggerFileInput() {
+      this.$refs.fileInput.click();
+    },
   },
   beforeUnmount() {
     // 컴포넌트 제거 시 이벤트 리스너 제거
@@ -517,6 +679,18 @@ export default {
 .tiptap {
   :first-child {
     margin-top: 0;
+  }
+
+  /* image styles */
+  img {
+    display: block;
+    height: auto;
+    margin: 1.5rem 0;
+    max-width: 100%;
+
+    &.ProseMirror-selectednode {
+      outline: 3px solid var(--purple);
+    }
   }
 
   /* List styles */

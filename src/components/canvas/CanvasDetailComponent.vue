@@ -17,12 +17,6 @@
       </v-col>
     </v-row>
     <hr />
-        <!-- 이미지 업로드 버튼 -->
-        <div class="image-upload-container">
-      <input type="file" ref="fileInput" @change="handleImageUpload" hidden />
-      <v-btn @click="triggerFileInput" color="primary">이미지 업로드</v-btn>
-    </div>
-
     <div>
       <TipTabEditor
         v-if="this.editorContent != null"
@@ -86,8 +80,6 @@ export default {
       activeBlockId: null,
       editorContent: null,
       parentUpdateEditorContent: "초기 값",
-      fileList: [], // 업로드할 파일 리스트
-      filesRes: null, // 서버에 저장된 파일 메타데이터 응답
     };
   },
   mounted() {
@@ -287,7 +279,7 @@ export default {
     // tiptabEditor method
     deleteBlock(blockFeId) {
       const prevBlockId = this.$store.getters.getTargetBlockPrevFeId(blockFeId); //삭제전 prev block id 검색
-      console.log("prevBlockId :: ", prevBlockId)
+      console.log("prevBlockId :: ", prevBlockId);
       this.deleteBlockTargetFeIdActions(blockFeId).then((isDeleteBlock) => {
         console.log("isDeleteBlock :: ", isDeleteBlock);
         if (isDeleteBlock) {
@@ -303,10 +295,9 @@ export default {
             member: this.sender, // 현재 접속한 user ⭐ 추후 변경
           };
 
-          console.log(this.message)
+          console.log(this.message);
 
           this.sendMessage();
-
         }
       });
     },
@@ -326,12 +317,12 @@ export default {
       const blockMethod = this.checkBlockMethod(blockFeId, blockContent);
       this.message = {
         method: blockMethod,
-        canvasId: this.canvasId,
+        feId: blockFeId, // block id
         prevBlockId: previousId,
-        parentBlockId: parentId,
+        canvasId: this.canvasId,
+        // parentBlockId: parentId,
         contents: blockContent,
         type: blockElType,
-        feId: blockFeId,
         member: this.sender, // 현재 접속한 user ⭐ 추후 변경
       };
 
@@ -349,89 +340,25 @@ export default {
         return "create";
       }
     },
-    triggerFileInput() {
-      this.$refs.fileInput.click();
-    },
-
-    // S3 Presigned URL 생성 및 파일 업로드
-    async handleImageUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      this.fileList.push(file);
-
-      // Presigned URL 요청
-      try {
-        const presignedUrls = await this.getPresignedURL(file.name);
-        const s3Url = await this.uploadFileToS3(file, presignedUrls[file.name]);
-
-        // 성공적으로 업로드된 파일의 URL에서 ? 이전 부분만 추출
-        const uploadedUrl = this.extractS3Url(s3Url);
-
-        // 업로드된 파일의 URL을 메타데이터로 저장
-        await this.saveFileMetadata([uploadedUrl]);
-
-        // 에디터에 이미지 삽입
-        this.insertImageToEditor(uploadedUrl);
-      } catch (error) {
-        console.error("Image upload failed:", error);
-      }
-    },
-
-    async getPresignedURL(fileName) {
-      const reqFiles = [{ fileName }];
-      const response = await axios.post(
-        `${process.env.VUE_APP_API_BASE_URL}/files/presigned-urls`,
-        reqFiles
+    changeOrderBlock(changeOrderObj) {
+      const { prevBlockId, nextBlockId, feId, parentBlockId } = changeOrderObj;
+      console.log(
+        "changeOrderBlock >> ",
+        prevBlockId,
+        nextBlockId,
+        feId,
+        parentBlockId
       );
-      return response.data.result;
-    },
-
-    async uploadFileToS3(file, presignedUrl) {
-      try {
-        const config = {
-          headers: {
-            "Content-Type": file.type,
-          },
-        };
-        await axios.put(presignedUrl, file, config);
-        return presignedUrl;
-      } catch (error) {
-        console.error(`Error uploading ${file.name}:`, error);
-        throw error;
-      }
-    },
-
-    extractS3Url(presignedUrl) {
-      return presignedUrl.split("?")[0];
-    },
-
-    // 서버에 파일 메타데이터 저장
-    async saveFileMetadata(uploadedFileUrls) {
-      const metadataDto = {
-        // mapGetters로 channelId 가져와야 될것 같은데....
-        channelId: this.$store.getters.getChannelId,
-        fileType: 'CANVAS', // FileType Enum으로 'CANVAS' 지정
-        fileSaveListDto: uploadedFileUrls.map((url, index) => ({
-          fileName: this.fileList[index].name, // 파일 이름
-          fileUrl: url, // S3 URL
-        })),
+      
+      this.message = {
+        canvasId: this.canvasId,
+        method: "changeOrder",
+        ...changeOrderObj,
+        member: this.sender, // 현재 접속한 user ⭐ 추후 변경
       };
-      const response = await axios.post(
-        `${process.env.VUE_APP_API_BASE_URL}/files/metadata`,
-        metadataDto
-      );
-      console.log(response.data.result);
-      this.filesRes = response.data.result;
-    },
 
-    // TipTap 에디터에 이미지 삽입
-    insertImageToEditor(imageUrl) {
-      if (this.$refs.editor && this.$refs.editor.editor) {
-        this.$refs.editor.editor.chain().focus().setImage({ src: imageUrl }).run();
-      }
+      this.sendMessage();
     },
-
     changeCanvasName() {
       console.error(this.room.title);
     },
@@ -464,6 +391,6 @@ export default {
   }
 }
 .image-upload-container {
-    margin: 10px 0;
-  }
+  margin: 10px 0;
+}
 </style>
