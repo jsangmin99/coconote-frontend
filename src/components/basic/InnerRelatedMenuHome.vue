@@ -294,6 +294,7 @@ export default {
         );
         this.setWorkspaceNameInfoActions(this.editedName);
         alert("워크스페이스 정보가 수정되었습니다.");
+        this.workspaceEditModal = false;
         window.location.reload();
       } catch (error) {
         console.log(error);
