@@ -1,14 +1,14 @@
 <template>
-  <div class="search-page">
+<div class="search-page">
     <!-- 검색 창 -->
     <div class="search-bar">
-      <input v-model="keyword" @input="fetchAutocomplete" @keyup.enter="search" placeholder="검색어를 입력하세요"
+      <input ref="searchInput" v-model="keyword" @input="fetchAutocomplete" @keyup.enter="search" placeholder="검색어를 입력하세요"
         class="search-input" />
       <button @click="search" class="search-button">검색</button>
     </div>
 
     <!-- 자동완성 리스트 -->
-    <div v-if="autocompleteSuggestions.length > 0" class="autocomplete-suggestions">
+    <div v-if="autocompleteSuggestions.length > 0" class="autocomplete-suggestions" ref="autocomplete">
       <ul>
         <li v-for="suggestion in autocompleteSuggestions" :key="suggestion" @click="selectSuggestion(suggestion)">
           {{ suggestion }}
@@ -159,6 +159,12 @@ export default {
     // Debounce 처리된 자동완성 함수 설정
     this.fetchAutocomplete = debounce(this.fetchAutocomplete, 300);
   },
+  mounted() {
+    document.addEventListener('click', this.handleClickOutside);
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleClickOutside);
+  },
   methods: {
     async search() {
       this.loading = true;
@@ -223,6 +229,19 @@ export default {
         this.autocompleteSuggestions = response.data?.result || [];
       } catch (error) {
         console.error('Autocomplete failed:', error);
+        this.autocompleteSuggestions = [];
+      }
+    },
+
+    handleClickOutside(event) {
+      const autocomplete = this.$refs.autocomplete;
+      const searchInput = this.$refs.searchInput;
+      
+      // autocomplete 목록이나 search input을 클릭했는지 여부를 체크
+      if (
+        (autocomplete && !autocomplete.contains(event.target)) &&
+        (searchInput && !searchInput.contains(event.target))
+      ) {
         this.autocompleteSuggestions = [];
       }
     },
