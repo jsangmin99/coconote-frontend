@@ -203,8 +203,9 @@
       },
       handleOutsideClick() {
       // 컨텍스트 메뉴 외부 클릭 시 닫힘 처리
-          this.isContextMenuVisible = false;
-          this.isTagMenuVisible = false;
+        this.isContextMenuVisible = false;
+        this.isTagMenuVisible = false;
+        this.tagName = "";
       },
       editMessage() {
         // 메시지 수정 로직
