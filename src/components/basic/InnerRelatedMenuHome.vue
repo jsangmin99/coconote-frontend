@@ -118,10 +118,15 @@
 
 <script>
 import axios from "axios";
-import { mapGetters } from "vuex";
-import { mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
+  props: {
+    // workspaceId
+    selectedValue: {
+      type: Number,
+    },
+  },
   name: "InnerRelatedMenuHome",
   components: {},
   computed: {
