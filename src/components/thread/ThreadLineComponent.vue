@@ -33,7 +33,7 @@
               :style="{ width: inputWidth + 'px'}"
             >
             <div class="more-tag" v-if="isTagMenuVisible">
-              <div v-for="(tag,index) in tagList" :key="index" class="tag-list" @click="addT(tag.id)">
+              <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
                 <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
               </div>
             </div>
@@ -100,6 +100,10 @@
     computed: {
       formattedContent() {
         return this.content.replace(/\n/g, '<br />'); // 개행 문자를 <br>로 변환
+      },
+      filteredTagList() {
+        // tags에 포함되지 않은 tagList의 태그를 필터링
+        return this.tagList.filter(tag => !this.tags.some(t => t.id === tag.id));
       }
     },
     created() {
