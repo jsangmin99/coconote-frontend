@@ -106,9 +106,14 @@
       filteredTagList() {
         // tags에 포함되지 않은 tagList의 태그를 필터링
         if(!this.tags || this.tags.length === 0){
-          return this.tagList
+          return this.tagList.filter(tag => 
+            tag.name.toLowerCase().includes(this.tagName.toLowerCase()) // tagName에 따라 필터링
+          );
         }else{
-          return this.tagList.filter(tag => !this.tags.some(t => t.id === tag.id));
+          return this.tagList.filter(tag => 
+            !this.tags.some(t => t.id === tag.id) &&
+            tag.name.toLowerCase().includes(this.tagName.toLowerCase()) // tagName에 따라 필터링
+          );
         }
       }
     },
