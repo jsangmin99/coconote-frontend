@@ -37,6 +37,7 @@
               <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
                 <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
               </div>
+              <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
             </div>
           </div>
         </div>
@@ -123,8 +124,9 @@
         document.removeEventListener("click", this.handleOutsideClick);
     },
     methods: {
-      adjustWidth() {
+      adjustWidth({target:{value}}) {
         this.inputWidth = this.$refs.tagInput.scrollWidth; // 입력 필드의 콘텐츠 너비를 기반으로 조정
+        this.tagName = value
       },
       createTag(){
         if (!this.tagName.trim()) {
@@ -281,6 +283,9 @@
 .tag-list:hover {
   background-color: #f0f0f0;
 }
+.tag-create:hover {
+  background-color: #f0f0f0;
+}
 .more-tag{
   position: absolute;
   left: 0;
@@ -289,9 +294,9 @@
   padding: 10px;
   display: flex;
   flex-direction: column;
-  width: 150px;
-  height: 220px;
-  overflow: scroll;
+  width: 200px;
+  max-height: 220px;
+  overflow-y: auto;
 }
 .content {
   white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */
