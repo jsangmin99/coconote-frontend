@@ -143,9 +143,6 @@
 </template>
 
 <script>
-import { Color } from "@tiptap/extension-color";
-import ListItem from "@tiptap/extension-list-item";
-import TextStyle from "@tiptap/extension-text-style";
 import StarterKit from "@tiptap/starter-kit";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import CustomBlock from "@/components/tiptab/CustomBlock"; // CustomBlock 가져오기
@@ -154,7 +151,7 @@ import UniqueID from "@tiptap-pro/extension-unique-id";
 import DragHandle from "@tiptap-pro/extension-drag-handle";
 import NodeRange from "@tiptap-pro/extension-node-range";
 // import { isChangeOrigin } from "@tiptap/extension-collaboration";
-// import DraggableItem from '@/components/tiptab/DraggableItem'
+import DraggableItem from "@/components/tiptab/DraggableItem";
 import { mapGetters, mapActions } from "vuex";
 
 export default {
@@ -187,7 +184,7 @@ export default {
       defaultContent: this.initialContent, // 부모로부터 받은 데이터를 초기값으로 설정
       updateEditorContent: this.parentUpdateEditorContent,
 
-      recentKeyboardKey: null,
+      dragCheckEditorJson: null,
     };
   },
   watch: {
@@ -197,35 +194,61 @@ export default {
     },
   },
   mounted() {
-    console.log(">>>>>>>>PPP", this.defaultContent);
-    window.addEventListener("keydown", this.onKeydown); // 키보드 입력 이벤트 감지
     this.editor = new Editor({
       extensions: [
-        Color.configure({ types: [TextStyle.name, ListItem.name] }),
-        TextStyle.configure({ types: [ListItem.name] }),
-        StarterKit,
+        StarterKit.configure({
+          bulletList: false, // ol, ul, li 형식 허용 X
+          orderedList: false,
+          listItem: false,
+        }),
         CustomBlock,
-        // DraggableItem
+        DraggableItem,
         UniqueID.configure({
-          types: [
-            "heading",
-            "paragraph",
-            "orderedList",
-            "bulletList",
-            "listItem",
-          ],
-          // filterTransaction: (transaction) => !isChangeOrigin(transaction),
+          types: ["heading", "paragraph"],
         }),
         NodeRange.configure({
-          // allow to select only on depth 0
-          // depth: 0,
           key: null,
         }),
         DragHandle.configure({
-          render() {
+          render: () => {
             const element = document.createElement("div");
-
             element.classList.add("custom-drag-handle");
+
+            // 드래그 시작 시
+            element.addEventListener("dragstart", (event) => {
+              console.log("dragstart :: ", event);
+              this.dragCheckEditorJson = this.getIdOrder(
+                this.editor.getJSON().content
+              );
+            });
+
+            // 드래그가 끝날 때
+            element.addEventListener("dragend", (e) => {
+              console.log("Drag ended :: ", e);
+              // 드래그가 끝나면 상태를 초기화하는 로직 추가 가능
+              const prevJson = this.getIdOrder(this.editor.getJSON().content);
+              const result = this.compareIdOrders(
+                this.dragCheckEditorJson,
+                prevJson
+              );
+
+              const tempBlock = [
+                result.currentId,
+                "paragraph",
+                result.currentContent[0].text == "" ? "" : result.currentContent[0].text,
+                result.previousOfCurrentId,
+                null
+              ]
+              console.log("tempBlock", tempBlock,result)
+
+              this.$parent.updateBlock(
+                result.currentId,
+                "paragraph",
+                result.currentContent[0].text == "" ? "" : result.currentContent[0].text,
+                result.previousOfCurrentId,
+                null
+              );
+            });
 
             return element;
           },
@@ -247,14 +270,16 @@ export default {
 
     this.editor.on("selectionUpdate", ({ editor }) => {
       // The selection has changed.
-      // console.log(
-      //   `selectionUpdate`,
-      //   editor.view?.trackWrites?.data,
-      //   editor.view?.trackWrites?.parentElement?.dataset?.id,
-      //   editor.view?.trackWrites?.dataset?.id,
-      //   this.recentKeyboardKey,
-      //   editor
-      // );
+      console.log(
+        `selectionUpdate`,
+        editor.view?.trackWrites?.data,
+        "||",
+        editor.view?.trackWrites?.parentElement?.dataset?.id, //이것
+        "||",
+        editor.view?.trackWrites?.dataset?.id,
+        this.recentKeyboardKey,
+        editor
+      );
 
       // 처음부터 delete 엎어서 진행해보기.....
 
@@ -276,25 +301,19 @@ export default {
         "⭐ Node:",
         updateBlockID,
         updateContent,
-        this.recentKeyboardKey,
         editor.view?.trackWrites?.dataset?.id,
         updateContent == "",
         editor.view?.trackWrites?.data,
         updateContent == undefined
       );
-      if (this.localJSON.content != "") {
+
+      if (this.localJSON.content == undefined) {
         this.localJSON = this.editor.getJSON();
       }
 
       // 삭제 확인 : keyCode 감지하려면 우선순위때문에 삭제한 id가 안나옴..
       const originTargetBlockId = editor.view?.trackWrites?.dataset?.id;
       const originTargetBlockContents = editor.view?.trackWrites?.data;
-      console.error(
-        originTargetBlockId,
-        originTargetBlockContents,
-        updateBlockID,
-        "<< 삭제여부 확인용"
-      );
       if (
         originTargetBlockContents == undefined &&
         originTargetBlockId != undefined
@@ -321,6 +340,15 @@ export default {
         }
       }
 
+      // 내용 차이 확인
+      const filteredItems = this.localJSON?.content.filter((item) => item.attrs.id === updateBlockID);
+      console.log(filteredItems)
+      if (filteredItems.length > 0) {
+        if(filteredItems[0].content != undefined && filteredItems[0].content[0].text == updateContent){
+          isReturn = false; // 값이 동일하다면 보내지 않음
+        }
+      }
+
       // 삭제 method를 보내지 않았다면
       if (!isReturn) {
         return false;
@@ -331,10 +359,15 @@ export default {
         updateBlockID
       );
 
+      if(searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0){
+        return false;
+      }
+
       const previousId = searchElAndPrevEl[0];
       const targetElType = searchElAndPrevEl[1];
 
       // console.error("➡️prev➡️➡️", previousId);
+
       const parentId = null;
 
       // 여기서 감지해서 보내기
@@ -346,7 +379,6 @@ export default {
         parentId
       );
     });
-
   },
   methods: {
     ...mapActions(["pushBlockFeIdsActions", "deleteBlockTargetFeIdActions"]),
@@ -440,17 +472,41 @@ export default {
         }
         return false;
       }
-
     },
-    onKeydown(event) {
-      this.recentKeyboardKey = event.keyCode; // 누른 키 값을 저장
-      console.log("key event!! >> ", this.recentKeyboardKey);
-      // 8 : 백스페이스
+
+    // drag 시, 변경된 순서 갖고오는 메소드
+    getIdOrder(json) {
+      return json.map((item) => ({
+        id: item.attrs.id,
+        content: item.content,
+      }));
+    },
+
+    // 두 JSON의 ID 순서를 비교하는 함수
+    compareIdOrders(oldEditorJson, recentEditorJson) {
+      let firstChangedId = null;
+
+      // 두 번째 JSON의 id들이 첫 번째 JSON과 같은 순서에 있는지 비교
+      for (let i = 0; i < oldEditorJson.length; i++) {
+        if (recentEditorJson[i].id !== oldEditorJson[i].id) {
+          // 변경된 ID와 콘텐츠를 찾기
+          firstChangedId = {
+            previousPosition: i,
+            previousId: oldEditorJson[i].id,
+            currentId: recentEditorJson[i].id,
+            previousOfCurrentId: i > 0 ? recentEditorJson[i - 1].id : null, // 현재 ID의 앞에 있는 ID
+            previousContent: oldEditorJson[i].content, // 이전 ID의 콘텐츠
+            currentContent: recentEditorJson[i].content, // 현재 ID의 콘텐츠
+          };
+          break; // 첫 번째 변경된 ID를 찾으면 반복 종료
+        }
+      }
+
+      return firstChangedId;
     },
   },
   beforeUnmount() {
     // 컴포넌트 제거 시 이벤트 리스너 제거
-    window.removeEventListener("keydown", this.onKeydown);
     this.editor.destroy();
   },
 };
@@ -554,7 +610,7 @@ export default {
 }
 
 .ProseMirror {
-  padding: 1rem 1rem 1rem 0;
+  padding: 1rem 3rem 1rem 3rem;
 
   * {
     margin-top: 0.75em;

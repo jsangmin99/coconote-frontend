@@ -289,13 +289,16 @@ export default {
             canvasId: this.canvasId,
             prevBlockId: prevBlockId,
             parentBlockId: null,
-            contents: "z",
+            contents: "",
             type: "paragraph", //삭제여서 타입 관계 X
             feId: blockFeId,
             member: this.sender, // 현재 접속한 user ⭐ 추후 변경
           };
 
+          console.log(this.message)
+
           this.sendMessage();
+
         }
       });
     },
