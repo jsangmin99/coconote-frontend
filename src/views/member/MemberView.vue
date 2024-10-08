@@ -45,13 +45,17 @@
       <v-card-text>
          <v-icon size="50">mdi-account-circle</v-icon>
          <v-list>
-          <v-list-item>이름    {{ this.workspaceMemberInfo.memberName }}</v-list-item>
-          <v-list-item>닉네임    {{ this.workspaceMemberInfo.nickname }}</v-list-item>
-          <v-list-item>소속    {{ this.workspaceMemberInfo.field }}</v-list-item>
-          <v-list-item>직급    {{ this.workspaceMemberInfo.position }}</v-list-item>
-          <v-list-item>권한    {{ this.workspaceMemberInfo.wsRole }}</v-list-item>
+          <v-list-item>이름    {{ workspaceMemberInfo.memberName }}</v-list-item>
+          <v-list-item>닉네임    {{ workspaceMemberInfo.nickname }}</v-list-item>
+          <v-list-item>소속    {{ workspaceMemberInfo.field }}</v-list-item>
+          <v-list-item>직급    {{ workspaceMemberInfo.position }}</v-list-item>
+          <v-list-item>권한    {{ workspaceMemberInfo.wsRole }}</v-list-item>
          </v-list>
       </v-card-text>
+      <div v-if="this.getWsRole !== 'USER' && this.workspaceMemberInfo.wsRole !== 'PMANAGER'">
+        <v-btn color="blue" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">권한</v-btn>
+        <v-btn color="red" @click="removeMember(workspaceMemberInfo.workspaceMemberId)">강퇴</v-btn>
+      </div>
       <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn>
     </v-card>
    
@@ -68,7 +72,7 @@
 <script>
 import axios from "axios";
 import CreateWorkspaceMemberModal from '@/components/basic/CreateWorkspaceMemberModal.vue';
-
+import { mapGetters, mapActions } from "vuex";
 
 export default {
    props: {
@@ -84,7 +88,9 @@ export default {
     this.fetchWorkspaceMemberList();
     this.fetchMyInfo();
   },
-  computed: {},
+  computed: {
+    ...mapGetters(["getWorkspaceId", "getWorkspaceMemberId", "getWorkspaceName", "getWsRole",]),
+  },
   data() {
     return {
       myInfo: [],
@@ -100,6 +106,9 @@ export default {
     };
   },
   methods: {
+    ...mapActions([
+      "setMemberInfoActions",
+    ]),
     async fetchMyInfo() {
       try {
         const response = await axios.get(
@@ -166,6 +175,13 @@ export default {
             wsMember.position = this.editedPosition;
         }
         this.editingMemberId = null;
+        this.setMemberInfoActions({
+            nickname: this.editedNickname,
+            workspaceMemberId: this.getWorkspaceMemberId,
+            profileImage: "", // 나중에 바꿔야 함
+            wsRole: this.getWsRole,
+        });
+
         alert("수정되었습니다.");
       } catch (e) {
         console.error("수정 실패", e);
@@ -174,6 +190,29 @@ export default {
     },
     cancelEditing() {
       this.editingMemberId = null;
+    },
+    async changeRole(wsMemberId) {
+      try{
+        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/changerole/${wsMemberId}`);
+        alert("권한이 변경되었습니다.");
+        this.workspaceMemberModal = false;
+        window.location.href = `/member/${this.getWorkspaceId}`;
+      } catch (e) {
+        console.error("실패", e);
+        alert("권한 변경에 실패했습니다.");
+      }
+      
+    },
+    async removeMember(wsMemberId) {
+      try{
+        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/delete/${wsMemberId}`);        
+        alert("회원을 강제 퇴장시켰습니다.");
+        window.location.href = `/member/${this.getWorkspaceId}`;
+
+      } catch (e) {
+        console.error("실패", e);
+        alert("회원 삭제에 실패했습니다.");
+      }
     },
   },
 };

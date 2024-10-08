@@ -27,7 +27,9 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from 'axios';
+import { mapActions } from "vuex";
+
 export default {
     data() {
         return {
@@ -36,13 +38,44 @@ export default {
         }
     },
     methods: {
+      ...mapActions([
+      "setWorkspaceInfoActions",
+      "setWorkspaceNameInfoActions",
+      "setMemberInfoActions",
+      "setChannelInfoActions",
+      "setChannelNameInfoActions",
+      "setChannelDescInfoActions",
+    ]),
         async createWorkspace() {
             const body = {
                 name:this.name,
                 wsInfo:this.wsInfo,
             }
             try {
-                await axios.post(`${process.env.VUE_APP_API_BASE_URL}/workspace/create`, body);
+                const wsInfo = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/workspace/create`, body);
+                
+                // 새로 만든 워크스페이스로 이동하는 로직
+                this.setWorkspaceInfoActions(wsInfo.data.result.workspaceId);
+                this.setWorkspaceNameInfoActions(wsInfo.data.result.name);
+                const newWorkspaceId = wsInfo.data.result.workspaceId;
+
+                const response = await axios.get( // 내 워크스페이스 회원 정보도 수정
+                `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${newWorkspaceId}`
+                );
+                const myInfo = {
+                  nickname: response.data.result.nickname,
+                  workspaceMemberId: response.data.result.workspaceMemberId,
+                  profileImage: response.data.result.profileImage,
+                  wsRole: response.data.result.wsRole,
+                };
+                this.setMemberInfoActions(myInfo);
+        
+                const chInfo = await axios.get( // 채널 정보도 수정
+                `${process.env.VUE_APP_API_BASE_URL}/${newWorkspaceId}/channel/first` 
+                );
+                this.setChannelInfoActions(chInfo.data.result.channelId); 
+                this.setChannelNameInfoActions(chInfo.data.result.channelName);
+                this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
 
                 this.$emit('update:dialog', false);
             } catch(e) {
