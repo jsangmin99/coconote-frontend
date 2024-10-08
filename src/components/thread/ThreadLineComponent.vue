@@ -32,7 +32,7 @@
               ref="tagInput"
               :style="{ width: inputWidth + 'px'}"
             >
-            <div class="more-tag" v-if="isTagMenuVisible">
+            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
               <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
                 <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
               </div>
@@ -177,6 +177,13 @@
       toggleTagMenu(event) {
         event.stopPropagation(); // 클릭 이벤트 전파 방지
         this.isTagMenuVisible = !this.isTagMenuVisible;
+
+        // 화면 높이 확인 후 위치 결정
+        const screenHeight = window.innerHeight;
+        const buttonPosition = event.target.getBoundingClientRect().bottom;
+
+        this.tagMenuPosition = (screenHeight / 1.7 > buttonPosition) ? 'top' : 'bottom';
+
         this.$nextTick(() => {
         if (this.isTagMenuVisible) {
             this.$refs.tagInput.focus(); // 포커스 주기
@@ -262,7 +269,6 @@
 }
 .more-tag{
   position: absolute;
-  top: 25px;
   left: 0;
   background-color: white;
   border: 1px solid #ccc;
@@ -270,7 +276,7 @@
   display: flex;
   flex-direction: column;
   width: 150px;
-  height: 250px;
+  height: 220px;
   overflow: scroll;
 }
 .content {
