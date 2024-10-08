@@ -1,6 +1,22 @@
 <template>
   <v-navigation-drawer permanent class="innerSubMenu" :absolute="false">
     <h1>{{ this.getWorkspaceName }}</h1>
+    <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon color="#32446e">
+      <v-icon>mdi-cog</v-icon>
+      <v-menu activator="parent">
+        <v-list>
+          <v-list-item @click="startEditing(this.getWorkspaceId)">
+            수정
+          </v-list-item>
+            <v-list-item @click="deleteWorkspace(this.getWorkspaceId)">
+            삭제
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-btn>
+
+
+
     <v-list>
       <template v-for="section in sections" :key="section.sectionId">
         <v-list-subheader class="section-title">
@@ -114,6 +130,22 @@
       </template>
     </v-card>
   </v-dialog>
+
+
+      <v-dialog v-model="workspaceEditModal" max-width="500px" class="workspaceEditModal">
+       <v-card>
+        <v-card-title class="text-h5 text-center">워크스페이스 정보 수정</v-card-title>
+        <v-card-text>
+         <v-list>
+          <v-text-field v-model="editedName" placeholder="이름"></v-text-field>
+          <v-text-field v-model="editedWsInfo" placeholder="설명"></v-text-field>
+         </v-list>      
+      </v-card-text>
+      <v-btn text="수정" color="blue" @click="saveEditing(this.getWorkspaceId)"></v-btn>
+    </v-card>
+    </v-dialog>
+
+
 </template>
 
 <script>
@@ -167,6 +199,9 @@ export default {
         channelInfo: "",
         isPublic: 1,
       },
+      workspaceEditModal: false,
+      editedName: "",
+      editedWsInfo: "",
     };
   },
   methods: {
@@ -174,6 +209,7 @@ export default {
       "setChannelInfoActions",
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
+      "setWorkspaceNameInfoActions",
     ]),
     async getSectionData() {
       const response = await axios.get(
@@ -234,6 +270,46 @@ export default {
           data
         );
         this.getSectionData();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async startEditing(workspaceId) {
+      try {
+        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/info/${workspaceId}`);
+        this.editedName = response.data.result.name;
+        this.editedWsInfo = response.data.result.wsInfo;
+        this.workspaceEditModal = true;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async saveEditing(workspaceId) {
+      try {
+        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/workspace/update/${workspaceId}`, 
+          {
+            name: this.editedName,
+            wsInfo: this.editedWsInfo
+          }
+        );
+        this.setWorkspaceNameInfoActions(this.editedName);
+        alert("워크스페이스 정보가 수정되었습니다.");
+        window.location.reload();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async deleteWorkspace(workspaceId) {
+      try {
+        if (window.confirm("워크스페이스를 삭제하시겠습니까?")) {
+        // "예" 선택
+        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/workspace/delete/${workspaceId}`);
+        alert("워크스페이스가 삭제되었습니다.");
+        window.location.href = "/workspace";
+        } else {
+        // "아니오" 선택
+        console.log("작업이 취소되었습니다.");
+        } 
       } catch (error) {
         console.log(error);
       }
