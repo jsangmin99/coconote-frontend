@@ -25,6 +25,7 @@
           :createAndAddTag="createAndAddTag"
           :tagList="tagList"
           :addTag="addTag"
+          :removeTag="removeTag"
         />
       </div>
     </div>
@@ -150,12 +151,18 @@ export default {
         const messageToUpdate = this.messages.find(message => message.id === recv.id);
         if(messageToUpdate){
           if(!messageToUpdate.tags || messageToUpdate.tags.length === 0){
-            messageToUpdate.tags = [{id:recv.tagId, name:recv.tagName, color:recv.tagColor}]
+            messageToUpdate.tags = [{id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId}]
           }else{
-            messageToUpdate.tags.push({id:recv.tagId, name:recv.tagName, color:recv.tagColor});
+            messageToUpdate.tags.push({id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId});
           }
         }
 
+      } else if(recv.type === "REMOVE_TAG"){
+        const messageToUpdate = this.messages.find(message => message.id === recv.id);
+        
+        if(messageToUpdate){
+          messageToUpdate.tags = messageToUpdate.tags.filter(tag => tag.id !== recv.tagId);
+        }
       } else if(recv.type === "DELETE"){
         // DELETE일 경우, messages에서 해당 id의 메시지를 제거
         this.messages = this.messages.filter(message => message.id !== recv.id);
@@ -205,6 +212,20 @@ export default {
           channelId: this.roomId,
           threadId: id,
           tagId: tagId,
+        })
+      );
+    },
+    removeTag(id, tagId, threadTagId){
+      const authToken = localStorage.getItem('accessToken');
+      this.ws.send(
+        "/pub/chat/message",
+        {Authorization: authToken},
+        JSON.stringify({
+          type: "REMOVE_TAG",
+          channelId: this.roomId,
+          threadId: id,
+          tagId: tagId,
+          threadTagId: threadTagId,
         })
       );
     },

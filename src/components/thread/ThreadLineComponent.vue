@@ -17,7 +17,8 @@
         <!-- 태그 -->
         <div class="tag-group">
           <div class="tag-container" v-for="(tag,index) in this.tags" :key="index" >
-            <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+              <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+              <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
           </div>
           <button @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
           <div class="tag-toggle">
@@ -85,7 +86,7 @@
   
 <script>
   export default {
-    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag'],
+    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag'],
     data() {
         return {
             message: "",
@@ -135,6 +136,9 @@
       },
       addT(tagId){
         this.addTag(this.id, tagId)
+      },
+      deleteTag(tagId, threadTagId){
+        this.removeTag(this.id,tagId,threadTagId)
       },
       getRandomColor() {
         const letters = '0123456789ABCDEF';
@@ -248,13 +252,23 @@
   gap: 5px;
 }
 .tag-container {
-  
+  position: relative;
 }
 .tag {
   border-radius: 5px;
   padding: 0 5px 1px 5px;
   color: white;
   font-size: 11px;
+}
+.tag-container:hover .delete-tag {
+  display: block;
+}
+.delete-tag{
+  display: none;
+  position: absolute;
+  top: -6px;
+  right: -3px;
+  z-index: 3;
 }
 .tag-toggle{
   z-index: 3;
