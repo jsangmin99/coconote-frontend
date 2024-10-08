@@ -121,6 +121,7 @@ export default {
     async emitSelected() {
       this.$emit("selected", this.selectedValue);
       this.fetchWorkspaceInfo();
+      window.location.reload();
     },
     showWorkspaceModal() {
       this.createWorkspace = true;
