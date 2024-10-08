@@ -240,7 +240,7 @@ export default {
               console.log("현 선택자 :: ", this.dragCheckSelectionNode);
               this.dragCheckEditorJson = this.selectedNodePrevAndNext(
                 this.editor.getJSON().content,
-                this.dragCheckSelectionNode.attrs.id
+                this.dragCheckSelectionNode?.attrs?.id
               );
               console.log(
                 "현 선택자에 대한 이전 이후 값 >> ",
@@ -254,7 +254,7 @@ export default {
               // 드래그가 끝나면 상태를 초기화하는 로직 추가 가능
               const recentSelectorJson = this.selectedNodePrevAndNext(
                 this.editor.getJSON().content,
-                this.dragCheckSelectionNode.attrs.id
+                this.dragCheckSelectionNode?.attrs?.id
               );
 
               console.log("종료 후 이전 이후 값 >> >> ", recentSelectorJson);
@@ -573,10 +573,10 @@ export default {
         parentBlockId: null, // 부모블록. 사용X
       };
       for (let i = 0; i < editorJson.length; i++) {
-        if (editorJson[i].attrs.id == targetId) {
+        if (editorJson[i].attrs?.id == targetId) {
           idGroupObj.prevBlockId = i > 0 ? editorJson[i - 1].attrs.id : null;
           idGroupObj.nextBlockId =
-            i < editorJson.length ? editorJson[i + 1].attrs.id : null;
+            i < (editorJson.length-1) ? editorJson[i + 1].attrs.id : null;
           break;
         }
       }
