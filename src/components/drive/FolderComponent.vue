@@ -6,7 +6,7 @@
       <span @click="navigateToFolder(rootFolderId)" class="breadcrumb-item"
         :class="{ active: currentFolderId === rootFolderId }" draggable="true" @dragover.prevent
         @drop="onDrop($event, rootFolderId)">
-        루트
+        root
       </span>
 
       <span v-if="breadcrumb.length"> / </span>
@@ -17,13 +17,18 @@
       </span>
     </div>
 
-    <!-- 뒤로 가기 버튼 -->
+    <!-- 툴바 -->
     <div class="toolbar">
-      <!-- <button @click="goBack" :disabled="!backButtonHistory.length || currentFolderId === rootFolderId">뒤로 가기</button> -->
-      <button @click="createFolder">새 폴더</button>
-      <button @click="refreshFolderList">새로고침</button>
-      <input type="file" multiple @change="onFileChange" />
-      <button @click="uploadFiles" :disabled="!files.length">파일 업로드</button>
+
+      <!-- 파일 선택 라벨, 아이콘 추가 -->
+      <label for="file-upload" class="btn upload-btn">
+        <v-icon icon="mdi-upload" />
+        올리기
+      </label>
+      <input type="file" multiple @change="onFileChange" id="file-upload" hidden />
+
+      <!-- 새 폴더 버튼 -->
+      <button @click="createFolder" class="btn new-folder-btn">새 폴더</button>
     </div>
 
     <div v-if="uploadProgress.length">
@@ -35,33 +40,67 @@
       </ul>
     </div>
 
-    <!-- 폴더 목록 (드래그 앤 드롭 적용) -->
+    <!-- 폴더 목록 -->
     <div class="folder-list">
       <div v-for="folder in folderList" :key="folder.folderId" class="folder-item" draggable="true"
         @dragstart="onDragStart($event, 'folder', folder.folderId)" @dragover.prevent
-        @drop="onDrop($event, folder.folderId)" @click="navigateToFolder(folder.folderId)">
+        @drop="onDrop($event, folder.folderId)" @click="navigateToFolder(folder.folderId)"
+        @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
         <i class="folder-icon">📁</i>
         <span>{{ folder.folderName }}</span>
-        <button @click.stop="renameFolder(folder.folderId)">이름 변경</button>
-        <button @click.stop="deleteFolder(folder.folderId)">삭제</button>
-        <button @click.stop="moveFolder(folder.folderId)">이동</button>
       </div>
     </div>
 
+    <!-- 파일 목록 -->
     <div class="file-list">
       <div v-for="file in fileList" :key="file.fileId" class="file-item" draggable="true"
-        @dragstart="onDragStart($event, 'file', file.fileId)" @dragover.prevent @drop="onDrop($event, null)">
+        @dragstart="onDragStart($event, 'file', file.fileId)" @dragover.prevent @drop="onDrop($event, null)"
+        @contextmenu.prevent="showContextMenu($event, 'file', file)" @click="showFullFileName(file.fileId)">
+
+        <!-- 이미지 파일일 경우 -->
         <template v-if="isImage(file.fileName)">
           <img :src="file.fileUrl" alt="Image Preview" class="file-preview" />
+          <a :href="file.fileUrl" download :title="file.fileName">
+            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+          </a>
         </template>
+
+        <!-- PDF 파일일 경우 -->
+        <template v-else-if="isPdf(file.fileName)">
+          <embed :src="file.fileUrl" type="application/pdf" class="file-preview" />
+          <a :href="file.fileUrl" download :title="file.fileName">
+            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+          </a>
+        </template>
+
+        <!-- SVG 파일일 경우 -->
+        <template v-else-if="isSvg(file.fileName)">
+          <img :src="file.fileUrl" alt="SVG Preview" class="file-preview" />
+          <a :href="file.fileUrl" download :title="file.fileName">
+            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+          </a>
+        </template>
+
+        <!-- 기타 파일일 경우 -->
         <template v-else>
           <i class="file-icon">📄</i>
-        </template> <a :href="file.fileUrl" download>{{ file.fileName }}</a>
-        <button @click.stop="deleteFile(file.fileId)">삭제</button>
-        <button @click.stop="moveFile(file.fileId)">이동</button>
-        <button @click.stop="downloadFile(file.fileId)">다운로드</button>
+          <a :href="file.fileUrl" download :title="file.fileName">
+            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+          </a>
+        </template>
       </div>
     </div>
+
+    <!-- 컨텍스트 메뉴 -->
+    <div v-if="contextMenuVisible" class="context-menu"
+      :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }">
+      <ul>
+        <li v-if="selectedItemType === 'folder'" @click="renameItem">이름 변경</li>
+        <li v-if="selectedItemType === 'file'" @click="downloadFile(selectedItem.fileId)">다운로드</li>
+        <li @click="deleteItem">삭제</li>
+      </ul>
+    </div>
+
   </div>
 </template>
 
@@ -81,7 +120,11 @@ export default {
       breadcrumb: [], // 폴더 경로를 저장하는 배열
       draggedItem: null, // 드래그 중인 아이템
       draggedType: null, // 드래그 중인 타입 ('folder' 또는 'file')
-
+      contextMenuVisible: false, // 우클릭 메뉴 표시 여부
+      contextMenuPosition: { x: 0, y: 0 }, // 우클릭 메뉴 위치
+      selectedItem: null, // 선택한 항목 (파일 또는 폴더)
+      selectedItemType: null, // 선택한 항목의 타입 ('folder' 또는 'file')
+      clickedFileId: null, // 클릭한 파일의 ID를 저장
     };
   },
   methods: {
@@ -94,7 +137,10 @@ export default {
         this.currentFolderId = data.nowFolderId;
         this.folderList = data.folderListDto || [];
         this.fileList = data.fileListDto || [];
-        this.breadcrumb = [{ folderId: this.currentFolderId, folderName: data.nowFolderName }];
+        // '루트' 경로는 이미 있으므로 추가하지 않음
+        this.breadcrumb = data.nowFolderId === this.rootFolderId
+          ? []
+          : [{ folderId: this.currentFolderId, folderName: data.nowFolderName }];
       } catch (error) {
         console.error('채널 드라이브 로딩 실패:', error);
         alert('채널 드라이브 로딩 중 오류가 발생했습니다.');
@@ -209,6 +255,11 @@ export default {
     onFileChange(event) {
       this.files = Array.from(event.target.files);
       this.uploadProgress = Array(this.files.length).fill(0); // 업로드 진행상황 초기화
+
+      if (this.files.length > 0) {
+        // 파일이 선택되면 즉시 업로드 실행
+        this.uploadFiles();
+      }
     },
 
     // 파일 업로드
@@ -294,9 +345,65 @@ export default {
 
       await axios.post(`${process.env.VUE_APP_API_BASE_URL}/files/metadata`, metadataDto);
     },
+    async downloadFile(fileId) {
+      try {
+        // presigned URL 가져오기
+        const response = await axios.get(`http://localhost:8080/api/v1/files/${fileId}/download`);
+
+        const presignedUrl = response.data.result; // presigned URL 가져오기
+
+        // Blob을 사용하여 파일 다운로드
+        const fileResponse = await axios.get(presignedUrl, { responseType: 'blob' });
+
+        // 파일 이름 추출
+        const fileName = response.headers['content-disposition']
+          ? response.headers['content-disposition'].split('filename=')[1].replace(/"/g, '')
+          : 'downloaded_file';
+
+        // Blob을 파일로 변환하여 다운로드
+        const blob = new Blob([fileResponse.data], { type: fileResponse.headers['content-type'] });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.setAttribute('download', fileName); // 서버에서 전달된 파일 이름으로 설정
+        document.body.appendChild(link);
+        link.click(); // 링크 클릭 이벤트로 다운로드 시작
+        document.body.removeChild(link); // 링크 제거
+      } catch (error) {
+        console.error("파일 다운로드에 실패했습니다.", error);
+        alert("파일 다운로드 중 오류가 발생했습니다.");
+      }
+    },
+
+    // 파일 이름 전체 표시
+    showFullFileName(fileId) {
+      this.clickedFileId = fileId; // 클릭한 파일의 ID를 저장
+    },
+
+    // 파일 이름 일부만 표시
+    truncateFileName(fileName) {
+      const maxLength = 15;
+      if (fileName.length > maxLength) {
+        const start = fileName.slice(0, 8);
+        const end = fileName.slice(-5);
+        return `${start}...${end}`;
+      }
+      return fileName;
+    },
+
+
     isImage(fileName) {
       return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(fileName);
     },
+
+    isPdf(fileName) {
+      return /\.pdf$/i.test(fileName);
+    },
+
+    isSvg(fileName) {
+      return /\.svg$/i.test(fileName);
+    },
+
+
     // 파일 삭제
     async deleteFile(fileId) {
       try {
@@ -358,6 +465,63 @@ export default {
         console.error('폴더 이동 실패:', error);
         alert('폴더 이동 중 오류가 발생했습니다.');
       }
+    },
+
+    // 우클릭 메뉴 보이기
+    showContextMenu(event, type, item) {
+      event.preventDefault(); // 기본 우클릭 메뉴를 방지
+      this.contextMenuVisible = false; // 기존 메뉴 숨기기
+      this.contextMenuPosition = { x: event.clientX, y: event.clientY };
+      this.selectedItem = item;
+      this.selectedItemType = type;
+
+      // DOM 업데이트 후 메뉴가 보이도록 $nextTick 사용
+      this.$nextTick(() => {
+        this.contextMenuVisible = true;
+      });
+    },
+
+
+    // 우클릭 메뉴 숨기기
+    hideContextMenu() {
+      this.contextMenuVisible = false;
+      this.selectedItem = null;
+      this.selectedItemType = null;
+    },
+
+
+    // 이름 변경
+    async renameItem() {
+      if (this.selectedItemType === 'folder') {
+        await this.renameFolder(this.selectedItem.folderId);
+      } else if (this.selectedItemType === 'file') {
+        alert('파일 이름 변경은 현재 지원되지 않습니다.');
+      }
+
+      this.hideContextMenu();
+    },
+    // 삭제
+    async deleteItem() {
+      if (this.selectedItemType === 'folder') {
+        await this.deleteFolder(this.selectedItem.folderId);
+      } else if (this.selectedItemType === 'file') {
+        await this.deleteFile(this.selectedItem.fileId);
+      }
+
+      this.hideContextMenu();
+    },
+    // 이동
+    async moveItem() {
+      const newFolderId = prompt("이동할 폴더 ID를 입력하세요:");
+      if (!newFolderId) return;
+
+      if (this.selectedItemType === 'folder') {
+        await this.moveFolder(this.selectedItem.folderId, newFolderId);
+      } else if (this.selectedItemType === 'file') {
+        await this.moveFile(this.selectedItem.fileId, newFolderId);
+      }
+
+      this.hideContextMenu();
     },
 
     // 폴더 삭제
@@ -433,6 +597,14 @@ export default {
     // this.currentFolderId = this.currentFolderId || 1;
     this.loadChannelDrive();
   },
+  mounted() {
+    // window 클릭 이벤트 추가 (컨텍스트 메뉴 밖을 클릭하면 메뉴를 숨김)
+    window.addEventListener('click', this.hideContextMenu);
+  },
+  beforeUnmount() {
+    // 컴포넌트가 파괴되기 전 window 클릭 이벤트 제거
+    window.removeEventListener('click', this.hideContextMenu);
+  }
 };
 </script>
 
@@ -456,8 +628,38 @@ export default {
 
 .toolbar {
   display: flex;
+  align-items: center;
   gap: 10px;
   margin-bottom: 20px;
+}
+
+.select-all-checkbox {
+  margin-right: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.upload-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.new-folder-btn {
+  background-color: #f1f1f1;
+  color: #333;
+}
+
+.btn:hover {
+  opacity: 0.9;
 }
 
 .folder-list,
@@ -506,8 +708,35 @@ export default {
   width: 100px;
   height: 100px;
   object-fit: cover;
-  border: 1px solid lightgray;
-  margin-bottom: 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
 }
 
+.file-preview:hover {
+  transform: scale(1.05);
+}
+
+.context-menu {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.context-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.context-menu li {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.context-menu li:hover {
+  background-color: #eee;
+}
 </style>
