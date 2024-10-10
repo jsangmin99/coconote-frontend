@@ -319,23 +319,26 @@ export default {
         }
 
         // 삭제 check용
-        const updateAfterNodes = selectedNode.$anchor.path[0].content.content;
-        if (this.nodeLength > updateAfterNodes.length) {
-          // 개수가 생성 때 보다 적어졌을 때
-          const originAllFeIds = this.getAllBlockFeIds;
-          const updateAllFeIds = updateAfterNodes.map((el) => {
-            return el.attrs.id;
-          });
+        if (this.dragCheckSelectionNode == null) {
+          //drag 중이 아닐 때 가능
+          const updateAfterNodes = selectedNode.$anchor.path[0].content.content;
+          if (this.nodeLength > updateAfterNodes.length) {
+            // 개수가 생성 때 보다 적어졌을 때
+            const originAllFeIds = this.getAllBlockFeIds;
+            const updateAllFeIds = updateAfterNodes.map((el) => {
+              return el.attrs.id;
+            });
 
-          // originAllFeIds에 있는데 updateAllFeIds에 없는 값 찾기
-          const removedIds = originAllFeIds.filter(
-            (id) => !updateAllFeIds.includes(id)
-          );
+            // originAllFeIds에 있는데 updateAllFeIds에 없는 값 찾기
+            const removedIds = originAllFeIds.filter(
+              (id) => !updateAllFeIds.includes(id)
+            );
 
-          // return removedIds; // 사라진 ID 반환
-          this.$parent.deleteBlock(removedIds[0]);
+            // return removedIds; // 사라진 ID 반환
+            this.$parent.deleteBlock(removedIds[0]);
 
-          this.nodeLength = updateAllFeIds.length;
+            this.nodeLength = updateAllFeIds.length;
+          }
         }
 
         const updateBlockID = selectedNode?.$head?.path[3]?.attrs?.id;
@@ -477,17 +480,24 @@ export default {
         const changeNode = document.querySelector(
           `[data-id="${newContent.feId}"]`
         );
-        const targetDataId = (newContent.prevBlockId == null ) ? newContent.nextBlockId : newContent.prevBlockId;
-        const appendType = (newContent.prevBlockId == null ) ? "next" : "prev";
-        const targetNode =  document.querySelector(
+        const targetDataId =
+          newContent.prevBlockId == null
+            ? newContent.nextBlockId
+            : newContent.prevBlockId;
+        const appendType = newContent.prevBlockId == null ? "next" : "prev";
+        const targetNode = document.querySelector(
           `[data-id="${targetDataId}"]`
         );
         // 이동 실행: changeNode가 targetNode 앞에 이동
         if (changeNode && targetNode) {
-          if(appendType == "prev"){ // targetNode 뒤에 changeNode 추가
-            targetNode.parentNode.insertBefore(changeNode, targetNode.nextSibling);
-          }else{ // targetNode 앞에 changeNode 추가
-            targetNode.parentNode.insertBefore(changeNode, targetNode);
+          if (appendType == "prev") {
+            // targetNode 뒤에 changeNode 추가
+            console.log(`${targetDataId} [뒤에] 추가`);
+            targetNode.insertAdjacentElement("afterend", changeNode);
+          } else {
+            // targetNode 앞에 changeNode 추가
+            console.log(`${targetDataId} [앞에] 추가`);
+            targetNode.insertAdjacentElement("beforebegin", changeNode);
           }
         }
       } else {
