@@ -346,7 +346,8 @@ export default {
       }
     },
     changeOrderBlock(changeOrderObj) {
-      const { prevBlockId, nextBlockId, feId, contents, parentBlockId  } = changeOrderObj;
+      const { prevBlockId, nextBlockId, feId, contents, parentBlockId } =
+        changeOrderObj;
       console.log(
         "changeOrderBlock >> ",
         prevBlockId,
@@ -370,26 +371,45 @@ export default {
     async changeCanvasName() {
       console.error(this.room.title);
       const params = {
-        title : this.room.title,
-        parentCanvasId : null,
-        canvasId : this.canvasId,
-        channelId : this.getChannelId,
+        title: this.room.title,
+        parentCanvasId: null,
+        canvasId: this.canvasId,
+        channelId: this.getChannelId,
       };
       try {
-        const response = await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/canvas/${this.canvasId}`, params)
+        const response = await axios.patch(
+          `${process.env.VUE_APP_API_BASE_URL}/canvas/${this.canvasId}`,
+          params
+        );
         console.log(response);
         const updateCanvasTitle = response.data.result.title;
         this.room.title = updateCanvasTitle;
-        this.updateName()
+        this.updateName();
       } catch (error) {
         console.log(error);
       }
     },
     updateName() {
-      this.$emit('updateName', this.room.title);  // 변경된 값을 부모에게 전달
+      const obj = {
+        name: this.room.title,
+      };
+      this.$emit("updateName", obj); // 변경된 값을 부모에게 전달
     },
-    deleteCanvas() {
+    async deleteCanvas() {
       console.log("canvas 삭제 예정");
+      try {
+        const response = await axios.delete(
+          `${process.env.VUE_APP_API_BASE_URL}/canvas/${this.canvasId}`
+        );
+        console.log(response);
+        const obj = {
+          method: "deleteCanvas",
+          canvasId: this.canvasId
+        };
+        this.$emit("updateName", obj); // 변경된 값을 부모에게 전달
+      } catch (error) {
+        console.log(error);
+      }
     },
   },
   beforeUnmount() {

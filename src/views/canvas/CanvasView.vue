@@ -2,11 +2,18 @@
   <div class="channelInsideContainer">
     <ChannelCommonMenu :menu="'canvas'" :channelId="channelId" />
     <div class="channelInsideContentWrap">
+      <v-alert
+        v-if="isCanvasDelete"
+        color="error"
+        icon="$error"
+        title="안내"
+        text="현재 캔버스는 삭제된 캔버스 입니다."
+      ></v-alert>
       <v-row class="canvasContatiner ma-0">
         <v-col cols="2" class="canvasListContainer pa-0">
           <CanvasListComponent
             @updateCanvasId="updateCanvasId"
-            :canvasUpdateName="canvasUpdateName"
+            :canvasUpdateObj="canvasUpdateObj"
           />
           <!-- <v-list class="h-100">
             <v-list-item prepend-icon="mdi-home">Home</v-list-item>
@@ -60,11 +67,12 @@
           <div v-else-if="canvasId == null">
             <h1>캔버스가 없습니다.</h1>
           </div>
-          <CanvasDetailComponent v-else 
-            :canvasId="canvasId" 
+          <CanvasDetailComponent
+            v-else
+            :canvasId="canvasId"
             :key="canvasId"
-            :canvas-name="canvasUpdateName" 
-            @updateName="updateCanvasName"
+            :canvas-name="canvasUpdateObj"
+            @updateName="updateCanvasInfo"
           />
         </v-col>
       </v-row>
@@ -92,8 +100,9 @@ export default {
   data() {
     return {
       isLoading: false,
+      isCanvasDelete: false,
       canvasId: null, // 초기 canvasId 값
-      canvasUpdateName: null,
+      canvasUpdateObj: null,
     };
   },
   methods: {
@@ -101,11 +110,15 @@ export default {
       this.isLoading = true;
       console.log("canvasId 변경!", newCanvasId);
       this.canvasId = newCanvasId;
+      this.isCanvasDelete = false;
     },
-    updateCanvasName(newName) {
-      console.log("canvas 이름!! 변경!", newName);
-      this.canvasUpdateName = newName;  // CanvasDetail에서 전달된 이름으로 업데이트
-    }
+    updateCanvasInfo(obj) {
+      console.log("canvas 정보!! 변경!", obj);
+      this.canvasUpdateObj = obj; // CanvasDetail에서 전달된 이름으로 업데이트
+      if(obj.method && obj.method == "deleteCanvas"){
+        this.isCanvasDelete = true;
+      }
+    },
   },
 };
 </script>
