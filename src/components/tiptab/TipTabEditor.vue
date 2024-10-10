@@ -214,7 +214,11 @@ export default {
 
     this.editor = new Editor({
       extensions: [
-        Image,
+        Image.configure({
+          HTMLAttributes: {
+            class: "my-image",
+          },
+        }),
         StarterKit.configure({
           bulletList: false, // ol, ul, li 형식 허용 X
           orderedList: false,
@@ -259,9 +263,7 @@ export default {
 
               console.log("종료 후 이전 이후 값 >> >> ", recentSelectorJson);
 
-              this.$parent.changeOrderBlock(
-                recentSelectorJson
-              );
+              this.$parent.changeOrderBlock(recentSelectorJson);
               this.dragCheckEditorJson = null;
               this.dragCheckSelectionNode = null;
 
@@ -303,8 +305,6 @@ export default {
             }
             this.tempDragCheckSelectionNode = node;
             // Do something with the node
-            console.log("selectedNode :: ", this.tempDragCheckSelectionNode);
-            console.log("----------------------------");
           },
         }),
       ],
@@ -576,7 +576,7 @@ export default {
         if (editorJson[i].attrs?.id == targetId) {
           idGroupObj.prevBlockId = i > 0 ? editorJson[i - 1].attrs.id : null;
           idGroupObj.nextBlockId =
-            i < (editorJson.length-1) ? editorJson[i + 1].attrs.id : null;
+            i < editorJson.length - 1 ? editorJson[i + 1].attrs.id : null;
           break;
         }
       }
@@ -658,7 +658,38 @@ export default {
     insertImageToEditor(imageUrl) {
       if (this.editor) {
         if (imageUrl) {
-          this.editor.chain().focus().setImage({ src: imageUrl }).run();
+          const isSetImage = this.editor
+            .chain()
+            .focus()
+            .setImage({
+              src: imageUrl,
+            })
+            .run();
+          if (isSetImage) {
+            // 이미지 editor 추가 완료
+
+            // editor에서 존재하는 image 태그 돌아서, src가 매개변수인 imageUrl과 같은지 확인
+
+            const editorEl = document.getElementById("editorArea"); // 검색 영역
+            const imageEls = editorEl.querySelectorAll("img"); // image el 전체 검색
+
+            const foundImageEl = Array.from(imageEls).find(
+              (img) => img.getAttribute("src") === imageUrl
+            );
+            console.log("foundImageEl :: ", foundImageEl);
+            if (foundImageEl != undefined && foundImageEl != "") {
+              // 여기서 parent update 메소드 호출 -> image는 update 시, 기존 update 로직 활성화 X
+              const imagePrevNode = foundImageEl.previousSibling;
+              // const imageNextNode = foundImageEl.nextSibling;
+              this.$parent.updateBlock(
+                foundImageEl.getAttribute("data-id"),
+                "image",
+                foundImageEl.getAttribute("src"),
+                imagePrevNode != null ? imagePrevNode.getAttribute("data-id") : null,
+                null
+              );
+            }
+          }
         }
       }
     },

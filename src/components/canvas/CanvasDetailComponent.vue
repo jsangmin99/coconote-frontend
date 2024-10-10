@@ -135,12 +135,16 @@ export default {
           },
         };
         if (block.content != null) {
-          tempBlockObj.content = [
-            {
-              type: "text",
-              text: block.content == null ? "" : block.content,
-            },
-          ];
+          if (block.type == "image") {
+            tempBlockObj.attrs.src = block.content;
+          } else {
+            tempBlockObj.content = [
+              {
+                type: "text",
+                text: block.content,
+              },
+            ];
+          }
         }
 
         blockToEditorContentArr.push(tempBlockObj);
@@ -349,7 +353,7 @@ export default {
         feId,
         parentBlockId
       );
-      
+
       this.message = {
         canvasId: this.canvasId,
         method: "changeOrder",
