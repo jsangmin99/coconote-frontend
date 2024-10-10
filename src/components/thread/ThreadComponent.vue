@@ -1,12 +1,17 @@
 <template>
   <div class="container">
+    <div class="tag-filter-container">
+      <div v-for="(tag,index) in tagFilter" :key="index" >
+        <button @click="removeTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+      </div>
+    </div>
     <div class="list-group" ref="messageList" id="list-group">
       <div
         class="list-group-item"
-        v-for="(message,index) in messages.slice().reverse()"
+        v-for="(message,index) in filteredMessages.slice().reverse()"
         :key="message.id"
       >
-        <div v-if="index > 0 && this.isDifferentDay(message.createdTime,  messages.slice().reverse()[index-1].createdTime)">
+        <div v-if="index === 0 || (index > 0 && this.isDifferentDay(message.createdTime,  filteredMessages.slice().reverse()[index-1].createdTime))">
           <div style="display: flex; align-content: center; text-align: center; margin: auto;">
               <hr style="width: 27%; margin:auto;"><span style="margin:auto;">{{this.getDay(message.createdTime)}}</span><hr style="width: 27%; margin:auto;">
           </div>
@@ -26,6 +31,9 @@
           :tagList="tagList"
           :addTag="addTag"
           :removeTag="removeTag"
+          :addTagFilter="addTagFilter"
+          :removeTagFilter="removeTagFilter"
+          :tagFilter="tagFilter"
         />
       </div>
     </div>
@@ -97,6 +105,7 @@ export default {
       // uploadProgress: [], // 업로드 진행 상황
       filesRes: null,
       tagList: [],
+      tagFilter: [],
     };
   },
   created() {
@@ -113,7 +122,11 @@ export default {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
     this.scrollToBottom();
   },
-  updated() {},
+  updated() {
+    // if (!this.isLoading) {
+    //   this.checkAndScroll();
+    // }
+  },
   beforeUnmount() {
     // window.removeEventListener('scroll', this.scrollPagination)
     this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
@@ -129,10 +142,35 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['getWorkspaceId', 'getWorkspaceName'])
+    ...mapGetters(['getWorkspaceId', 'getWorkspaceName']),
+    filteredMessages() {
+      if (this.tagFilter.length === 0) {
+        this.checkAndScroll();
+        return this.messages; // 필터가 없으면 전체 메시지를 반환
+      }
+      return this.messages.filter(message => {
+        if (!message.tags) return false; // 태그가 없는 경우 제외
+
+        // 메시지의 태그가 tagFilter의 모든 태그를 포함하는지 확인
+        return this.tagFilter.every(filter => 
+          message.tags.some(tag => filter.id === tag.id)
+        );
+      });
+    }
   },
 
   methods: {
+    checkAndScroll() {
+      if (this.tagFilter.length === 0) {
+        this.scrollToBottom(); // 필터가 없을 때 스크롤을 아래로 이동
+      }
+    },
+    addTagFilter(tag){
+      this.tagFilter.push(tag)
+    },
+    removeTagFilter(tag){
+      this.tagFilter = this.tagFilter.filter(tagFilter => tagFilter.id !== tag.id);
+    },
     async getTagList(){
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/tag/list/${this.id}`);
       this.tagList = response.data.result
@@ -576,5 +614,15 @@ export default {
     width: 100%;
     white-space: pre-line;
 }
-
+.tag-filter-container{
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+.tag {
+  border-radius: 5px;
+  padding: 0 5px 1px 5px;
+  color: white;
+  font-size: 11px;
+}
 </style>

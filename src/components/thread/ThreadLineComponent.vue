@@ -17,7 +17,7 @@
         <!-- 태그 -->
         <div class="tag-group">
           <div class="tag-container" v-for="(tag,index) in this.tags" :key="index" >
-              <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+              <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
               <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
           </div>
           <button @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
@@ -87,7 +87,7 @@
   
 <script>
   export default {
-    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag'],
+    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter'],
     data() {
         return {
             message: "",
@@ -129,6 +129,18 @@
         document.removeEventListener("click", this.handleOutsideClick);
     },
     methods: {
+      addRemoveTagFilter(tag) {
+        // tagFilter가 정의되어 있는지 확인
+        const tagExists = this.tagFilter && this.tagFilter.some(t => t.id === tag.id);
+        
+        if (tagExists) {
+          // tag가 tagFilter에 있으면 removeTagFilter 호출
+          this.removeTagFilter(tag);
+        } else {
+          // tag가 tagFilter에 없으면 addTagFilter 호출
+          this.addTagFilter(tag);
+        }
+      },
       adjustWidth({target:{value}}) {
         this.inputWidth = this.$refs.tagInput.scrollWidth; // 입력 필드의 콘텐츠 너비를 기반으로 조정
         this.tagName = value
