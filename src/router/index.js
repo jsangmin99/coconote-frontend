@@ -11,6 +11,7 @@ import { channelRouter } from '@/router/channelRouter'
 import { driveRouter } from '@/router/driveRouter'
 import SearchComponent from '@/components/search/SearchComponent.vue';
 import { workspaceRouter } from '@/router/workspaceRouter';
+import { memberRouter } from './memberRouter';
 
 const routes = [
     {
@@ -53,7 +54,8 @@ const routes = [
     ...channelRouter,
     ...canvasRouter,
     ...threadRouter,
-    ...driveRouter
+    ...driveRouter,
+    ...memberRouter
 ]
 
 

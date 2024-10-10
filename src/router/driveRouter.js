@@ -1,5 +1,5 @@
 // driveRouter.js
-import DriveView from '@/views/drive/DriveView.vue';
+import DriveView from '@/views/drive/driveView.vue';
 
 export const driveRouter = [
     {
