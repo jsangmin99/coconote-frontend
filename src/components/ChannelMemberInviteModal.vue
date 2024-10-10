@@ -18,7 +18,7 @@
         <h3>현재 채널 멤버</h3>
         <div v-if="isLoadingMembers">로딩 중...</div>
         <div v-else>
-          <div v-for="member in channelMembers" :key="member.id" class="member-item">
+          <v-list v-for="member in channelMembers" :key="member.id" class="member-item">
             <img :src="member.memberInfo.profileImage || defaultProfileImage" alt="프로필 이미지" />
             <div class="member-info">
               <p>{{ member.memberInfo.nickname || '별명 없음' }}</p>
@@ -26,7 +26,7 @@
               <p>{{ member.memberInfo.workspaceMemberId }}</p>
               <p>역할: {{ member.channelRole }}</p>
             </div>
-          </div>
+          </v-list>
         </div>
 
         <!-- 멤버 검색 결과 -->
@@ -41,9 +41,9 @@
               <p>{{ member.email }}</p>
               <p>{{ member.workspaceMemberId }}</p>
             </div>
-            <button v-if="!isMemberInChannel(member)" @click="inviteMember(member.workspaceMemberId)">
+            <v-btn v-if="!isMemberInChannel(member)" @click="inviteMember(member.workspaceMemberId)">
                 초대
-              </button>
+              </v-btn>
               <span v-else>가입됨</span> <!-- 이미 가입된 멤버를 표시 -->
           </div>
         </div>

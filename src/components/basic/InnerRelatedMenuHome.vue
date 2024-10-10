@@ -15,17 +15,25 @@
       </v-menu>
     </v-btn>
 
-
-
     <v-list>
       <template v-for="section in sections" :key="section.sectionId">
         <v-list-subheader class="section-title">
           <v-icon icon="mdi-menu-right" />
           {{ section.sectionName }}
           <!-- 관리자일 때만 표시 -->
-          <v-icon class="icon-cog" icon="mdi-cog" />
-        </v-list-subheader>
+          <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon class="icon-cog">
+            <v-icon class="icon-cog">mdi-cog</v-icon>
+              <v-menu activator="parent">
+                <v-list>
+                  <v-list-item @click="editSection()">수정</v-list-item>
+                  <v-list-item @click="deleteSection()">삭제</v-list-item>
+                </v-list>
+              </v-menu>
+            </v-btn>
+          
 
+          <!-- <v-icon v-if="this.getWsRole !== 'USER'" class="icon-cog" icon="mdi-cog" /> -->
+        </v-list-subheader>
         <v-list-item v-for="channel in section.channelList" :key="channel.channelId" :class="{
           'selected-item': selectedChannelMenuId == channel.channelId,
         }" class="channel-item" @click="
@@ -171,6 +179,8 @@ export default {
       workspaceEditModal: false,
       editedName: "",
       editedWsInfo: "",
+      // sectionEditMode: false,
+      // editedSectionName: "",
     };
   },
   methods: {
@@ -291,6 +301,12 @@ export default {
       } catch (error) {
         console.log(error);
       }
+    },
+    async editSection() {
+      
+    },
+    async deleteSection() {
+    
     },
   },
 };
