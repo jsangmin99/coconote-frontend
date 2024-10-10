@@ -72,9 +72,10 @@ export default {
 
         if (response.data.result) {
           const memberInfo = {
-            nickname: response.data.result.nickname,
             workspaceMemberId: response.data.result.workspaceMemberId,
             profileImage: response.data.result.profileImage,
+            nickname: response.data.result.nickname,
+            name: response.data.result.name,
             wsRole: response.data.result.wsRole,
           };
           this.setMemberInfoActions(memberInfo); // Vuex에 멤버 정보 저장
