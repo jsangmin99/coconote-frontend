@@ -1,5 +1,10 @@
 <template>
   <div class="container">
+    <div class="tag-filter-container">
+      <div v-for="(tag,index) in tagFilter" :key="index" >
+        <button @click="removeTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+      </div>
+    </div>
     <div class="list-group" ref="messageList" id="list-group">
       <div
         class="list-group-item"
@@ -118,9 +123,9 @@ export default {
     this.scrollToBottom();
   },
   updated() {
-    if (!this.isLoading) {
-      this.checkAndScroll();
-    }
+    // if (!this.isLoading) {
+    //   this.checkAndScroll();
+    // }
   },
   beforeUnmount() {
     // window.removeEventListener('scroll', this.scrollPagination)
@@ -140,6 +145,7 @@ export default {
     ...mapGetters(['getWorkspaceId', 'getWorkspaceName']),
     filteredMessages() {
       if (this.tagFilter.length === 0) {
+        this.checkAndScroll();
         return this.messages; // 필터가 없으면 전체 메시지를 반환
       }
       return this.messages.filter(message => {
@@ -608,5 +614,15 @@ export default {
     width: 100%;
     white-space: pre-line;
 }
-
+.tag-filter-container{
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+.tag {
+  border-radius: 5px;
+  padding: 0 5px 1px 5px;
+  color: white;
+  font-size: 11px;
+}
 </style>
