@@ -13,6 +13,8 @@ import SearchComponent from '@/components/search/SearchComponent.vue';
 import { workspaceRouter } from '@/router/workspaceRouter';
 import { memberRouter } from './memberRouter';
 
+import Invitation from '@/views/workspace/InvitationView.vue'; // Invitation.vue 컴포넌트 추가
+
 const routes = [
     {
         // path로도 라우팅이 가능하고, name으로도 라우팅이 가능
@@ -39,7 +41,7 @@ const routes = [
         component: OAuth2Success, // 컴포넌트 경로를 실제 파일로 변경해 주세요.
     },
     {
-        path: '/member',
+        path: '/member/:workspaceId',
         name: 'MemberView',
         component: MemberView,
         props: true
@@ -49,6 +51,13 @@ const routes = [
         name: 'SEARCH',
         component: SearchComponent,
         props: true  // workspaceId를 props로 전달하기 위해 설정
+    },
+    {
+        path: '/invite', // 초대 링크 라우터 추가
+        name: 'INVITATION',
+        meta: { showHeaderAndSidebar: false },
+        component: Invitation, // Invitation 컴포넌트를 연결
+        props: (route) => ({ token: route.query.token })  // 초대 링크의 token 쿼리 파라미터를 props로 전달
     },
     ...workspaceRouter,
     ...channelRouter,

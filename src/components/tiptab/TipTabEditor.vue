@@ -155,6 +155,7 @@ import DragHandle from "@tiptap-pro/extension-drag-handle";
 import NodeRange from "@tiptap-pro/extension-node-range";
 // import { isChangeOrigin } from "@tiptap/extension-collaboration";
 // import DraggableItem from '@/components/tiptab/DraggableItem'
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   components: {
@@ -169,6 +170,13 @@ export default {
       type: Object,
       required: false,
     },
+  },
+  computed: {
+    ...mapGetters([
+      "getBlockFeIdIndex",
+      "getTargetBlockPrevFeId",
+      "getTargetBlockPrevFeIdIndex",
+    ]),
   },
 
   data() {
@@ -226,51 +234,9 @@ export default {
       onUpdate: () => {
         this.localHTML = this.editor.getHTML();
         this.localJSON = this.editor.getJSON();
-
-        // const selectedNode = this.editor.state.selection;
-
-        // console.log(this.recentKeyboardKey)
-
-        // console.log('⭐ Node:', selectedNode);
-        // if (!selectedNode) {
-        //   return false;
-        // }
-
-        // const updateBlockID = selectedNode?.$head?.path[3]?.attrs?.id;
-        // if (!updateBlockID) {
-        //   return false;
-        // }
-        // const updateContent =
-        //   selectedNode?.$head?.path[3]?.content?.content[0]?.text;
-
-        // // console.log('⭐ Node:', updateBlockID, updateContent);
-        // const searchElAndPrevEl = this.findPreviousId(
-        //   this.localJSON.content,
-        //   updateBlockID
-        // );
-
-        // const previousId = searchElAndPrevEl[0];
-        // const targetElType = searchElAndPrevEl[1];
-
-        // // console.error("➡️prev➡️➡️", previousId);
-        // const parentId = null;
-
-        // // 여기서 감지해서 보내기
-        // this.$parent.updateBlock(
-        //   updateBlockID,
-        //   targetElType,
-        //   updateContent == "" ? "" : updateContent,
-        //   previousId,
-        //   parentId
-        // );
       },
       content: this.defaultContent,
     });
-
-    // this.editor.on("beforeCreate", ({ editor }) => {
-    //   // Before the view is created.
-    //   console.log(`beforeCreate`, editor);
-    // });
 
     this.editor.on("create", ({ editor }) => {
       // The editor is ready.
@@ -278,11 +244,6 @@ export default {
       this.localHTML = editor.getHTML();
       this.localJSON = editor.getJSON();
     });
-
-    // this.editor.on("update", ({ editor }) => {
-    //   // The content has changed.
-    //   console.log(`update`, editor.view?.trackWrites?.data, editor);
-    // });
 
     this.editor.on("selectionUpdate", ({ editor }) => {
       // The selection has changed.
@@ -295,11 +256,10 @@ export default {
       //   editor
       // );
 
+      // 처음부터 delete 엎어서 진행해보기.....
+
       const selectedNode = editor.state.selection;
       let isReturn = true;
-      console.log("😭😭😭😭😭");
-      console.log(selectedNode);
-      console.log("😭😭😭😭😭");
 
       if (!selectedNode) {
         return false;
@@ -329,7 +289,12 @@ export default {
       // 삭제 확인 : keyCode 감지하려면 우선순위때문에 삭제한 id가 안나옴..
       const originTargetBlockId = editor.view?.trackWrites?.dataset?.id;
       const originTargetBlockContents = editor.view?.trackWrites?.data;
-      console.error(originTargetBlockId, originTargetBlockContents, updateBlockID);
+      console.error(
+        originTargetBlockId,
+        originTargetBlockContents,
+        updateBlockID,
+        "<< 삭제여부 확인용"
+      );
       if (
         originTargetBlockContents == undefined &&
         originTargetBlockId != undefined
@@ -343,6 +308,16 @@ export default {
           console.error("삭제다!!!");
           this.$parent.deleteBlock(originTargetBlockId);
           isReturn = false;
+        } else {
+          // 삭제 target block 말고 이전 block 함께 체크
+          const prevBlockId = this.getTargetBlockPrevFeId(originTargetBlockId);
+          const prevResult = this.localJSON.content.find(
+            (item) => item.attrs && item.attrs.id === prevBlockId
+          );
+          if (prevResult == undefined) {
+            this.$parent.deleteBlock(prevBlockId);
+            isReturn = false;
+          }
         }
       }
 
@@ -372,32 +347,9 @@ export default {
       );
     });
 
-    // this.editor.on("transaction", ({ editor, transaction }) => {
-    //   // The editor state has changed.
-    //   console.log(`transaction`,  editor.view?.trackWrites?.data, transaction);
-    // });
-
-    // this.editor.on("focus", ({ editor, event }) => {
-    //   // The editor is focused.
-    //   console.log(`focus `, editor, event);
-    // });
-
-    // this.editor.on('blur', ({ editor, event }) => {
-    //   // The editor isn’t focused anymore.
-    //   console.log(`blur `,editor,event)
-    // })
-
-    // this.editor.on("destroy", () => {
-    //   // The editor is being destroyed.
-    //   console.log(`destroy`);
-    // });
-
-    // this.editor.on("contentError", ({ editor, error, disableCollaboration }) => {
-    //   // The editor content does not match the schema.
-    //   console.log(`contentError`, editor, error, disableCollaboration);
-    // });
   },
   methods: {
+    ...mapActions(["pushBlockFeIdsActions", "deleteBlockTargetFeIdActions"]),
     findPreviousId(obj, targetId) {
       return this.recursiveSearch(obj, targetId);
     },
@@ -489,37 +441,6 @@ export default {
         return false;
       }
 
-      // const from = this.editor.state.selection.from
-      // const to = this.editor.state.selection.to
-
-      // const endPos = this.editor.state.doc.nodeSize - 2
-      // console.log(endPos,from,to)
-      // // Cut out content from range and put it at the end of the document
-      // this.editor.commands.cut({ from, to }, endPos)
-
-      // nodesChanged.value = true;
-      // this.editor.commands.insertContentAt(1, [
-      //     {
-      //       type: 'paragraph',
-      //       content: [
-      //         {
-      //           type: 'text',
-      //           text: '으아아아압 테스트 insert 1번째 줄!!!!',
-      //         },
-      //       ],
-      //     },
-      //   ],
-      //   {
-      //     updateSelection: true,
-      //     parseOptions: {
-      //       preserveWhitespace: 'full',
-      //     },
-      //   }
-      // )
-
-      // nodesChanged.value = false;
-      // 여기에 content 변경 시 처리할 로직 추가
-      // this.editor.setContent(newContent); // 예: TipTap 에디터에 새로운 내용을 반영
     },
     onKeydown(event) {
       this.recentKeyboardKey = event.keyCode; // 누른 키 값을 저장

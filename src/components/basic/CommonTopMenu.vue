@@ -28,20 +28,6 @@
           </v-col>
         </v-row>
       </v-form>
-      <v-row>
-        <v-col cols="auto" v-if="isLoading == true">
-          <v-select
-            v-model="workspaceId"
-            :items="items"
-            outlined
-            single-line
-            hide-details
-            dense
-            class="inline"
-            style="font-size: 0.9rem"
-          ></v-select>
-        </v-col>
-      </v-row>
     </template>
   </v-app-bar>
   <CreateWorkspaceModal
@@ -53,8 +39,8 @@
 
 <script>
 import axios from "axios";
-import CreateWorkspaceModal from "@/components/createSpaces/CreateWorkspaceModal.vue";
-import { mapGetters } from "vuex";
+import CreateWorkspaceModal from "@/components/basic/CreateWorkspaceModal.vue";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   computed: {
@@ -70,6 +56,7 @@ export default {
       selectedValue: null,
       createWorkspace: false,
       isLoading: false,
+      workspaceInfo: [],
     };
   },
   created() {
@@ -78,22 +65,63 @@ export default {
     this.fetchMyWorkspaceList();
   },
   methods: {
+      ...mapActions([
+      "setWorkspaceInfoActions",
+      "setWorkspaceNameInfoActions",
+      "setMemberInfoActions",
+      "setChannelInfoActions",
+      "setChannelNameInfoActions",
+      "setChannelDescInfoActions",
+    ]),
     async fetchMyWorkspaceList() {
       try {
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/workspace/list`
         );
         this.items = response.data.result; // 내 워크스페이스 목록 가져오기
-
-        console.log(response.data.result);
-
         this.isLoading = true;
       } catch (e) {
         console.log(e);
       }
     },
-    emitSelected() {
+    async fetchWorkspaceInfo() {
+      try {
+        const wsInfo = await axios.get( // 워크스페이스 정보
+          `${process.env.VUE_APP_API_BASE_URL}/workspace/info/${this.selectedValue}`
+        );
+        this.setWorkspaceInfoActions(wsInfo.data.result.workspaceId);
+        this.setWorkspaceNameInfoActions(wsInfo.data.result.name);
+
+
+        const response = await axios.get( // 내 워크스페이스 회원 정보
+          `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.selectedValue}`
+        );
+        const myInfo = {
+          nickname: response.data.result.nickname,
+          workspaceMemberId: response.data.result.workspaceMemberId,
+          profileImage: response.data.result.profileImage,
+          wsRole: response.data.result.wsRole,
+        };
+        this.setMemberInfoActions(myInfo);
+        
+
+        const chInfo = await axios.get( // 채널 정보
+        `${process.env.VUE_APP_API_BASE_URL}/${this.selectedValue}/channel/first` 
+        );
+        this.setChannelInfoActions(chInfo.data.result.channelId); 
+        this.setChannelNameInfoActions(chInfo.data.result.channelName);
+        this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
+
+      this.isLoading = true;
+      } catch (e) {
+        console.log(e);
+      }
+
+    },
+    async emitSelected() {
       this.$emit("selected", this.selectedValue);
+      this.fetchWorkspaceInfo();
+      window.location.reload();
     },
     showWorkspaceModal() {
       this.createWorkspace = true;

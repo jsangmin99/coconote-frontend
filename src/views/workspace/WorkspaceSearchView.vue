@@ -33,6 +33,9 @@ export default {
       "setWorkspaceInfoActions",
       "setWorkspaceNameInfoActions",
       "setMemberInfoActions", // 추가: 멤버 정보를 저장하는 Vuex 액션
+      "setChannelInfoActions",
+      "setChannelNameInfoActions",
+      "setChannelDescInfoActions",
     ]),
 
     // 워크스페이스 정보를 가져오는 메소드
@@ -73,6 +76,7 @@ export default {
             profileImage: response.data.result.profileImage,
             nickname: response.data.result.nickname,
             name: response.data.result.name,
+            wsRole: response.data.result.wsRole,
           };
           this.setMemberInfoActions(memberInfo); // Vuex에 멤버 정보 저장
         }
@@ -86,7 +90,11 @@ export default {
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/${this.workspaceId}/channel/first` // 채널 정보 API
       );
+      this.setChannelInfoActions(response.data.result.channelId);
+      this.setChannelNameInfoActions(response.data.result.channelName);
+      this.setChannelDescInfoActions(response.data.result.channelInfo);
       this.$router.push(`/channel/${response.data.result.channelId}`);
+
     },
 
     // 홈으로 리다이렉트

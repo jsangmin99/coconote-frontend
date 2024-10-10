@@ -1,6 +1,22 @@
 <template>
   <v-navigation-drawer permanent class="innerSubMenu" :absolute="false">
     <h1>{{ this.getWorkspaceName }}</h1>
+    <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon color="#32446e">
+      <v-icon>mdi-cog</v-icon>
+      <v-menu activator="parent">
+        <v-list>
+          <v-list-item @click="startEditing(this.getWorkspaceId)">
+            수정
+          </v-list-item>
+            <v-list-item @click="deleteWorkspace(this.getWorkspaceId)">
+            삭제
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-btn>
+
+
+
     <v-list>
       <template v-for="section in sections" :key="section.sectionId">
         <v-list-subheader class="section-title">
@@ -13,9 +29,17 @@
         <v-list-item
           v-for="channel in section.channelList"
           :key="channel.channelId"
-          :class="{ 'selected-item': selectedChannelMenuId == channel.channelId }"
+          :class="{
+            'selected-item': selectedChannelMenuId == channel.channelId,
+          }"
           class="channel-item"
-          @click="changeChannel(channel.channelId, channel.channelName)"
+          @click="
+            changeChannel(
+              channel.channelId,
+              channel.channelName,
+              channel.channelInfo
+            )
+          "
         >
           <template v-slot:prepend>
             <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
@@ -28,7 +52,8 @@
         <v-list-item
           class="channelCreate"
           @click="
-            (channelDialog = true), (createChannelInfo.sectionId = section.sectionId)
+            (channelDialog = true),
+              (createChannelInfo.sectionId = section.sectionId)
           "
         >
           <v-icon class="icon-plus" icon="mdi-plus" />
@@ -36,7 +61,10 @@
         </v-list-item>
       </template>
 
-      <v-list-subheader class="section-title sectionCreate" @click="sectionDialog = true">
+      <v-list-subheader
+        class="section-title sectionCreate"
+        @click="sectionDialog = true"
+      >
         <v-icon class="icon-plus" icon="mdi-plus" /> 섹션 생성
       </v-list-subheader>
     </v-list>
@@ -65,7 +93,11 @@
           @keyup.enter="createChannel"
           placeholder="이름"
         ></v-text-field>
-        <v-radio-group inline label="채널종류" v-model="createChannelInfo.isPublic">
+        <v-radio-group
+          inline
+          label="채널종류"
+          v-model="createChannelInfo.isPublic"
+        >
           <v-radio label="공개채널" value="1"></v-radio>
           <v-radio label="비공개 채널" value="0"></v-radio>
         </v-radio-group>
@@ -98,14 +130,35 @@
       </template>
     </v-card>
   </v-dialog>
+
+
+      <v-dialog v-model="workspaceEditModal" max-width="500px" class="workspaceEditModal">
+       <v-card>
+        <v-card-title class="text-h5 text-center">워크스페이스 정보 수정</v-card-title>
+        <v-card-text>
+         <v-list>
+          <v-text-field v-model="editedName" placeholder="이름"></v-text-field>
+          <v-text-field v-model="editedWsInfo" placeholder="설명"></v-text-field>
+         </v-list>      
+      </v-card-text>
+      <v-btn text="수정" color="blue" @click="saveEditing(this.getWorkspaceId)"></v-btn>
+    </v-card>
+    </v-dialog>
+
+
 </template>
 
 <script>
 import axios from "axios";
-import { mapGetters } from "vuex";
-import { mapActions } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
+  props: {
+    // workspaceId
+    selectedValue: {
+      type: Number,
+    },
+  },
   name: "InnerRelatedMenuHome",
   components: {},
   computed: {
@@ -118,13 +171,15 @@ export default {
 
       handler(newChannelId) {
         console.error(newChannelId);
-        this.selectedChannelMenuId = newChannelId;
-        this.changeChannel(newChannelId);
+        if (newChannelId != this.selectedChannelMenuId) {
+          this.selectedChannelMenuId = newChannelId;
+          this.changeChannel(newChannelId);
+        }
       },
     },
   },
   created() {
-    this.selectedChannelMenuId = this.$route.params.channelId;
+    // this.selectedChannelMenuId = this.$route.params.channelId;
   },
   mounted() {
     this.getSectionData();
@@ -133,7 +188,7 @@ export default {
   data() {
     return {
       sections: [],
-      selectedMenuId : null,
+      selectedMenuId: null,
       selectedChannelMenuId: null,
       sectionDialog: false,
       channelDialog: false,
@@ -144,10 +199,18 @@ export default {
         channelInfo: "",
         isPublic: 1,
       },
+      workspaceEditModal: false,
+      editedName: "",
+      editedWsInfo: "",
     };
   },
   methods: {
-    ...mapActions(["setChannelInfoActions", "setChannelNameInfoActions"]),
+    ...mapActions([
+      "setChannelInfoActions",
+      "setChannelNameInfoActions",
+      "setChannelDescInfoActions",
+      "setWorkspaceNameInfoActions",
+    ]),
     async getSectionData() {
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
@@ -155,11 +218,12 @@ export default {
       console.log("/section/list/workspaceId", response);
       this.sections = response.data.result;
     },
-    async changeChannel(id,name) {
+    async changeChannel(id, name, desc) {
       this.selectedChannelMenuId = id;
       // window.location.href = `/channel/${id}`;
       this.setChannelInfoActions(id); // Vuex store에 업데이트
       this.setChannelNameInfoActions(name); // Vuex store에 업데이트
+      this.setChannelDescInfoActions(desc); // Vuex store에 업데이트
 
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/channel/${this.$store.getters.getChannelId}/isjoin`
@@ -167,9 +231,9 @@ export default {
 
       const isJoin = response.data.result;
 
-      if(isJoin){
+      if (isJoin) {
         this.$router.push(`/channel/${id}/thread/view`);
-      }else{
+      } else {
         this.$router.push(`/channel/${id}`);
       }
     },
@@ -179,7 +243,10 @@ export default {
           workspaceId: this.getWorkspaceId,
           sectionName: this.createSectionName,
         };
-        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/section/create`, data);
+        await axios.post(
+          `${process.env.VUE_APP_API_BASE_URL}/section/create`,
+          data
+        );
         this.getSectionData();
       } catch (error) {
         console.log(error);
@@ -198,8 +265,52 @@ export default {
         return false;
       }
       try {
-        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/channel/create`, data);
+        await axios.post(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/create`,
+          data
+        );
         this.getSectionData();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async startEditing(workspaceId) {
+      try {
+        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/info/${workspaceId}`);
+        this.editedName = response.data.result.name;
+        this.editedWsInfo = response.data.result.wsInfo;
+        this.workspaceEditModal = true;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async saveEditing(workspaceId) {
+      try {
+        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/workspace/update/${workspaceId}`, 
+          {
+            name: this.editedName,
+            wsInfo: this.editedWsInfo
+          }
+        );
+        this.setWorkspaceNameInfoActions(this.editedName);
+        alert("워크스페이스 정보가 수정되었습니다.");
+        this.workspaceEditModal = false;
+        window.location.reload();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async deleteWorkspace(workspaceId) {
+      try {
+        if (window.confirm("워크스페이스를 삭제하시겠습니까?")) {
+        // "예" 선택
+        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/workspace/delete/${workspaceId}`);
+        alert("워크스페이스가 삭제되었습니다.");
+        window.location.href = "/workspace";
+        } else {
+        // "아니오" 선택
+        console.log("작업이 취소되었습니다.");
+        } 
       } catch (error) {
         console.log(error);
       }
