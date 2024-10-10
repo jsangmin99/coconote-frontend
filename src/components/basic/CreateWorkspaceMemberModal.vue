@@ -38,7 +38,11 @@ export default {
     methods: {
         async sendMail() {
     try {
-        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/email/request/${this.selectedValue}?email=${this.email}`);
+      const workspaceId = localStorage.getItem('workspaceId');
+        if (!workspaceId) {
+          throw new Error('Workspace ID is missing');
+        }
+        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/workspace/${workspaceId}/invite?email=${this.email}`);
         this.$emit('update:dialog', false);
     } catch(e) {
         console.log(e);
