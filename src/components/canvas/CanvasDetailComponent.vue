@@ -175,7 +175,7 @@ export default {
     recvMessage(recv) {
       if (recv.type === "CANVAS") {
         const blockJson = JSON.parse(recv.message);
-        // console.log("blockJson", blockJson);
+        console.error("blockJson >> ", blockJson);
         if (this.activeBlockId == blockJson.feId) {
           // if (this.member == blockJson.member) {
           console.log(

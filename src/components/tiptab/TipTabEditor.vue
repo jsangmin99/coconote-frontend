@@ -214,9 +214,6 @@ export default {
     },
   },
   mounted() {
-    let uuid = crypto.randomUUID();
-    console.log("uuid >> ", uuid);
-
     this.editor = new Editor({
       extensions: [
         Image.configure({
@@ -317,8 +314,6 @@ export default {
         const selectedNode = this.editor.state.selection;
         let isReturn = true;
 
-        console.log("onUpdate :: ", selectedNode);
-
         if (!selectedNode) {
           return false;
         }
@@ -331,16 +326,15 @@ export default {
           const updateAllFeIds = updateAfterNodes.map((el) => {
             return el.attrs.id;
           });
-          console.log("개수비교~~", originAllFeIds, updateAllFeIds);
+
           // originAllFeIds에 있는데 updateAllFeIds에 없는 값 찾기
           const removedIds = originAllFeIds.filter(
             (id) => !updateAllFeIds.includes(id)
           );
 
-          console.log("사라진 ID:", removedIds);
           // return removedIds; // 사라진 ID 반환
           this.$parent.deleteBlock(removedIds[0]);
-          
+
           this.nodeLength = updateAllFeIds.length;
         }
 
@@ -351,15 +345,15 @@ export default {
         const updateContent =
           selectedNode?.$head?.path[3]?.content?.content[0]?.text;
 
-        console.log(
-          "⭐ Node:",
-          updateBlockID,
-          updateContent,
-          this.editor.view?.trackWrites?.dataset?.id,
-          updateContent == "",
-          this.editor.view?.trackWrites?.data,
-          updateContent == undefined
-        );
+        // console.log(
+        //   "⭐ Node:",
+        //   updateBlockID,
+        //   updateContent,
+        //   this.editor.view?.trackWrites?.dataset?.id,
+        //   updateContent == "",
+        //   this.editor.view?.trackWrites?.data,
+        //   updateContent == undefined
+        // );
 
         if (this.localJSON.content == undefined) {
           this.localJSON = this.editor.getJSON();
@@ -369,7 +363,7 @@ export default {
         const filteredItems = this.localJSON?.content.filter(
           (item) => item.attrs.id === updateBlockID
         );
-        console.log(filteredItems);
+
         if (filteredItems.length > 0) {
           if (
             filteredItems[0].content != undefined &&
@@ -378,7 +372,6 @@ export default {
             isReturn = false; // 값이 동일하다면 보내지 않음
           }
         }
-        console.log("333", isReturn);
 
         // 삭제 method를 보내지 않았다면
         if (!isReturn) {
@@ -421,11 +414,6 @@ export default {
 
     this.editor.on("create", ({ editor }) => {
       // The editor is ready.
-      console.log(`create`, editor);
-      console.log(
-        "초기 개수 >> ",
-        editor.view.state.selection.$anchor.path[0].content.content.length
-      );
       this.nodeLength =
         editor.view.state.selection.$anchor.path[0].content.content.length;
       this.localHTML = editor.getHTML();
@@ -472,7 +460,6 @@ export default {
         "부모 컴포넌트로부터 새로운 content를 받았습니다:",
         newContent
       );
-      console.log(this.editor);
 
       let targetElement = document.querySelector(
         `#editorArea [data-id="${newContent.feId}"]`
@@ -483,6 +470,25 @@ export default {
         if (targetElement) {
           // ⭐ 자식 생각 필요
           targetElement.remove();
+        }
+      } else if (newContent.method == "changeOrder") {
+        // 순서변경의 경우
+        console.log("부모로부터 순서변경 감지!!! ");
+        const changeNode = document.querySelector(
+          `[data-id="${newContent.feId}"]`
+        );
+        const targetDataId = (newContent.prevBlockId == null ) ? newContent.nextBlockId : newContent.prevBlockId;
+        const appendType = (newContent.prevBlockId == null ) ? "next" : "prev";
+        const targetNode =  document.querySelector(
+          `[data-id="${targetDataId}"]`
+        );
+        // 이동 실행: changeNode가 targetNode 앞에 이동
+        if (changeNode && targetNode) {
+          if(appendType == "prev"){ // targetNode 뒤에 changeNode 추가
+            targetNode.parentNode.insertBefore(changeNode, targetNode.nextSibling);
+          }else{ // targetNode 앞에 changeNode 추가
+            targetNode.parentNode.insertBefore(changeNode, targetNode);
+          }
         }
       } else {
         // 생성이나, 현재 targetElement가 없는 update의 경우
@@ -497,6 +503,7 @@ export default {
             orderedList: "ol",
             bulletList: "ul",
             listItem: "li",
+            image: "img",
           };
 
           let elTagType = typeEl[newContent.type];
@@ -506,7 +513,11 @@ export default {
 
           let newElement = document.createElement(elTagType);
           newElement.setAttribute("data-id", newContent.feId);
-          newElement.textContent = newContent.contents;
+          if (elTagType == "img") {
+            newElement.src = newContent.contents;
+          } else {
+            newElement.textContent = newContent.contents;
+          }
 
           if (newContent.prevBlockId != null) {
             let prevElement = document.querySelector(
@@ -643,7 +654,7 @@ export default {
         `${process.env.VUE_APP_API_BASE_URL}/files/metadata`,
         metadataDto
       );
-      console.log(response.data.result);
+
       this.tempFilesRes = response.data.result[0].fileUrl;
       // 에디터에 이미지 삽입
       this.insertImageToEditor(this.tempFilesRes);
@@ -671,7 +682,7 @@ export default {
             const foundImageEl = Array.from(imageEls).find(
               (img) => img.getAttribute("src") === imageUrl
             );
-            console.log("foundImageEl :: ", foundImageEl);
+
             if (foundImageEl != undefined && foundImageEl != "") {
               // 여기서 parent update 메소드 호출 -> image는 update 시, 기존 update 로직 활성화 X
               const imagePrevNode = foundImageEl.previousSibling;
