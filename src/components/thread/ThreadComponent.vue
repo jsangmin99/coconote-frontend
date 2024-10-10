@@ -1,10 +1,12 @@
 <template>
-  <div class="container">
+  <div v-if="!isComment" class="container">
+    <!-- 필터 태그 -->
     <div class="tag-filter-container">
       <div v-for="(tag,index) in tagFilter" :key="index" >
         <button @click="removeTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
       </div>
     </div>
+    <!-- 스레드 그룹 -->
     <div class="list-group" ref="messageList" id="list-group">
       <div
         class="list-group-item"
@@ -17,13 +19,8 @@
           </div>
         </div>
         <ThreadLineComponent
-          :id="message.id"
-          :image="message.image"
-          :nickName="message.memberName"
+          :thread="message"
           :createdTime="this.getTime(message.createdTime)"
-          :content="message.content"
-          :files="message.files"
-          :tags="message.tags"
           :updateMessage="updateMessage"
           :deleteMessage="deleteMessage"
           :deleteFile="deleteFile"
@@ -34,12 +31,13 @@
           :addTagFilter="addTagFilter"
           :removeTagFilter="removeTagFilter"
           :tagFilter="tagFilter"
+          :commentIn="commentIn"
         />
       </div>
     </div>
     
+    <!-- 입력 그룹 -->
     <div class="input-group">
-
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index">
           <button type="button" @click="deleteImage(index)">삭제</button>
@@ -59,6 +57,71 @@
         />
         <div class="input-group-append">
           <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList.length === 0">보내기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- 댓글 부분 -->
+  <div v-if="isComment" class="container">
+    <div class="thread-title">
+      <button @click="commentOut">back</button>
+      <h2>스레드</h2>
+    </div>
+    <div class="comment-group">
+      <ThreadLineComponent
+        :thread="parentThread"
+        :createdTime="this.getTime(parentThread.createdTime)"
+        :updateMessage="updateMessage"
+        :deleteMessage="deleteMessage"
+        :deleteFile="deleteFile"
+        :createAndAddTag="createAndAddTag"
+        :tagList="tagList"
+        :addTag="addTag"
+        :removeTag="removeTag"
+        :addTagFilter="addTagFilter"
+        :removeTagFilter="removeTagFilter"
+        :tagFilter="tagFilter"
+      />
+      <h5>밑으로 댓글</h5>
+      <div v-for="(message,index) in parentThread.childThreads" :key="index">
+        <ThreadLineComponent
+          :thread="message"
+          :createdTime="this.getTime(message.createdTime)"
+          :updateMessage="updateMessage"
+          :deleteMessage="deleteMessage"
+          :deleteFile="deleteFile"
+          :createAndAddTag="createAndAddTag"
+          :tagList="tagList"
+          :addTag="addTag"
+          :removeTag="removeTag"
+          :addTagFilter="addTagFilter"
+          :removeTagFilter="removeTagFilter"
+          :tagFilter="tagFilter"
+        />
+      </div>
+      <!-- 입력 그룹 -->
+      <div class="input-group">
+        <!-- 파일 올리기 -->
+        <div class="image-group">
+          <div v-for="(file, index) in fileList" :key="index">
+            <button type="button" @click="deleteImage(index)">삭제</button>
+            <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+            <p class="custom-contents">{{file.name}}</p>
+          </div>
+        </div>
+          <!-- 내용 작성란 -->
+        <div class="text-group">
+          <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
+          <textarea
+            type="text"
+            class="form-control"
+            v-model="message"
+            v-on:keypress.enter="sendMessage"
+            @keydown="handleKeydown"
+          />
+          <div class="input-group-append">
+            <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList.length === 0">보내기</button>
+          </div>
         </div>
       </div>
     </div>
@@ -106,6 +169,9 @@ export default {
       filesRes: null,
       tagList: [],
       tagFilter: [],
+      tagFilterOneToZero: false,
+      isComment: false,
+      parentThread: null,
     };
   },
   created() {
@@ -145,7 +211,6 @@ export default {
     ...mapGetters(['getWorkspaceId', 'getWorkspaceName']),
     filteredMessages() {
       if (this.tagFilter.length === 0) {
-        this.checkAndScroll();
         return this.messages; // 필터가 없으면 전체 메시지를 반환
       }
       return this.messages.filter(message => {
@@ -156,10 +221,21 @@ export default {
           message.tags.some(tag => filter.id === tag.id)
         );
       });
-    }
+    },
   },
 
   methods: {
+    commentIn(thread){
+      this.isComment = !this.isComment
+      this.parentThread = thread
+      
+      this.scrollToBottom();
+    },
+    commentOut(){
+      this.isComment = !this.isComment
+      this.parentThread = null
+      this.scrollToBottom();
+    },
     checkAndScroll() {
       if (this.tagFilter.length === 0) {
         this.scrollToBottom(); // 필터가 없을 때 스크롤을 아래로 이동
@@ -169,6 +245,7 @@ export default {
       this.tagFilter.push(tag)
     },
     removeTagFilter(tag){
+      if(this.tagFilter.length === 1) this.tagFilterOneToZero = true
       this.tagFilter = this.tagFilter.filter(tagFilter => tagFilter.id !== tag.id);
     },
     async getTagList(){
@@ -217,14 +294,33 @@ export default {
       }
       else {
         // 새로운 메시지일 경우 기존 로직
-        this.messages.unshift({
+        if(recv.parentThreadId){
+          console.log("부모id 받아옴");
+          
+          const messageToUpdate = this.messages.find(message => message.id === recv.parentThreadId);
+
+          if(messageToUpdate){
+            if(!messageToUpdate.childThreads || messageToUpdate.childThreads.length === 0){
+              console.log("first");
+              
+              messageToUpdate.childThreads = [recv]
+            }else{
+              console.log("이미 자식 존재");
+              
+              messageToUpdate.childThreads.push(recv);
+            }
+          }
+        }else{
+          this.messages.unshift({
             id: recv.id,
             memberName: recv.memberName,
             content: recv.content,
             image: recv.image,
             createdTime: recv.createdTime,
             files: recv.files,
-        });
+          });
+        }
+        
         this.scrollToBottom();
       }
     },
@@ -344,11 +440,13 @@ export default {
           type: "TALK",
           channelId: this.roomId,
           senderId: this.sender,
+          parentId: (this.parentThread ? this.parentThread.id : null),
           content: this.message,
           workspaceId: this.workspaceId,
           files: this.filesRes?.map(file => ({fileId:file.id, fileName: file.fileName, fileURL: file.fileUrl }))
         })
       );
+      this.files = null;
       this.message = "";
       this.fileList = [];
       this.uploadProgress = [];
@@ -577,7 +675,6 @@ export default {
   padding:  0 0 0 24px;
 }
 .list-group {
-  flex-grow: 1; /* 리스트가 가능한 공간을 모두 차지 */
   overflow-y: auto; /* 세로 스크롤 가능 */
   max-height: calc(100vh - 240px);
   gap: 10px;
@@ -590,7 +687,6 @@ export default {
   position: sticky;
   bottom: 0; /* 하단에 고정 */
   background-color: white; /* 배경색 설정 */
-  z-index: 1; /* 리스트 위에 표시되도록 */
   border: 1px solid;
   margin-right: 24px;
 }
@@ -612,7 +708,6 @@ export default {
 }
 .form-control {
     width: 100%;
-    white-space: pre-line;
 }
 .tag-filter-container{
   display: flex;
@@ -624,5 +719,9 @@ export default {
   padding: 0 5px 1px 5px;
   color: white;
   font-size: 11px;
+}
+.thread-title{
+  display: flex;
+  flex-direction: row;
 }
 </style>
