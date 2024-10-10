@@ -36,7 +36,7 @@ export default {
     },
     isHiddenPage() {
       // 보이지 않아야 할 페이지 목록
-      const hiddenPages = ["/login", "/"];
+      const hiddenPages = ["/login", "/","/invite"];
       // 현재 경로가 목록에 포함되어 있는지 확인
       return hiddenPages.includes(this.$route.path);
     },
