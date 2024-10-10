@@ -20,14 +20,10 @@
         <img :src="profileImageUrl" alt="Profile Image" class="avatar-image" />
       </div>
     </v-list>
-    
+
     <!-- ModalProfileLogout 컴포넌트 호출 -->
-    <ModalProfileLogout 
-      :dialog="dialog" 
-      @update:dialog="dialog = $event" 
-      :modalPosition="modalPosition"
-    />
-    
+    <ModalProfileLogout :dialog="dialog" @update:dialog="dialog = $event" :modalPosition="modalPosition" />
+
   </v-navigation-drawer>
 
   <!-- 하위 메뉴 컴포넌트 -->
@@ -100,59 +96,82 @@ export default {
       this.$router.push(`/channel/${response.data.result.channelId}`);
     },
 
-    toggleDialog() {
-      this.dialog = !this.dialog;
-      console.log(this.dialog);
-      console.log(this.dialog);
-      if (this.dialog) {
-        this.setModalPosition(); // 모달의 위치 설정
-      }
-    },
-
     setModalPosition() {
       const button = this.$refs.profileButton; // 버튼 요소 참조
       const rect = button.getBoundingClientRect(); // 버튼 위치 정보 가져오기
       console.log(rect),
-      console.log(button),
-      this.modalPosition = {
-        top: rect.top - 90, // 버튼 위쪽으로 50px 위에 모달 위치
-        left: rect.right + 10, // 버튼 오른쪽에 모달 위치
-      };
+        console.log(button),
+        this.modalPosition = {
+          top: rect.top - 90, // 버튼 위쪽으로 50px 위에 모달 위치
+          left: rect.right + 10, // 버튼 오른쪽에 모달 위치
+        };
     },
     generateAvatar(name) {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    const size = 100;
-    canvas.width = size;
-    canvas.height = size;
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      const size = 100;
+      canvas.width = size;
+      canvas.height = size;
 
-    // 배경 색상 설정 (랜덤 또는 고정)
-    const backgroundColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
-    context.fillStyle = backgroundColor;
-    context.fillRect(0, 0, size, size);
+      // 배경 색상 설정 (랜덤 또는 고정)
+      const backgroundColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+      context.fillStyle = backgroundColor;
+      context.fillRect(0, 0, size, size);
 
-    // 닉네임 첫 글자 추출
-    const firstLetter = name && name !== 'null' ? name.charAt(0).toUpperCase() : 'G';
-    context.font = '50px Arial';
-    context.fillStyle = '#ffffff';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillText(firstLetter, size / 2, size / 2);
+      // 닉네임 첫 글자 추출
+      const firstLetter = name && name !== 'null' ? name.charAt(0).toUpperCase() : 'G';
+      context.font = '50px Arial';
+      context.fillStyle = '#ffffff';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(firstLetter, size / 2, size / 2);
 
-    // 생성한 이미지를 데이터 URL로 변환하여 profileImageUrl에 저장
-    const profileImage = canvas.toDataURL('image/png');
+      // 생성한 이미지를 데이터 URL로 변환하여 profileImageUrl에 저장
+      const profileImage = canvas.toDataURL('image/png');
 
-    // Vuex mutation을 이용하여 profileImageUrl과 nickname을 저장
-    this.$store.commit('setMemberInfo', {
-      nickname: name,
-      profileImage: profileImage,
-      workspaceMemberId: this.$store.getters.getWorkspaceMemberId
-    });
-    
-    // profileImageUrl 업데이트
-    this.profileImageUrl = profileImage;
-  }
+      // Vuex mutation을 이용하여 profileImageUrl과 nickname을 저장
+      this.$store.commit('setMemberInfo', {
+        nickname: name,
+        profileImage: profileImage,
+        workspaceMemberId: this.$store.getters.getWorkspaceMemberId
+      });
+
+      // profileImageUrl 업데이트
+      this.profileImageUrl = profileImage;
+    },
+    toggleDialog() {
+      event.stopPropagation(); // 클릭 이벤트 전파를 막습니다.
+      this.dialog = !this.dialog;
+      if (this.dialog) {
+        this.setModalPosition(); // 모달의 위치 설정
+        document.addEventListener('keydown', this.handleEscKey);
+        document.addEventListener('click', this.handleOutsideClick);
+      } else {
+        document.removeEventListener('click', this.handleOutsideClick);
+      }
+    },
+
+    handleOutsideClick(event) {
+      // 클릭이 모달 외부인지 확인
+      if (!this.$refs.profileButton.contains(event.target)) {
+        this.dialog = false; // 모달 닫기
+        document.removeEventListener('click', this.handleOutsideClick); // 리스너 제거
+      }
+    },
+    handleEscKey(event) {
+      if (event.key === 'Escape' || event.keyCode === 27) { // Check for ESC key
+        this.dialog = false;
+        document.removeEventListener('click', this.handleOutsideClick);
+        document.removeEventListener('keydown', this.handleEscKey);
+      }
+    }
   },
+  beforeUnmount() {
+    if (this.dialog) {
+      document.removeEventListener('click', this.handleOutsideClick);
+    }
+    document.removeEventListener('keydown', this.handleEscKey);
+  }
 };
 </script>
 
@@ -168,7 +187,8 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  justify-content: space-between; /* 상단 메뉴와 하단 프로필 버튼 분리 */
+  justify-content: space-between;
+  /* 상단 메뉴와 하단 프로필 버튼 분리 */
 }
 
 .selected-item {
@@ -178,22 +198,29 @@ export default {
 
 .profile-logout-section {
   display: flex;
-  justify-content: center; /* 중앙 정렬 */
-  position: relative; /* 버튼이 레이아웃 안에서 이동할 수 있도록 */
-  bottom: 40px; /* 하단에서 40px 위로 설정 */
-  margin-top: 40px; /* 프로필 버튼과 위쪽 버튼 사이에 간격 */
-  transition: bottom 0.3s ease-in-out; /* 부드럽고 매끄러운 이동 */
+  justify-content: center;
+  /* 중앙 정렬 */
+  position: relative;
+  /* 버튼이 레이아웃 안에서 이동할 수 있도록 */
+  bottom: 40px;
+  /* 하단에서 40px 위로 설정 */
+  margin-top: 40px;
+  /* 프로필 버튼과 위쪽 버튼 사이에 간격 */
+  transition: bottom 0.3s ease-in-out;
+  /* 부드럽고 매끄러운 이동 */
 }
 
 .avatar-image {
-  width: 45px; /* 이미지 크기 45px x 45px로 설정 */
+  width: 45px;
+  /* 이미지 크기 45px x 45px로 설정 */
   height: 45px;
   border-radius: 50%;
   object-fit: cover;
   margin: 0 auto;
   display: block;
-  cursor: pointer; /* 손 모양 커서 설정 */
-  transition: bottom 0.3s ease-in-out; /* 부드럽고 매끄러운 이동 */
+  cursor: pointer;
+  /* 손 모양 커서 설정 */
+  transition: bottom 0.3s ease-in-out;
+  /* 부드럽고 매끄러운 이동 */
 }
-
 </style>
