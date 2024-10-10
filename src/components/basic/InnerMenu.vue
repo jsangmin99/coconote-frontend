@@ -2,12 +2,20 @@
   <v-navigation-drawer class="innerMenu" theme="dark" permanent rail>
     <v-list density="compact" nav class="menu-container">
       <!-- 홈 하위 메뉴 버튼 -->
-      <v-list-item prepend-icon="mdi-home" title="home" @click="changeSelectedMenu('home')"
-        :class="{ 'selected-item': selectedMenu === 'home' }"></v-list-item>
+      <v-list-item 
+        prepend-icon="mdi-home" 
+        title="home" 
+        @click="changeSelectedMenu('home')"
+        :class="{ 'selected-item': selectedMenu === 'home' }"
+        ></v-list-item>
 
       <!-- 워크스페이스 멤버 리스트 하위 메뉴 버튼 -->
-      <v-list-item prepend-icon="mdi-account-group" title="member" @click="changeSelectedMenu('member')"
-        :class="{ 'selected-item': selectedMenu === 'member' }"></v-list-item>
+      <v-list-item 
+        prepend-icon="mdi-account-group" 
+        title="member" 
+        @click="changeSelectedMenu('member')"
+        :class="{ 'selected-item': selectedMenu === 'member' }"
+      ></v-list-item>
 
       <v-list-item prepend-icon="mdi-magnify" title="search" @click="changeSelectedMenu('search')"
         :class="{ 'selected-item': selectedMenu === 'search' }"></v-list-item>
@@ -16,24 +24,42 @@
       <div style="flex-grow: 2;"></div>
 
       <!-- 프로필 및 로그아웃 버튼을 하단에 배치 -->
-      <div ref="profileButton" class="profile-logout-section" @click="toggleDialog">
-        <img :src="profileImageUrl" alt="Profile Image" class="avatar-image" />
+      <div ref="profileButton" 
+        class="profile-logout-section" 
+        @click="toggleDialog"
+      >
+        <img 
+          :src="profileImageUrl" 
+          alt="Profile Image" 
+          class="avatar-image" 
+        />
       </div>
     </v-list>
 
     <!-- ModalProfileLogout 컴포넌트 호출 -->
-    <ModalProfileLogout :dialog="dialog" @update:dialog="dialog = $event" :modalPosition="modalPosition" />
+    <ModalProfileLogout 
+      :dialog="dialog" 
+      @update:dialog="dialog = $event" 
+      :modalPosition="modalPosition" 
+    />
 
   </v-navigation-drawer>
 
   <!-- 하위 메뉴 컴포넌트 -->
-  <InnerRelatedMenuHome v-if="selectedMenu === 'home'" :selectedValue="selectedValue" />
-  <InnerRelatedMenuMember v-if="selectedMenu === 'member'" :selectedValue="selectedValue" />
+  <InnerRelatedMenuHome 
+    v-if="selectedMenu === 'home'" 
+    :selectedValue="selectedValue" 
+  />
+  <InnerRelatedMenuMember 
+    v-if="selectedMenu === 'member'" 
+    :selectedValue="selectedValue" 
+  />
 </template>
 
 <script>
 import axios from "axios";
 import { mapGetters } from "vuex";
+  
 import InnerRelatedMenuHome from "@/components/basic/InnerRelatedMenuHome.vue";
 import InnerRelatedMenuMember from "@/components/basic/InnerRelatedMenuMember.vue";
 import ModalProfileLogout from "@/views/member/ModalProfileLogout.vue"; // 모달 컴포넌트 import
