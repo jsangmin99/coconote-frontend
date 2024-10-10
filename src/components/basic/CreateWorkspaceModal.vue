@@ -78,6 +78,7 @@ export default {
                 this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
 
                 this.$emit('update:dialog', false);
+                window.location.reload();
             } catch(e) {
                 console.log(e);
             }
