@@ -345,14 +345,17 @@ export default {
       }
     },
     changeOrderBlock(changeOrderObj) {
-      const { prevBlockId, nextBlockId, feId, parentBlockId } = changeOrderObj;
+      const { prevBlockId, nextBlockId, feId, contents, parentBlockId  } = changeOrderObj;
       console.log(
         "changeOrderBlock >> ",
         prevBlockId,
         nextBlockId,
         feId,
+        contents,
         parentBlockId
       );
+
+      this.activeBlockId = feId;
 
       this.message = {
         canvasId: this.canvasId,

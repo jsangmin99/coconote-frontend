@@ -577,6 +577,8 @@ export default {
           idGroupObj.prevBlockId = i > 0 ? editorJson[i - 1].attrs.id : null;
           idGroupObj.nextBlockId =
             i < editorJson.length - 1 ? editorJson[i + 1].attrs.id : null;
+
+          idGroupObj.contents = editorJson[i]?.content?.text;
           break;
         }
       }
