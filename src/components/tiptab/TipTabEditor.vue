@@ -340,6 +340,8 @@ export default {
           console.log("사라진 ID:", removedIds);
           // return removedIds; // 사라진 ID 반환
           this.$parent.deleteBlock(removedIds[0]);
+          
+          this.nodeLength = updateAllFeIds.length;
         }
 
         const updateBlockID = selectedNode?.$head?.path[3]?.attrs?.id;
@@ -428,119 +430,6 @@ export default {
         editor.view.state.selection.$anchor.path[0].content.content.length;
       this.localHTML = editor.getHTML();
       this.localJSON = editor.getJSON();
-      // const $doc = editor.$doc
-      // const myNodePos = new NodePos(100, editor)
-      // console.log("현재 위치의 노드 출력 11  ", myNodePos); // 현재 위치의 노드 출력
-      // console.log("현재 위치의 노드 출력  ", myNodePos.node); // 현재 위치의 노드 출력
-      // console.log($doc,myNodePos)
-    });
-
-    this.editor.on("selectionUpdate", () => {
-      // The selection has changed.
-      // console.log(
-      //   `selectionUpdate`,
-      //   editor.view?.trackWrites?.data,
-      //   "||",
-      //   editor.view?.trackWrites?.parentElement?.dataset?.id, //이것
-      //   "||",
-      //   editor.view?.trackWrites?.dataset?.id,
-      //   this.recentKeyboardKey,
-      //   editor
-      // );
-      // const selectedNode = editor.state.selection;
-      // const test = selectedNode.$head.parent;
-      // console.log("선택당시 개수 >> ", selectedNode.$anchor.path[0].content.content.length)
-      // console.log("TEST22 >> ",test,selectedNode)
-      // const { from } = selectedNode;
-      // const node = this.editor.state.doc.nodeAt(from); // 선택된 노드 가져오기
-      // console.log("TEST 33 > > ", from);
-      // let isReturn = true;
-      // if (!selectedNode) {
-      //   return false;
-      // }
-      // const updateBlockID = selectedNode?.$head?.path[3]?.attrs?.id;
-      // if (!updateBlockID) {
-      //   return false;
-      // }
-      // const updateContent =
-      //   selectedNode?.$head?.path[3]?.content?.content[0]?.text;
-      // console.log(
-      //   "⭐ Node:",
-      //   updateBlockID,
-      //   updateContent,
-      //   editor.view?.trackWrites?.dataset?.id,
-      //   updateContent == "",
-      //   editor.view?.trackWrites?.data,
-      //   updateContent == undefined
-      // );
-      // if (this.localJSON.content == undefined) {
-      //   this.localJSON = this.editor.getJSON();
-      // }
-      // // 삭제 확인 : keyCode 감지하려면 우선순위때문에 삭제한 id가 안나옴..
-      // const originTargetBlockId = editor.view?.trackWrites?.dataset?.id;
-      // const originTargetBlockContents = editor.view?.trackWrites?.data;
-      // if (
-      //   originTargetBlockContents == undefined &&
-      //   originTargetBlockId != undefined
-      // ) {
-      //   // 내용이 undefined 이고, updateTarget이랑 originTarget이랑 다를 때감지 (삭제 확인용 감지)
-      //   const result = this.localJSON.content.find(
-      //     (item) => item.attrs && item.attrs.id === originTargetBlockId
-      //   );
-      //   console.log("result >>>>>>", result);
-      //   if (result == undefined) {
-      //     console.error("삭제다!!!");
-      //     this.$parent.deleteBlock(originTargetBlockId);
-      //     isReturn = false;
-      //   } else {
-      //     // 삭제 target block 말고 이전 block 함께 체크
-      //     const prevBlockId = this.getTargetBlockPrevFeId(originTargetBlockId);
-      //     const prevResult = this.localJSON.content.find(
-      //       (item) => item.attrs && item.attrs.id === prevBlockId
-      //     );
-      //     if (prevResult == undefined) {
-      //       this.$parent.deleteBlock(prevBlockId);
-      //       isReturn = false;
-      //     }
-      //   }
-      // }
-      // // 내용 차이 확인
-      // const filteredItems = this.localJSON?.content.filter(
-      //   (item) => item.attrs.id === updateBlockID
-      // );
-      // console.log(filteredItems);
-      // if (filteredItems.length > 0) {
-      //   if (
-      //     filteredItems[0].content != undefined &&
-      //     filteredItems[0].content[0].text == updateContent
-      //   ) {
-      //     isReturn = false; // 값이 동일하다면 보내지 않음
-      //   }
-      // }
-      // // 삭제 method를 보내지 않았다면
-      // if (!isReturn) {
-      //   return false;
-      // }
-      // // element 위치 감지
-      // const searchElAndPrevEl = this.findPreviousId(
-      //   this.localJSON.content,
-      //   updateBlockID
-      // );
-      // if (searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0) {
-      //   return false;
-      // }
-      // const previousId = searchElAndPrevEl[0];
-      // const targetElType = searchElAndPrevEl[1];
-      // // console.error("➡️prev➡️➡️", previousId);
-      // const parentId = null;
-      // // 여기서 감지해서 보내기
-      // this.$parent.updateBlock(
-      //   updateBlockID,
-      //   targetElType,
-      //   updateContent == "" ? "" : updateContent,
-      //   previousId,
-      //   parentId
-      // );
     });
   },
   methods: {
