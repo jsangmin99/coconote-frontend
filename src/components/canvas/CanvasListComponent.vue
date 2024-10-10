@@ -4,6 +4,7 @@
       prepend-icon="mdi-note-text-outline"
       v-for="item in chatrooms"
       :key="item.id"
+      :data-id="item.id"
       @click="changeCanvasId(item.id)"
     >
       {{ item.title }}
@@ -27,18 +28,28 @@ import axios from "axios";
 
 export default {
   name: "CanvasListComponent",
+  props: {
+    canvasUpdateName: String, // 부모로부터 전달받은 값 사용
+  },
+  watch: {
+    // canvasName의 변화를 감지
+    canvasUpdateName(newName) {
+      this.onCanvasNameChanged(newName);
+    },
+  },
   created() {
     this.channelId = this.$route.params.channelId;
-    console.error()
-    if(this.channelId == "" || this.channelId == undefined){
-      alert("잘못된 접근입니다.")
-      return false
+    console.error();
+    if (this.channelId == "" || this.channelId == undefined) {
+      alert("잘못된 접근입니다.");
+      return false;
     }
     this.findAllRoom();
   },
   data() {
     return {
       canvasName: "",
+      canvasIdInList: null,
       channelId: null,
       chatrooms: [],
     };
@@ -51,7 +62,7 @@ export default {
         )
         .then((response) => {
           this.chatrooms = response.data.result.content;
-          if(this.chatrooms.length > 0){
+          if (this.chatrooms.length > 0) {
             this.changeCanvasId(response.data.result.content[0].id); // 첫번째 id 자동선택
           }
         });
@@ -78,10 +89,19 @@ export default {
       }
     },
     changeCanvasId(canvasId) {
-      const sender = "테스트유저 "+ Date.now() ;
+      const sender = "테스트유저 " + Date.now();
       if (sender) {
-        console.log("changeCanvasId!!",canvasId)
+        console.log("changeCanvasId!!", canvasId);
+        this.canvasIdInList = canvasId;
         this.$emit("updateCanvasId", canvasId);
+      }
+    },
+    onCanvasNameChanged(newName) {
+      // 캔버스 이름이 변경되었을 때 실행할 로직
+      const targetCanvas = this.chatrooms.find((item) => item.id === this.canvasIdInList);
+
+      if (targetCanvas) {
+        targetCanvas.title = newName; // 리스트 항목의 title을 업데이트
       }
     },
   },

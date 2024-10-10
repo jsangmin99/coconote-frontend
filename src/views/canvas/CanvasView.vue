@@ -4,7 +4,10 @@
     <div class="channelInsideContentWrap">
       <v-row class="canvasContatiner ma-0">
         <v-col cols="2" class="canvasListContainer pa-0">
-          <CanvasListComponent @updateCanvasId="updateCanvasId" />
+          <CanvasListComponent
+            @updateCanvasId="updateCanvasId"
+            :canvasUpdateName="canvasUpdateName"
+          />
           <!-- <v-list class="h-100">
             <v-list-item prepend-icon="mdi-home">Home</v-list-item>
 
@@ -57,10 +60,11 @@
           <div v-else-if="canvasId == null">
             <h1>캔버스가 없습니다.</h1>
           </div>
-          <CanvasDetailComponent
-            v-else
-            :canvasId="canvasId"
+          <CanvasDetailComponent v-else 
+            :canvasId="canvasId" 
             :key="canvasId"
+            :canvas-name="canvasUpdateName" 
+            @updateName="updateCanvasName"
           />
         </v-col>
       </v-row>
@@ -75,11 +79,11 @@ import CanvasDetailComponent from "@/components/canvas/CanvasDetailComponent.vue
 
 export default {
   props: {
-      channelId: {
-        type: String,
-        required: true,
-      },
+    channelId: {
+      type: String,
+      required: true,
     },
+  },
   components: {
     ChannelCommonMenu,
     CanvasListComponent,
@@ -89,6 +93,7 @@ export default {
     return {
       isLoading: false,
       canvasId: null, // 초기 canvasId 값
+      canvasUpdateName: null,
     };
   },
   methods: {
@@ -97,6 +102,10 @@ export default {
       console.log("canvasId 변경!", newCanvasId);
       this.canvasId = newCanvasId;
     },
+    updateCanvasName(newName) {
+      console.log("canvas 이름!! 변경!", newName);
+      this.canvasUpdateName = newName;  // CanvasDetail에서 전달된 이름으로 업데이트
+    }
   },
 };
 </script>

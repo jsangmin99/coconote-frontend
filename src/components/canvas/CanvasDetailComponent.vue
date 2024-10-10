@@ -54,6 +54,7 @@ export default {
   },
   computed: {
     ...mapGetters([
+      "getChannelId",
       "getBlockFeId",
       "getBlockFeIdIndex",
       "getTargetBlockPrevFeId",
@@ -366,8 +367,26 @@ export default {
 
       this.sendMessage();
     },
-    changeCanvasName() {
+    async changeCanvasName() {
       console.error(this.room.title);
+      const params = {
+        title : this.room.title,
+        parentCanvasId : null,
+        canvasId : this.canvasId,
+        channelId : this.getChannelId,
+      };
+      try {
+        const response = await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/canvas/${this.canvasId}`, params)
+        console.log(response);
+        const updateCanvasTitle = response.data.result.title;
+        this.room.title = updateCanvasTitle;
+        this.updateName()
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    updateName() {
+      this.$emit('updateName', this.room.title);  // 변경된 값을 부모에게 전달
     },
     deleteCanvas() {
       console.log("canvas 삭제 예정");
