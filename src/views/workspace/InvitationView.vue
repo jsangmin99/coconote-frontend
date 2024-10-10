@@ -48,6 +48,7 @@ export default {
       try {
         const response = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/workspace/invite/accept?token=${token}`);
         this.successMessage = response.data.status_message;
+        window.location.href = '/workspace/first'; // 메인 페이지로 이동
       } catch (error) {
         this.errorMessage = error.response ? error.response.data.status_message : '가입 처리에 실패했습니다.';
       } finally {
