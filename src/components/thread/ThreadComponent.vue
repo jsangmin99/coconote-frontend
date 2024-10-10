@@ -6,7 +6,7 @@
         v-for="(message,index) in filteredMessages.slice().reverse()"
         :key="message.id"
       >
-        <div v-if="index > 0 && this.isDifferentDay(message.createdTime,  filteredMessages.slice().reverse()[index-1].createdTime)">
+        <div v-if="index === 0 || (index > 0 && this.isDifferentDay(message.createdTime,  filteredMessages.slice().reverse()[index-1].createdTime))">
           <div style="display: flex; align-content: center; text-align: center; margin: auto;">
               <hr style="width: 27%; margin:auto;"><span style="margin:auto;">{{this.getDay(message.createdTime)}}</span><hr style="width: 27%; margin:auto;">
           </div>
