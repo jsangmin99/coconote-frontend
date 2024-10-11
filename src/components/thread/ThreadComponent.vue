@@ -716,11 +716,12 @@ export default {
   gap: 10px;
 }
 .input-group {
-  position: sticky;
+  position: fixed;
   bottom: 0; /* 하단에 고정 */
   background-color: white; /* 배경색 설정 */
   border: 1px solid;
   margin-right: 24px;
+  width: 80%;
 }
 .image-group {
   display: flex;
@@ -737,6 +738,7 @@ export default {
 .text-group {
   display: flex;
   flex-direction: row;
+  width: 100%;
 }
 .form-control {
     width: 100%;
@@ -757,7 +759,7 @@ export default {
   flex-direction: row;
 }
 .comment-group{
-  overflow-y: scroll;
+  overflow-y: auto;
   max-height: calc(100vh - 240px);
 }
 </style>
