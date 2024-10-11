@@ -28,8 +28,9 @@ export default {
     // 로그아웃 버튼 클릭 시
     logout() {
       // 로그아웃 처리: localStorage에서 토큰 제거
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      // localStorage.removeItem("accessToken");
+      // localStorage.removeItem("refreshToken");
+      localStorage.clear(); // 로그아웃 시 ws 관련, login 관련 localStorage 초기화
       this.isLoggedIn = false; // 로그인 상태 갱신
     },
     // 로그인 상태 확인
