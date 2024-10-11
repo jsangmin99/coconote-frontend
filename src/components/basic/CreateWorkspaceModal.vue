@@ -70,15 +70,16 @@ export default {
                 };
                 this.setMemberInfoActions(myInfo);
         
-                const chInfo = await axios.get( // 채널 정보도 수정
-                `${process.env.VUE_APP_API_BASE_URL}/${newWorkspaceId}/channel/first` 
-                );
-                this.setChannelInfoActions(chInfo.data.result.channelId); 
-                this.setChannelNameInfoActions(chInfo.data.result.channelName);
-                this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
+                // const chInfo = await axios.get( // 채널 정보도 수정
+                // `${process.env.VUE_APP_API_BASE_URL}/${newWorkspaceId}/channel/first` 
+                // );
+                // this.setChannelInfoActions(chInfo.data.result.channelId); 
+                // this.setChannelNameInfoActions(chInfo.data.result.channelName);
+                // this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
 
                 this.$emit('update:dialog', false);
-                window.location.reload();
+                console.log("생성 후 workspace로 이동 예정 >> ", newWorkspaceId)
+                window.location.href = "/workspace";
             } catch(e) {
                 console.log(e);
             }
