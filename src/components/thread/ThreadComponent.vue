@@ -293,18 +293,41 @@ export default {
         }
 
       } else if(recv.type === "REMOVE_TAG"){
-        const messageToUpdate = this.messages.find(message => message.id === recv.id);
+        let messageToUpdate;
+        
+        if(recv.parentThreadId){
+          const parent = this.messages.find(message => message.id === recv.parentThreadId);
+          messageToUpdate = parent.childThreads.find(message => message.id === recv.id);
+        }else{
+          messageToUpdate = this.messages.find(message => message.id === recv.id);
+        }
         
         if(messageToUpdate){
           messageToUpdate.tags = messageToUpdate.tags.filter(tag => tag.id !== recv.tagId);
         }
       } else if(recv.type === "DELETE"){
         // DELETE일 경우, messages에서 해당 id의 메시지를 제거
-        this.messages = this.messages.filter(message => message.id !== recv.id);
-
+        console.log("recv.parentThreadId: ",recv.parentThreadId);
+        
+        if(recv.parentThreadId){
+          console.log("부모 있");
+          
+          const parent = this.messages.find(message => message.id === recv.parentThreadId);
+          parent.childThreads = parent.childThreads.filter(message => message.id !== recv.id);
+        }else{
+          console.log("부모 없");
+          this.messages = this.messages.filter(message => message.id !== recv.id);
+        }
       } else if(recv.type === "DELETE_FILE"){
         // DELETE_File일 경우, messages.files에서 해당 id의 파일을 제거
-        const messageToUpdate = this.messages.find(message => message.id === recv.id);
+        let messageToUpdate;
+        
+        if(recv.parentThreadId){
+          const parent = this.messages.find(message => message.id === recv.parentThreadId);
+          messageToUpdate = parent.childThreads.find(message => message.id === recv.id);
+        }else{
+          messageToUpdate = this.messages.find(message => message.id === recv.id);
+        }
 
         if(messageToUpdate){
           messageToUpdate.files = messageToUpdate.files.filter(file => file.fileId !== recv.fileId);
