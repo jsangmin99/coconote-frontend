@@ -228,8 +228,6 @@ export default {
     commentIn(thread){
       this.isComment = !this.isComment
       this.parentThread = thread
-      
-      this.scrollToBottom();
     },
     commentOut(){
       this.isComment = !this.isComment
@@ -247,6 +245,10 @@ export default {
     removeTagFilter(tag){
       if(this.tagFilter.length === 1) this.tagFilterOneToZero = true
       this.tagFilter = this.tagFilter.filter(tagFilter => tagFilter.id !== tag.id);
+      if(this.tagFilterOneToZero) {
+        this.scrollToBottom();
+        this.tagFilterOneToZero = false
+      }
     },
     async getTagList(){
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/tag/list/${this.id}`);
@@ -607,14 +609,14 @@ export default {
       }
     },
     scrollToBottom() {
-      // 메시지 목록을 감싸는 컨테이너 찾기
-      const container = document.getElementById("list-group");
-      if (container) {
-        // 잠시 딜레이를 주고 스크롤을 최하단으로 이동
-        setTimeout(() => {
-          container.scrollTop = container.scrollHeight;
-        }, 100);
-      }
+      setTimeout(() => {
+          const container = document.getElementById("list-group");
+
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }, 1);
+      
     },
     
     deleteImage(index){
