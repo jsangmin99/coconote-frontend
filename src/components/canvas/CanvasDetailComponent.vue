@@ -93,6 +93,7 @@ export default {
     ...mapActions([
       "setDefaultBlockFeIdsActions",
       "pushBlockFeIdsActions",
+      "appendBlockFeIdsAfterPrevActions",
       "deleteBlockTargetFeIdActions",
     ]),
     handleCanvasIdChange(newCanvasId) {
@@ -270,13 +271,24 @@ export default {
     },
     beforeRouteLeave() {
       // 컴포넌트가 파괴되기 전에 구독 해제 및 WebSocket 연결 종료
-      if (this.subscription) {
-        this.subscription.unsubscribe(); // 구독 해제
+      if (this.sock) {
+        this.sock.close(); // SockJS 연결을 닫음
+        this.sock = null;
         console.log("WebSocket subscription unsubscribed.");
       }
       if (this.ws) {
         this.ws.disconnect(() => {
           console.log("WebSocket connection closed.");
+        });
+      }
+      if (this.sockBlock) {
+        this.sockBlock.close(); // SockJS 연결을 닫음
+        this.sockBlock = null;
+        console.log("WebSocket subscription unsubscribed.");
+      }
+      if (this.wsBlock) {
+        this.wsBlock.disconnect(() => {
+          console.log("WebSocket wsBlock connection closed.");
         });
       }
     },

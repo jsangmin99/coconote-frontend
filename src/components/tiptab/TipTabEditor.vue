@@ -322,6 +322,7 @@ export default {
         if (this.dragCheckSelectionNode == null) {
           //drag 중이 아닐 때 가능
           const updateAfterNodes = selectedNode.$anchor.path[0].content.content;
+          console.log("ㅠㅠㅠㅠㅠㅠㅠㅠㅠ", this.nodeLength, updateAfterNodes.length)
           if (this.nodeLength > updateAfterNodes.length) {
             // 개수가 생성 때 보다 적어졌을 때
             const originAllFeIds = this.getAllBlockFeIds;
@@ -337,7 +338,7 @@ export default {
             // return removedIds; // 사라진 ID 반환
             this.$parent.deleteBlock(removedIds[0]);
 
-            this.nodeLength = updateAllFeIds.length;
+            // this.nodeLength = updateAllFeIds.length;
           }
         }
 
@@ -384,6 +385,8 @@ export default {
         this.localHTML = this.editor.getHTML();
         this.localJSON = this.editor.getJSON();
 
+        this.nodeLength = this.localJSON.content.length;
+
         // element 위치 감지
         const searchElAndPrevEl = this.findPreviousId(
           this.localJSON.content,
@@ -424,7 +427,11 @@ export default {
     });
   },
   methods: {
-    ...mapActions(["pushBlockFeIdsActions", "deleteBlockTargetFeIdActions"]),
+    ...mapActions([
+      "pushBlockFeIdsActions",
+      "deleteBlockTargetFeIdActions",
+      "appendBlockFeIdsAfterPrevActions",
+    ]),
     findPreviousId(obj, targetId) {
       return this.recursiveSearch(obj, targetId);
     },
@@ -459,10 +466,7 @@ export default {
       return null; // 찾지 못했을 때
     },
     onContentChanged(newContent) {
-      console.log(
-        "부모 컴포넌트로부터 새로운 content를 받았습니다:",
-        newContent
-      );
+      console.log("부모 컴포넌트로부터 새로운 content를 받았습니다:");
 
       let targetElement = document.querySelector(
         `#editorArea [data-id="${newContent.feId}"]`
@@ -474,6 +478,11 @@ export default {
           // ⭐ 자식 생각 필요
           targetElement.remove();
         }
+        // defaultFeId 중 해당 아이디 삭제
+        this.deleteBlockTargetFeIdActions(newContent.feId).then((isDeleteBlock) => {
+          console.log("isDeleteBlock newContent.feId :: ", isDeleteBlock);
+          this.nodeLength = this.nodeLength - 1;
+        });
       } else if (newContent.method == "changeOrder") {
         // 순서변경의 경우
         console.log("부모로부터 순서변경 감지!!! ");
@@ -484,17 +493,22 @@ export default {
           newContent.prevBlockId == null
             ? newContent.nextBlockId
             : newContent.prevBlockId;
-        const appendType = newContent.prevBlockId == null ? "next" : "prev";
+        const appendType =
+          newContent.prevBlockId == null
+            ? "next"
+            : newContent.nextBlockId == null
+            ? "prev"
+            : null;
         const targetNode = document.querySelector(
           `[data-id="${targetDataId}"]`
         );
         // 이동 실행: changeNode가 targetNode 앞에 이동
-        if (changeNode && targetNode) {
+        if (changeNode) {
           if (appendType == "prev") {
             // targetNode 뒤에 changeNode 추가
             console.log(`${targetDataId} [뒤에] 추가`);
             targetNode.insertAdjacentElement("afterend", changeNode);
-          } else {
+          } else if (appendType == "next") {
             // targetNode 앞에 changeNode 추가
             console.log(`${targetDataId} [앞에] 추가`);
             targetNode.insertAdjacentElement("beforebegin", changeNode);
@@ -529,6 +543,13 @@ export default {
             newElement.textContent = newContent.contents;
           }
 
+          if(newContent.method == "create"){
+            // 생성인 경우 store 개수 늘리기
+            this.appendBlockFeIdsAfterPrevActions(newContent.feId , newContent.prevBlockId);
+            this.nodeLength = this.nodeLength + 1;
+            console.log("zzz>> ",newContent.method, this.nodeLength)
+          }
+
           if (newContent.prevBlockId != null) {
             let prevElement = document.querySelector(
               `#editorArea [data-id="${newContent.prevBlockId}"]`
@@ -541,6 +562,11 @@ export default {
             );
             parentElement.appendChild(newElement);
             return false;
+          } else {
+            // parent, prev null 이어서 insert
+            let elementString = newElement.outerHTML;
+            console.error("editor에 추가", newElement, elementString);
+            this.editor.commands.insertContent(elementString);
           }
         }
         return false;
