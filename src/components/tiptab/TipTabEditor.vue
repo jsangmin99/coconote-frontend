@@ -494,11 +494,13 @@ export default {
             ? newContent.nextBlockId
             : newContent.prevBlockId;
         const appendType =
-          newContent.prevBlockId == null
-            ? "next"
-            : newContent.nextBlockId == null
+          newContent.prevBlockId != null
             ? "prev"
+            : newContent.nextBlockId != null
+            ? "next"
             : null;
+
+        console.log("appendType >> ",appendType, newContent.prevBlockId, newContent.nextBlockId)
         const targetNode = document.querySelector(
           `[data-id="${targetDataId}"]`
         );
@@ -512,6 +514,8 @@ export default {
             // targetNode 앞에 changeNode 추가
             console.log(`${targetDataId} [앞에] 추가`);
             targetNode.insertAdjacentElement("beforebegin", changeNode);
+          }else{
+            console.error("prev, next 모두 null. 첫줄 drag 이동한 상황")
           }
         }
       } else {

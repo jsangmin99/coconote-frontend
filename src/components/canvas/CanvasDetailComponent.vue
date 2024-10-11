@@ -178,10 +178,10 @@ export default {
       if (recv.type === "CANVAS") {
         const blockJson = JSON.parse(recv.message);
         console.error("blockJson >> ", blockJson);
-        if (this.activeBlockId == blockJson.feId) {
+        if (this.activeBlockId == blockJson.feId && blockJson.method === "update") {
           // if (this.member == blockJson.member) {
           console.log(
-            "현 focus 부분이랑 같은 block 수정 중인 부분.. => block Id 동일함"
+            "현 focus 부분이랑 같은 block 수정 중인 부분..인데! update여서 보냄! => block Id 동일함"
           );
         } else {
           console.log("다른 block Id 수정 중!~");
