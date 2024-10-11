@@ -82,7 +82,7 @@
         :removeTagFilter="removeTagFilter"
         :tagFilter="tagFilter"
       />
-      <h5>{{ parentThread.childThreads.length > 0 ? `밑으로 ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
+      <h5>{{ thread.childThreads && thread.childThreads.length > 0 ? `밑으로 ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
       
       <div v-for="(message,index) in parentThread.childThreads" :key="index">
         <ThreadLineComponent
@@ -732,7 +732,8 @@ export default {
   width: 100%;
 }
 .form-control {
-    width: 100%;
+  width: 100%;
+
 }
 .tag-filter-container{
   display: flex;
@@ -753,4 +754,11 @@ export default {
   overflow-y: auto;
   max-height: calc(100vh - 240px);
 }
+input:focus {
+  outline: none;
+}
+textarea:focus {
+  outline: none;
+}
+
 </style>
