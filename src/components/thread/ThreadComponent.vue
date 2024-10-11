@@ -82,7 +82,8 @@
         :removeTagFilter="removeTagFilter"
         :tagFilter="tagFilter"
       />
-      <h5>밑으로 댓글</h5>
+      <h5>{{ parentThread.childThreads.length > 0 ? `밑으로 ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
+      
       <div v-for="(message,index) in parentThread.childThreads" :key="index">
         <ThreadLineComponent
           :thread="message"
@@ -638,16 +639,6 @@ export default {
             const recv = JSON.parse(message.body);
             this.recvMessage(recv);
           });
-          this.ws.send(
-            "/pub/chat/message",
-            {Authorization: authToken},
-            JSON.stringify({
-              type: "ENTER",
-              channelId: this.roomId,
-              senderId: this.sender,
-              workspaceId: this.workspaceId,
-            })
-          );
         },
         (error) => {
           console.log(error);

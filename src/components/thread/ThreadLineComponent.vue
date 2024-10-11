@@ -70,7 +70,9 @@
       
       <!-- 댓글 -->
       <button v-if="!thread.parentThreadId" @click="commentIn(thread)">
-        <div class="comment">comment</div>
+        <div class="comment">
+          {{ thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
+        </div>
       </button>
     </div>
   </div>
