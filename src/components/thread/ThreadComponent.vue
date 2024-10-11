@@ -99,29 +99,29 @@
           :tagFilter="tagFilter"
         />
       </div>
-      <!-- 입력 그룹 -->
-      <div class="input-group">
-        <!-- 파일 올리기 -->
-        <div class="image-group">
-          <div v-for="(file, index) in fileList" :key="index">
-            <button type="button" @click="deleteImage(index)">삭제</button>
-            <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
-            <p class="custom-contents">{{file.name}}</p>
-          </div>
+    </div>
+    <!-- 입력 그룹 -->
+    <div class="input-group">
+      <!-- 파일 올리기 -->
+      <div class="image-group">
+        <div v-for="(file, index) in fileList" :key="index">
+          <button type="button" @click="deleteImage(index)">삭제</button>
+          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+          <p class="custom-contents">{{file.name}}</p>
         </div>
-          <!-- 내용 작성란 -->
-        <div class="text-group">
-          <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
-          <textarea
-            type="text"
-            class="form-control"
-            v-model="message"
-            v-on:keypress.enter="sendMessage"
-            @keydown="handleKeydown"
-          />
-          <div class="input-group-append">
-            <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList.length === 0">보내기</button>
-          </div>
+      </div>
+        <!-- 내용 작성란 -->
+      <div class="text-group">
+        <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
+        <textarea
+          type="text"
+          class="form-control"
+          v-model="message"
+          v-on:keypress.enter="sendMessage"
+          @keydown="handleKeydown"
+        />
+        <div class="input-group-append">
+          <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList.length === 0">보내기</button>
         </div>
       </div>
     </div>
@@ -180,19 +180,13 @@ export default {
     this.getMessageList();
     this.getTagList();
     this.connect();
-    // this.scrollToBottom();
     // window.addEventListener('scroll', this.scrollPagination)
     // this.$refs.messageList.addEventListener('scroll', this.scrollPagination);
   },
   mounted() {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
-    this.scrollToBottom();
   },
-  updated() {
-    // if (!this.isLoading) {
-    //   this.checkAndScroll();
-    // }
-  },
+  updated() {},
   beforeUnmount() {
     // window.removeEventListener('scroll', this.scrollPagination)
     this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
@@ -233,11 +227,6 @@ export default {
       this.isComment = !this.isComment
       this.parentThread = null
       this.scrollToBottom();
-    },
-    checkAndScroll() {
-      if (this.tagFilter.length === 0) {
-        this.scrollToBottom(); // 필터가 없을 때 스크롤을 아래로 이동
-      }
     },
     addTagFilter(tag){
       this.tagFilter.push(tag)
@@ -581,6 +570,7 @@ export default {
       } catch (e) {
         console.log(e);
       }
+      this.scrollToBottom();
     },
     debouncedScrollPagination: debounce(async function () {
       const list = document.getElementById("list-group");
@@ -724,7 +714,6 @@ export default {
 }
 .list-group-item{
   gap: 10px;
-
 }
 .input-group {
   position: sticky;
@@ -742,7 +731,7 @@ export default {
 .custom-contents{
   max-width: 120px; /* 제목의 최대 너비를 설정 */
   overflow: hidden; /* 내용이 넘칠 경우 숨김 처리 */
-  text-overflow: ellipsis !important; /* 넘치는 텍스트에 '...' 추가 (이거 적용안됨 이후 수정필요)*/
+  text-overflow: ellipsis !important; /* 넘치는 텍스트에 '...' 추가*/
   white-space: nowrap; /* 텍스트 줄 바꿈 방지 */
 }
 .text-group {
@@ -766,5 +755,9 @@ export default {
 .thread-title{
   display: flex;
   flex-direction: row;
+}
+.comment-group{
+  overflow-y: scroll;
+  max-height: calc(100vh - 240px);
 }
 </style>
