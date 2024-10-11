@@ -4,7 +4,7 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-          {{ thread.id }}
+       <img :src="thread.image" alt="image" class="profile-image">
       </div>
     </div>
     <div class="thread-content">
@@ -381,8 +381,17 @@
 .form-control {
   width: 80%;
 }
-input:focus {
+.input:focus {
   outline: none;
+}
+.profile-image{
+  width: 50px;
+  /* 이미지의 가로 크기 */
+  height: 50px;
+  /* 이미지의 세로 크기 */
+  border-radius: 50%;
+  /* 이미지를 동그랗게 만듦 */
+  object-fit: cover;
 }
 </style>
 
