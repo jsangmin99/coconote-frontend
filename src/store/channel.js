@@ -12,6 +12,7 @@ const channel = {
         setChannelInfo(state, channelValue) {
             state.channelId = channelValue;
             localStorage.setItem("channelId", channelValue);
+            console.error(">>>>>", state.channelId)
         },
         setChannelNameInfo(state, channelNameValue) {
             state.channelName = channelNameValue;

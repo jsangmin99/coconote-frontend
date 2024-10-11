@@ -1,12 +1,17 @@
 <template>
   <div class="container">
-    <ul class="list-group" ref="messageList" id="list-group">
-      <li
+    <div class="tag-filter-container">
+      <div v-for="(tag,index) in tagFilter" :key="index" >
+        <button @click="removeTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+      </div>
+    </div>
+    <div class="list-group" ref="messageList" id="list-group">
+      <div
         class="list-group-item"
-        v-for="(message,index) in messages.slice().reverse()"
+        v-for="(message,index) in filteredMessages.slice().reverse()"
         :key="message.id"
       >
-        <div v-if="index > 0 && this.isDifferentDay(message.createdTime,  messages.slice().reverse()[index-1].createdTime)">
+        <div v-if="index === 0 || (index > 0 && this.isDifferentDay(message.createdTime,  filteredMessages.slice().reverse()[index-1].createdTime))">
           <div style="display: flex; align-content: center; text-align: center; margin: auto;">
               <hr style="width: 27%; margin:auto;"><span style="margin:auto;">{{this.getDay(message.createdTime)}}</span><hr style="width: 27%; margin:auto;">
           </div>
@@ -18,12 +23,20 @@
           :createdTime="this.getTime(message.createdTime)"
           :content="message.content"
           :files="message.files"
+          :tags="message.tags"
           :updateMessage="updateMessage"
           :deleteMessage="deleteMessage"
           :deleteFile="deleteFile"
+          :createAndAddTag="createAndAddTag"
+          :tagList="tagList"
+          :addTag="addTag"
+          :removeTag="removeTag"
+          :addTagFilter="addTagFilter"
+          :removeTagFilter="removeTagFilter"
+          :tagFilter="tagFilter"
         />
-      </li>
-    </ul>
+      </div>
+    </div>
     
     <div class="input-group">
 
@@ -37,11 +50,12 @@
         
       <div class="text-group">
         <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
-        <input
+        <textarea
           type="text"
           class="form-control"
           v-model="message"
           v-on:keypress.enter="sendMessage"
+          @keydown="handleKeydown"
         />
         <div class="input-group-append">
           <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList.length === 0">보내기</button>
@@ -90,12 +104,15 @@ export default {
       fileList: [],
       // uploadProgress: [], // 업로드 진행 상황
       filesRes: null,
+      tagList: [],
+      tagFilter: [],
     };
   },
   created() {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
     this.getMessageList();
+    this.getTagList();
     this.connect();
     // this.scrollToBottom();
     // window.addEventListener('scroll', this.scrollPagination)
@@ -105,7 +122,11 @@ export default {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
     this.scrollToBottom();
   },
-  updated() {},
+  updated() {
+    // if (!this.isLoading) {
+    //   this.checkAndScroll();
+    // }
+  },
   beforeUnmount() {
     // window.removeEventListener('scroll', this.scrollPagination)
     this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
@@ -121,10 +142,39 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['getWorkspaceId', 'getWorkspaceName'])
+    ...mapGetters(['getWorkspaceId', 'getWorkspaceName']),
+    filteredMessages() {
+      if (this.tagFilter.length === 0) {
+        this.checkAndScroll();
+        return this.messages; // 필터가 없으면 전체 메시지를 반환
+      }
+      return this.messages.filter(message => {
+        if (!message.tags) return false; // 태그가 없는 경우 제외
+
+        // 메시지의 태그가 tagFilter의 모든 태그를 포함하는지 확인
+        return this.tagFilter.every(filter => 
+          message.tags.some(tag => filter.id === tag.id)
+        );
+      });
+    }
   },
 
   methods: {
+    checkAndScroll() {
+      if (this.tagFilter.length === 0) {
+        this.scrollToBottom(); // 필터가 없을 때 스크롤을 아래로 이동
+      }
+    },
+    addTagFilter(tag){
+      this.tagFilter.push(tag)
+    },
+    removeTagFilter(tag){
+      this.tagFilter = this.tagFilter.filter(tagFilter => tagFilter.id !== tag.id);
+    },
+    async getTagList(){
+      const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/tag/list/${this.id}`);
+      this.tagList = response.data.result
+    },
     recvMessage(recv) {
       if (recv.type === "UPDATE") {
         // UPDATE일 경우, 해당 id의 메시지를 찾아 content를 업데이트
@@ -133,6 +183,25 @@ export default {
         if (messageToUpdate) {
             // 메시지가 존재할 경우 content 업데이트
             messageToUpdate.content = recv.content;
+        }
+      } else if(recv.type === "ADD_TAG"){
+        
+        const messageToUpdate = this.messages.find(message => message.id === recv.id);
+        if(messageToUpdate){
+          if(!messageToUpdate.tags || messageToUpdate.tags.length === 0){
+            messageToUpdate.tags = [{id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId}]
+          }else{
+            messageToUpdate.tags.push({id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId});
+          }
+        }
+        // 태그를 만들면 바로 태그리스트에 넣어주려 했는데 그럴러면 type을 하나더 추가해서 분기해줘야 될듯 나중에 시간나면 할예정
+        // this.tagList.push({id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId});
+
+      } else if(recv.type === "REMOVE_TAG"){
+        const messageToUpdate = this.messages.find(message => message.id === recv.id);
+        
+        if(messageToUpdate){
+          messageToUpdate.tags = messageToUpdate.tags.filter(tag => tag.id !== recv.tagId);
         }
       } else if(recv.type === "DELETE"){
         // DELETE일 경우, messages에서 해당 id의 메시지를 제거
@@ -156,8 +225,49 @@ export default {
             createdTime: recv.createdTime,
             files: recv.files,
         });
+        this.scrollToBottom();
       }
-      this.scrollToBottom();
+    },
+    createAndAddTag(id, tagName, tagColor){
+      const authToken = localStorage.getItem('accessToken');
+      this.ws.send(
+        "/pub/chat/message",
+        {Authorization: authToken},
+        JSON.stringify({
+          type: "ADD_TAG",
+          channelId: this.roomId,
+          threadId: id,
+          tagName: tagName,
+          tagColor: tagColor,
+        })
+      );
+    },
+    addTag(id, tagId){
+      const authToken = localStorage.getItem('accessToken');
+      this.ws.send(
+        "/pub/chat/message",
+        {Authorization: authToken},
+        JSON.stringify({
+          type: "ADD_TAG",
+          channelId: this.roomId,
+          threadId: id,
+          tagId: tagId,
+        })
+      );
+    },
+    removeTag(id, tagId, threadTagId){
+      const authToken = localStorage.getItem('accessToken');
+      this.ws.send(
+        "/pub/chat/message",
+        {Authorization: authToken},
+        JSON.stringify({
+          type: "REMOVE_TAG",
+          channelId: this.roomId,
+          threadId: id,
+          tagId: tagId,
+          threadTagId: threadTagId,
+        })
+      );
     },
     updateMessage(id, message){
       const authToken = localStorage.getItem('accessToken');
@@ -198,6 +308,10 @@ export default {
       );
     },
     async sendMessage() {
+      // 메시지가 비어있거나 공백 문자만 포함된 경우
+      if (!this.message.trim() && this.fileList.length === 0) {
+        return; // 함수 종료
+      }
       const authToken = localStorage.getItem('accessToken');
 
       if(this.fileList.length>0) {
@@ -312,7 +426,7 @@ export default {
         this.currentPage++;
         this.isLastPage = response.data.result.last;
         // this.messages = [...this.messages, ...response.data.result.content]
-
+        
         // 기존 메시지의 ID 집합을 생성
         const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
 
@@ -366,6 +480,19 @@ export default {
     
     deleteImage(index){
       this.fileList.splice(index, 1);
+    },
+    handleKeydown(event) {
+      if (event.key === 'Enter') {
+        if (event.shiftKey) {
+          // Shift + Enter일 경우 개행 추가
+          this.message += '\n';
+          event.preventDefault(); // 기본 동작 방지
+        } else {
+          // Enter만 누를 경우 메시지 전송
+          this.sendMessage();
+          event.preventDefault(); // 기본 동작 방지
+        }
+      }
     },
     connect() {
       this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
@@ -485,6 +612,17 @@ export default {
 }
 .form-control {
     width: 100%;
+    white-space: pre-line;
 }
-
+.tag-filter-container{
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+.tag {
+  border-radius: 5px;
+  padding: 0 5px 1px 5px;
+  color: white;
+  font-size: 11px;
+}
 </style>

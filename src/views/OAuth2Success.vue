@@ -36,7 +36,14 @@ export default {
       if (accessToken && refreshToken) {
         try {
           this.saveTokens(accessToken, refreshToken);
-          this.$router.push(`/workspace`); // 워크스페이스 입장 전 자동선택 페이지로 이동
+          // 로컬 스토리지에서 redirectUrl을 가져온다.
+          const redirectUrl = localStorage.getItem('redirectUrl');
+          if (redirectUrl) {
+            localStorage.removeItem('redirectUrl'); // URL 사용 후 제거
+            this.$router.push(redirectUrl); // 저장된 URL로 이동
+          } else {
+            this.$router.push('/workspace'); // 저장된 URL이 없으면 워크스페이스로 이동
+          }
         } catch (error) {
           console.error("토큰 저장 중 에러 발생:", error);
         }

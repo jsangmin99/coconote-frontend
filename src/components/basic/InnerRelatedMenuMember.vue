@@ -1,60 +1,18 @@
 <template>
   <v-navigation-drawer permanent class="innerSubMenu" :width="220">
-    <div>{{ workspaceName }} 회원 목록</div>
-    <v-list v-for="member in workspaceMemberList" :key="member.workspaceMemberId">
-      <v-list-item 
-        value="member.workspaceMemberId"
-        @click="selectedMenu = 'InnerRelated멤버MenuHome'"
-        :class="{ 'selected-item': selectedMenu === '멤버' }"
-        class="channel-item"
-      >
-      <template v-slot:prepend>
-        <v-icon>mdi-person</v-icon>
-        <span>{{ member.nickname }}</span>
-      </template>
-      </v-list-item>
-        <v-list-item>
-        <template v-slot:prepend>
-          <v-btn @click="showMailSender">
-          </v-btn>
-        <span>회원 초대</span>
-      </template>
-      </v-list-item>
-    </v-list>
+    <div>회원 목록</div>
   </v-navigation-drawer>
 </template>
 
 <script>
-import axios from "axios";
-
 export default {
     props: {
-    selectedValue: {
-      type: Number,
-    }
   },
   name: "InnerRelatedMenuHome",
-  updated() {
-    this.fetchWorkspaceInfo();
-  },
   data() {
     return {
-      workspaceMemberList: {},
-      workspaceName: "",
-      
-    };
-  },
-  methods: {
-    async fetchWorkspaceInfo() {
-      try {
-        const wsList = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/list`);
-        this.workspaceName = wsList.data.result[this.selectedValue -1].name;
-        const wsDetail = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/${this.selectedValue}/member/list`);
-        this.workspaceMemberList = wsDetail.data.result; 
-      } catch (e) {
-        console.log(e);
-      }
-    },
+
+    }
   },
 };
 </script>

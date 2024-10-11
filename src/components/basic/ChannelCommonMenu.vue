@@ -35,7 +35,7 @@
     </div>
 
     <!-- 드롭다운 메뉴 -->
-    <div v-if="isDropdownOpen" class="dropdown-menu">
+    <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
       <ul>
         <li @click="editChannel">채널 수정</li>
         <li @click="deleteChannel">채널 삭제</li>
@@ -94,8 +94,24 @@ export default {
   },
   mounted() {
     this.loadChannelMembers(); // 컴포넌트가 마운트되면 채널 멤버를 불러옴
+    document.addEventListener('click', this.handleClickOutside); //드롭다운 메뉴 외부 클릭 시 닫기
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleClickOutside);
   },
   methods: {
+    handleClickOutside(event) {
+      // 드롭다운 버튼을 클릭한 경우는 무시
+      const dropdownToggle = this.$el.querySelector('.mdi-dots-vertical');
+      const dropdown = this.$el.querySelector('.dropdown-menu');
+
+      if ((dropdownToggle && dropdownToggle.contains(event.target)) || (dropdown && dropdown.contains(event.target))) {
+        return;
+      }
+
+      this.isDropdownOpen = false;
+    },
+
     async loadChannelMembers() {
       try {
         const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/channel/member/list/${this.getChannelId}`);
@@ -256,9 +272,9 @@ export default {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 10px;
     z-index: 100;
-    top: 40px;
+    top: 75px;
     /* 위치 조정 */
-    right: 0px;
+    right: 40px;
   }
 
   .dropdown-menu ul {
@@ -275,6 +291,7 @@ export default {
   .dropdown-menu ul li:hover {
     background-color: #f3f3f3;
   }
+
   .icon-container {
     position: relative;
     display: flex;
