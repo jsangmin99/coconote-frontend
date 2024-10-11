@@ -255,7 +255,14 @@ export default {
     recvMessage(recv) {
       if (recv.type === "UPDATE") {
         // UPDATE일 경우, 해당 id의 메시지를 찾아 content를 업데이트
-        const messageToUpdate = this.messages.find(message => message.id === recv.id);
+        let messageToUpdate;
+        
+        if(recv.parentThreadId){
+          const parent = this.messages.find(message => message.id === recv.parentThreadId);
+          messageToUpdate = parent.childThreads.find(message => message.id === recv.id);
+        }else{
+          messageToUpdate = this.messages.find(message => message.id === recv.id);
+        }
 
         if (messageToUpdate) {
             // 메시지가 존재할 경우 content 업데이트
