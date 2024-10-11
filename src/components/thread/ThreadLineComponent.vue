@@ -11,7 +11,7 @@
       <div class="title">
 
         <!-- 닉네임 생성일 -->
-        <div class="nickName">{{thread.memberName}}</div>
+        <strong class="nickName">{{thread.memberName}}</strong>
         <div class="createdTime">{{createdTime}}</div>
 
         <!-- 태그 -->
@@ -72,7 +72,7 @@
       </div>
       
       <!-- 댓글 -->
-      <button v-if="!thread.parentThreadId" @click="commentIn(thread)">
+      <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0" @click="commentIn(thread)">
         <div class="comment">
           {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
         </div>
@@ -86,7 +86,7 @@
   </div>
   <div v-if="isContextMenuVisible || isTagMenuVisible" class="overlay"></div>
   <div v-if="isContextMenuVisible" class="context-menu">
-    <button>댓글 쓰기</button>
+    <button @click="commentIn(thread)">댓글 쓰기</button>
     <button>태그 추가</button>
     <button @click="editMessage">수정</button>
     <button @click="deleteM">삭제</button>
@@ -268,7 +268,6 @@ import axios from '@/services/axios';
 <style scoped>
 .thread {
   display: flex;
-  align-items: center;
 }
 .thread-wrapper {
   position: relative;
@@ -306,7 +305,7 @@ import axios from '@/services/axios';
 
 }
 .createdTime {
-    
+  
 }
 .tag-group {
   display: flex;

@@ -82,7 +82,7 @@
         :removeTagFilter="removeTagFilter"
         :tagFilter="tagFilter"
       />
-      <h5>{{ thread.childThreads && thread.childThreads.length > 0 ? `밑으로 ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
+      <h5>{{ parentThread.childThreads && parentThread.childThreads.length > 0 ? `밑으로 ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
       
       <div v-for="(message,index) in parentThread.childThreads" :key="index">
         <ThreadLineComponent
