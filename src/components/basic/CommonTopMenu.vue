@@ -65,7 +65,7 @@ export default {
     this.fetchMyWorkspaceList();
   },
   methods: {
-      ...mapActions([
+    ...mapActions([
       "setWorkspaceInfoActions",
       "setWorkspaceNameInfoActions",
       "setMemberInfoActions",
@@ -79,6 +79,10 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/workspace/list`
         );
         this.items = response.data.result; // 내 워크스페이스 목록 가져오기
+        if (this.items.length > 0) {
+          this.selectedValue = this.items[0].workspaceId; // 첫 번째 워크스페이스 ID 할당
+          this.emitSelected();
+        }
         this.isLoading = true;
       } catch (e) {
         console.log(e);
@@ -86,14 +90,15 @@ export default {
     },
     async fetchWorkspaceInfo() {
       try {
-        const wsInfo = await axios.get( // 워크스페이스 정보
+        const wsInfo = await axios.get(
+          // 워크스페이스 정보
           `${process.env.VUE_APP_API_BASE_URL}/workspace/info/${this.selectedValue}`
         );
         this.setWorkspaceInfoActions(wsInfo.data.result.workspaceId);
         this.setWorkspaceNameInfoActions(wsInfo.data.result.name);
 
-
-        const response = await axios.get( // 내 워크스페이스 회원 정보
+        const response = await axios.get(
+          // 내 워크스페이스 회원 정보
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.selectedValue}`
         );
         const myInfo = {
@@ -103,25 +108,24 @@ export default {
           wsRole: response.data.result.wsRole,
         };
         this.setMemberInfoActions(myInfo);
-        
 
-        const chInfo = await axios.get( // 채널 정보
-        `${process.env.VUE_APP_API_BASE_URL}/${this.selectedValue}/channel/first` 
+        const chInfo = await axios.get(
+          // 채널 정보
+          `${process.env.VUE_APP_API_BASE_URL}/${this.selectedValue}/channel/first`
         );
-        this.setChannelInfoActions(chInfo.data.result.channelId); 
+        this.setChannelInfoActions(chInfo.data.result.channelId);
         this.setChannelNameInfoActions(chInfo.data.result.channelName);
         this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
 
-      this.isLoading = true;
+        this.isLoading = true;
       } catch (e) {
         console.log(e);
       }
-
     },
     async emitSelected() {
       this.$emit("selected", this.selectedValue);
       this.fetchWorkspaceInfo();
-      // window.location.reload(); 
+      // window.location.reload();
     },
     showWorkspaceModal() {
       this.createWorkspace = true;
