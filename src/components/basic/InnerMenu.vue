@@ -207,6 +207,7 @@ export default {
   height: 100% !important;
   display: flex;
   flex-direction: column;
+  position: static !important;
 }
 
 .menu-container {
