@@ -68,9 +68,7 @@ export default {
       member: "",
       message: "",
       messages: [],
-      ws: null,
       wsBlock: null,
-      sock: null,
       sockBlock: null,
       reconnect: 0,
 
@@ -196,41 +194,6 @@ export default {
       }
     },
     connect() {
-      // this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
-      this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
-      this.ws = Stomp.over(this.sock);
-      this.ws.connect(
-        {},
-        () => {
-          this.ws.subscribe(
-            `/sub/canvas/room/${this.detailCanvasId}`,
-            (message) => {
-              const recv = JSON.parse(message.body);
-              this.recvMessage(recv);
-            }
-          );
-          this.ws.send(
-            `/pub/canvas/message`,
-            {},
-            JSON.stringify({
-              type: "ENTER",
-              roomId: this.detailCanvasId,
-              sender: this.sender,
-            })
-          );
-        },
-        () => {
-          if (this.reconnect++ <= 5) {
-            setTimeout(() => {
-              this.sock = new SockJS(
-                `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
-              );
-              this.ws = Stomp.over(this.sock);
-              this.connect();
-            }, 10 * 1000);
-          }
-        }
-      );
       // block 용 websocket
       this.sockBlock = new SockJS(
         `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
@@ -271,16 +234,6 @@ export default {
     },
     beforeRouteLeave() {
       // 컴포넌트가 파괴되기 전에 구독 해제 및 WebSocket 연결 종료
-      if (this.sock) {
-        this.sock.close(); // SockJS 연결을 닫음
-        this.sock = null;
-        console.log("WebSocket subscription unsubscribed.");
-      }
-      if (this.ws) {
-        this.ws.disconnect(() => {
-          console.log("WebSocket connection closed.");
-        });
-      }
       if (this.sockBlock) {
         this.sockBlock.close(); // SockJS 연결을 닫음
         this.sockBlock = null;
