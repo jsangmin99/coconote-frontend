@@ -11,7 +11,7 @@ import { channelRouter } from '@/router/channelRouter'
 import { driveRouter } from '@/router/driveRouter'
 import SearchComponent from '@/components/search/SearchComponent.vue';
 import { workspaceRouter } from '@/router/workspaceRouter';
-import { memberRouter } from './memberRouter';
+import { memberRouter } from '@/router/memberRouter';
 
 import Invitation from '@/views/workspace/InvitationView.vue'; // Invitation.vue 컴포넌트 추가
 
