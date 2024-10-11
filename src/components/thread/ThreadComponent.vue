@@ -262,7 +262,16 @@ export default {
             messageToUpdate.content = recv.content;
         }
       } else if(recv.type === "ADD_TAG" || recv.type === "CREATE_AND_ADD_TAG"){
-        const messageToUpdate = this.messages.find(message => message.id === recv.id);
+
+        let messageToUpdate;
+        
+        if(recv.parentThreadId){
+          const parent = this.messages.find(message => message.id === recv.parentThreadId);
+          messageToUpdate = parent.childThreads.find(message => message.id === recv.id);
+        }else{
+          messageToUpdate = this.messages.find(message => message.id === recv.id);
+        }
+
         if(messageToUpdate){
           if(!messageToUpdate.tags || messageToUpdate.tags.length === 0){
             messageToUpdate.tags = [{id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId}]
@@ -272,7 +281,6 @@ export default {
         }
         // 태그를 만들면 바로 태그리스트에 넣어주려 했는데 그럴러면 type을 하나더 추가해서 분기해줘야 될듯 나중에 시간나면 할예정
         if(recv.type === "CREATE_AND_ADD_TAG"){
-          console.log("태그 생성");
           
           this.tagList.push({id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId});
         }
