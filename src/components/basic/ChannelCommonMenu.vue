@@ -4,7 +4,7 @@
       <div class="titleArea">
         <div class="col">
           <div>
-            <v-icon icon="mdi-star" class="star active" @click="toggleBookmark" />
+            <v-icon @click.stop="toggleBookmark(getChannelId)" :color="isBookmarked ? '#ffbb00' : 'grey'" class="star active">mdi-star</v-icon>
           </div>
           <h1>{{ getChannelName }}</h1>
           <div>
@@ -65,7 +65,7 @@
 
 <script>
 import ChannelMemberModal from "@/components/ChannelMemberInviteModal.vue";
-import { mapGetters } from "vuex";
+import { mapGetters, mapActions } from "vuex";
 import axios from "axios";
 
 export default {
@@ -80,7 +80,8 @@ export default {
       isChannelMemberModalOpen: false,
       isDropdownOpen: false, // 드롭다운 상태 관리
       toggleBookmarkIsLoading: false,
-      defaultProfileImage: 'https://via.placeholder.com/40', // 기본 프로필 이미지 설정
+      defaultProfileImage: 'https://via.placeholder.com/40', // 기본 프로필 이미지 설정,
+      isBookmarked: false,
     };
   },
   computed: {
@@ -88,6 +89,8 @@ export default {
       "getChannelId",
       "getChannelName",
       "getChannelDesc",
+      "getChannelRole",
+      "getIsBookmark",
       "getWorkspaceId",
       "getWorkspaceName",
     ]),
@@ -99,7 +102,13 @@ export default {
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
   },
+  created() {
+    this.fetchBookmark(this.getChannelId);
+  },
   methods: {
+      ...mapActions([
+      "setChannelRoleInfoActions",
+    ]),
     handleClickOutside(event) {
       // 드롭다운 버튼을 클릭한 경우는 무시
       const dropdownToggle = this.$el.querySelector('.mdi-dots-vertical');
@@ -169,16 +178,33 @@ export default {
     editChannel() {
       console.log("채널 수정 클릭됨");
     },
-    async toggleBookmark() {
-      this.toggleBookmarkIsLoading = true;
+    async fetchBookmark(channelId) {
+      const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${channelId}`);
+      if(response.data.result.isBookmark) {
+        this.isBookmarked = true;
+      }else{
+        this.isBookmarked = false;
+      }
+    },
+    async toggleBookmark(channelId) {
+      // this.toggleBookmarkIsLoading = true;
       try {
-        const response = await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/bookmark/${this.channelId}`);
-        console.log("toggleBookmark", response);
+        const response = await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/bookmark/${channelId}`);
+        if(response.data.result) {
+          this.isBookmarked = true;
+        } else {
+          this.isBookmarked = false;
+        }
+        console.log("toggleBookmark", response.data.result);
       } catch (error) {
         console.error("bookmark 토글 중 오류 발생", error);
       } finally {
-        this.toggleBookmarkIsLoading = false;
+        // this.toggleBookmarkIsLoading = false;
       }
+    },
+    isBookmark() {
+      console.log("별 무슨 색깔인지", this.isBookmarked);
+      return this.isBookmarked;
     },
   },
 };

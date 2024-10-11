@@ -72,6 +72,7 @@ export default {
       "setChannelInfoActions",
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
+      "setChannelRoleInfoActions",
     ]),
     async fetchMyWorkspaceList() {
       try {
@@ -79,6 +80,10 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/workspace/list`
         );
         this.items = response.data.result; // 내 워크스페이스 목록 가져오기
+        if (this.items.length > 0) {
+        this.selectedValue = this.items[0].workspaceId; // 첫 번째 워크스페이스 ID 할당
+        this.emitSelected();
+      }
         this.isLoading = true;
       } catch (e) {
         console.log(e);
@@ -111,6 +116,12 @@ export default {
         this.setChannelInfoActions(chInfo.data.result.channelId); 
         this.setChannelNameInfoActions(chInfo.data.result.channelName);
         this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
+
+
+        const chMember = await axios.get( // 채널 권한 정보
+        `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${chInfo.data.result.channelId}` 
+        );
+        this.setChannelRolerInfoActions(chMember.data.result.channelRole);
 
       this.isLoading = true;
       } catch (e) {

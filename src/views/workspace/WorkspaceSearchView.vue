@@ -36,6 +36,7 @@ export default {
       "setChannelInfoActions",
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
+      "setChannelRoleInfoActions",
     ]),
 
     // 워크스페이스 정보를 가져오는 메소드
@@ -93,6 +94,13 @@ export default {
       this.setChannelInfoActions(response.data.result.channelId);
       this.setChannelNameInfoActions(response.data.result.channelName);
       this.setChannelDescInfoActions(response.data.result.channelInfo);
+
+
+      const chMember = await axios.get( // 채널 권한 정보
+      `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${response.data.result.channelId}` 
+      );
+      this.setChannelRoleInfoActions(chMember.data.result.channelRole);
+
       this.$router.push(`/channel/${response.data.result.channelId}`);
 
     },

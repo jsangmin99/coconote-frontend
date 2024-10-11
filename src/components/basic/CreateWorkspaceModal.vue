@@ -45,6 +45,8 @@ export default {
       "setChannelInfoActions",
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
+      "setChannelRoleInfoActions"
+      
     ]),
         async createWorkspace() {
             const body = {
@@ -76,6 +78,11 @@ export default {
                 this.setChannelInfoActions(chInfo.data.result.channelId); 
                 this.setChannelNameInfoActions(chInfo.data.result.channelName);
                 this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
+
+                const chMember = await axios.get( // 채널 권한 정보
+                `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${chInfo.data.result.channelId}` 
+                );
+                this.setChannelRoleInfoActions(chMember.data.result.channelRole);
 
                 this.$emit('update:dialog', false);
                 window.location.reload();

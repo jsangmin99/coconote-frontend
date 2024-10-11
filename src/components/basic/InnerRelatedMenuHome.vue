@@ -43,12 +43,12 @@
               channel.channelInfo
             )
             ">
-          <template v-slot:prepend>
+          <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
             <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
             <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
           </template>
 
-          <v-list-item-title> {{ channel.channelName }}</v-list-item-title>
+          <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)"> {{ channel.channelName }}</v-list-item-title>
         </v-list-item>
 
         <v-list-item class="channelCreate" @click="
@@ -157,6 +157,7 @@ export default {
   },
   created() {
     // this.selectedChannelMenuId = this.$route.params.channelId;
+    this.fetchMyChannels();
   },
   mounted() {
     this.getSectionData();
@@ -181,6 +182,7 @@ export default {
       editedWsInfo: "",
       // sectionEditMode: false,
       // editedSectionName: "",
+      myChannels: [],
     };
   },
   methods: {
@@ -188,6 +190,7 @@ export default {
       "setChannelInfoActions",
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
+      "setChannelRoleInfoActions",
       "setWorkspaceNameInfoActions",
     ]),
     async getSectionData() {
@@ -200,17 +203,22 @@ export default {
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
         if (this.sections.length > 0 && this.sections[0].channelList.length > 0) {
           const firstChannel = this.sections[0].channelList[0];
-          this.changeChannel(firstChannel.channelId, firstChannel.channelName, firstChannel.channelInfo);
+          const chMember = await axios.get( // 채널 권한 정보
+          `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${firstChannel.channelId}` 
+          );
+          const channelRole = this.setChannelRoleInfoActions(chMember.data.result.channelRole);
+          this.changeChannel(firstChannel.channelId, firstChannel.channelName, firstChannel.channelInfo, channelRole);
         }
       } catch (error) {
         console.log(error);
       }
     },
-    async changeChannel(id, name, desc) {
+    async changeChannel(id, name, desc, role) {
       this.selectedChannelMenuId = id;
       this.setChannelInfoActions(id);
       this.setChannelNameInfoActions(name);
       this.setChannelDescInfoActions(desc);
+      this.setChannelRoleInfoActions(role);
 
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
@@ -307,6 +315,20 @@ export default {
     },
     async deleteSection() {
     
+    },
+    async fetchMyChannels() {
+      try {
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.getWorkspaceId}`
+        );
+        this.myChannels = response.data.result.channels;
+        console.log("내가 속한 채널들", this.myChannels);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    isMember(id) {
+      return this.myChannels.some(channel => channel === id);
     },
   },
 };
