@@ -4,21 +4,21 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-          {{ id }}
+          {{ thread.id }}
       </div>
     </div>
     <div class="thread-content">
       <div class="title">
 
         <!-- 닉네임 생성일 -->
-        <div class="nickName">{{nickName}}</div>
+        <div class="nickName">{{thread.memberName}}</div>
         <div class="createdTime">{{createdTime}}</div>
 
         <!-- 태그 -->
         <div class="tag-group">
-          <div class="tag-container" v-for="(tag,index) in this.tags" :key="index" >
-              <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
-              <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+          <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
+            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
           </div>
           <button @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
           <div class="tag-toggle">
@@ -57,7 +57,7 @@
       
       <!-- 파일 -->
       <div class="image-group">
-        <div v-for="(file, index) in this.files" :key="index">
+        <div v-for="(file, index) in thread.files" :key="index">
           <div class="file-group">
             <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
             <p class="custom-contents">{{file.fileName}}</p>
@@ -69,7 +69,9 @@
       </div>
       
       <!-- 댓글 -->
-      <div class="comment">comment</div>
+      <button v-if="!thread.parentThreadId" @click="commentIn(thread)">
+        <div class="comment">comment</div>
+      </button>
     </div>
   </div>
 
@@ -87,7 +89,7 @@
   
 <script>
   export default {
-    props: ['id','type', 'image', 'nickName', 'createdTime','content','files','childThreads','tags','updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter'],
+    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn'],
     data() {
         return {
             message: "",
@@ -101,24 +103,24 @@
     },
     computed: {
       formattedContent() {
-        return this.content.replace(/\n/g, '<br />'); // 개행 문자를 <br>로 변환
+        return this.thread.content.replace(/\n/g, '<br />'); // 개행 문자를 <br>로 변환
       },
       filteredTagList() {
         // tags에 포함되지 않은 tagList의 태그를 필터링
-        if(!this.tags || this.tags.length === 0){
+        if(!this.thread.tags || this.thread.tags.length === 0){
           return this.tagList.filter(tag => 
             tag.name.toLowerCase().includes(this.tagName.toLowerCase()) // tagName에 따라 필터링
           );
         }else{
           return this.tagList.filter(tag => 
-            !this.tags.some(t => t.id === tag.id) &&
+            !this.thread.tags.some(t => t.id === tag.id) &&
             tag.name.toLowerCase().includes(this.tagName.toLowerCase()) // tagName에 따라 필터링
           );
         }
-      }
+      },
     },
     created() {
-        this.message=this.content
+        this.message=this.thread.content
     },
     mounted() {
         // 외부 클릭 감지 이벤트 리스너 등록
@@ -149,15 +151,15 @@
         if (!this.tagName.trim()) {
           return;
         }
-        this.createAndAddTag(this.id, this.tagName, this.getRandomColor());
+        this.createAndAddTag(this.thread.id, this.tagName, this.getRandomColor());
         this.tagName = ""
         this.inputWidth = 35
       },
       addT(tagId){
-        this.addTag(this.id, tagId)
+        this.addTag(this.thread.id, tagId)
       },
       deleteTag(tagId, threadTagId){
-        this.removeTag(this.id,tagId,threadTagId)
+        this.removeTag(this.thread.id,tagId,threadTagId)
       },
       getRandomColor() {
         const letters = '0123456789ABCDEF';
@@ -184,14 +186,14 @@
         if (!this.message.trim()) {
           return; // 함수 종료
         }
-        this.updateMessage(this.id,this.message);
+        this.updateMessage(this.thread.id,this.message);
         this.isUpdate = false
       },
       deleteM(){
-        this.deleteMessage(this.id);
+        this.deleteMessage(this.thread.id);
       },
       deleteF(fileId){
-        this.deleteFile(this.id,fileId);
+        this.deleteFile(this.thread.id,fileId);
       },
       toggleContextMenu(event) {
         event.stopPropagation(); // 클릭 이벤트 전파 방지
