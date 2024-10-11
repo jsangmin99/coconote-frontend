@@ -69,7 +69,7 @@
       </div>
       
       <!-- 댓글 -->
-      <button @click="commentIn(thread)">
+      <button v-if="!thread.parentThreadId" @click="commentIn(thread)">
         <div class="comment">comment</div>
       </button>
     </div>
