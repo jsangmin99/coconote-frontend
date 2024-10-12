@@ -34,15 +34,22 @@
 
           <!-- <v-icon v-if="this.getWsRole !== 'USER'" class="icon-cog" icon="mdi-cog" /> -->
         </v-list-subheader>
-        <v-list-item v-for="channel in section.channelList" :key="channel.channelId" :class="{
-          'selected-item': selectedChannelMenuId == channel.channelId,
-        }" class="channel-item" @click="
+
+        <v-list-item
+          v-for="channel in section.channelList"
+          :key="channel.channelId"
+          :class="{
+            'selected-item': selectedChannelMenuId == channel.channelId,
+          }"
+          class="channel-item"
+          @click="
             changeChannel(
               channel.channelId,
               channel.channelName,
               channel.channelInfo
             )
-            ">
+          "
+        >
           <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
             <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
             <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
@@ -51,16 +58,22 @@
           <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)"> {{ channel.channelName }}</v-list-item-title>
         </v-list-item>
 
-        <v-list-item class="channelCreate" @click="
-          (channelDialog = true),
-          (createChannelInfo.sectionId = section.sectionId)
-          ">
+        <v-list-item
+          class="channelCreate"
+          @click="
+            (channelDialog = true),
+              (createChannelInfo.sectionId = section.sectionId)
+          "
+        >
           <v-icon class="icon-plus" icon="mdi-plus" />
           채널생성
         </v-list-item>
       </template>
 
-      <v-list-subheader class="section-title sectionCreate" @click="sectionDialog = true">
+      <v-list-subheader
+        class="section-title sectionCreate"
+        @click="sectionDialog = true"
+      >
         <v-icon class="icon-plus" icon="mdi-plus" /> 섹션 생성
       </v-list-subheader>
     </v-list>
@@ -71,12 +84,29 @@
       <v-card-title> 채널 관리 </v-card-title>
       <v-card-text>
         <p>채널의 이름을 입력하세요.</p>
-        <v-text-field ref="channelNameInput" color="primary" density="compact" variant="underlined"
-          v-model="createChannelInfo.channelName" @keyup.enter="createChannel" placeholder="이름"></v-text-field>
+        <v-text-field
+          ref="channelNameInput"
+          color="primary"
+          density="compact"
+          variant="underlined"
+          v-model="createChannelInfo.channelName"
+          @keyup.enter="createChannel"
+          placeholder="이름"
+        ></v-text-field>
         <p>채널의 설명을 입력하세요.</p>
-        <v-text-field color="primary" density="compact" variant="underlined" v-model="createChannelInfo.channelInfo"
-          @keyup.enter="createChannel" placeholder="이름"></v-text-field>
-        <v-radio-group inline label="채널종류" v-model="createChannelInfo.isPublic">
+        <v-text-field
+          color="primary"
+          density="compact"
+          variant="underlined"
+          v-model="createChannelInfo.channelInfo"
+          @keyup.enter="createChannel"
+          placeholder="이름"
+        ></v-text-field>
+        <v-radio-group
+          inline
+          label="채널종류"
+          v-model="createChannelInfo.isPublic"
+        >
           <v-radio label="공개채널" value="1"></v-radio>
           <v-radio label="비공개 채널" value="0"></v-radio>
         </v-radio-group>
@@ -93,8 +123,15 @@
       <v-card-title> 섹션 관리 </v-card-title>
       <v-card-text>
         섹션의 이름을 입력하세요.
-        <v-text-field color="primary" density="compact" class="canvasTitle" variant="underlined"
-          v-model="createSectionName" @keyup.enter="createSection" placeholder="이름"></v-text-field>
+        <v-text-field
+          color="primary"
+          density="compact"
+          class="canvasTitle"
+          variant="underlined"
+          v-model="createSectionName"
+          @keyup.enter="createSection"
+          placeholder="이름"
+        ></v-text-field>
       </v-card-text>
       <template v-slot:actions>
         <v-btn class="" text="생성" @click="createSection"></v-btn>
@@ -103,21 +140,31 @@
     </v-card>
   </v-dialog>
 
-
-  <v-dialog v-model="workspaceEditModal" max-width="500px" class="workspaceEditModal">
+  <v-dialog
+    v-model="workspaceEditModal"
+    max-width="500px"
+    class="workspaceEditModal"
+  >
     <v-card>
-      <v-card-title class="text-h5 text-center">워크스페이스 정보 수정</v-card-title>
+      <v-card-title class="text-h5 text-center"
+        >워크스페이스 정보 수정</v-card-title
+      >
       <v-card-text>
         <v-list>
           <v-text-field v-model="editedName" placeholder="이름"></v-text-field>
-          <v-text-field v-model="editedWsInfo" placeholder="설명"></v-text-field>
+          <v-text-field
+            v-model="editedWsInfo"
+            placeholder="설명"
+          ></v-text-field>
         </v-list>
       </v-card-text>
-      <v-btn text="수정" color="blue" @click="saveEditing(this.getWorkspaceId)"></v-btn>
+      <v-btn
+        text="수정"
+        color="blue"
+        @click="saveEditing(this.getWorkspaceId)"
+      ></v-btn>
     </v-card>
   </v-dialog>
-
-
 </template>
 
 <script>
@@ -201,13 +248,20 @@ export default {
         this.sections = response.data.result;
 
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
-        if (this.sections.length > 0 && this.sections[0].channelList.length > 0) {
+        if (
+          this.sections.length > 0 &&
+          this.sections[0].channelList.length > 0
+        ) {
           const firstChannel = this.sections[0].channelList[0];
           const chMember = await axios.get( // 채널 권한 정보
           `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${firstChannel.channelId}` 
           );
           const channelRole = this.setChannelRoleInfoActions(chMember.data.result.channelRole);
-          this.changeChannel(firstChannel.channelId, firstChannel.channelName, firstChannel.channelInfo, channelRole);
+          this.changeChannel(
+            firstChannel.channelId,
+            firstChannel.channelName,
+            firstChannel.channelInfo
+          , channelRole);
         }
       } catch (error) {
         console.log(error);
@@ -271,7 +325,9 @@ export default {
     },
     async startEditing(workspaceId) {
       try {
-        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/info/${workspaceId}`);
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/workspace/info/${workspaceId}`
+        );
         this.editedName = response.data.result.name;
         this.editedWsInfo = response.data.result.wsInfo;
         this.workspaceEditModal = true;
@@ -281,10 +337,11 @@ export default {
     },
     async saveEditing(workspaceId) {
       try {
-        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/workspace/update/${workspaceId}`,
+        await axios.patch(
+          `${process.env.VUE_APP_API_BASE_URL}/workspace/update/${workspaceId}`,
           {
             name: this.editedName,
-            wsInfo: this.editedWsInfo
+            wsInfo: this.editedWsInfo,
           }
         );
         this.setWorkspaceNameInfoActions(this.editedName);
@@ -299,8 +356,16 @@ export default {
       try {
         if (window.confirm("워크스페이스를 삭제하시겠습니까?")) {
           // "예" 선택
-          await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/workspace/delete/${workspaceId}`);
+          await axios.delete(
+            `${process.env.VUE_APP_API_BASE_URL}/workspace/delete/${workspaceId}`
+          );
           alert("워크스페이스가 삭제되었습니다.");
+          const noDeleteLsKey = ["accessToken", "refreshToken"]; //삭제하면 안되는 localStorage 값
+          for (var key in localStorage) {
+            if (!noDeleteLsKey.includes(key)) {
+              localStorage.removeItem(key);
+            } 
+          }
           window.location.href = "/workspace";
         } else {
           // "아니오" 선택

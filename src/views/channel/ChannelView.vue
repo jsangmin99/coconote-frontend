@@ -6,31 +6,22 @@
         <h2>
           id : <span>{{ this.$store.getters.getChannelId }}</span>
         </h2>
-        <v-btn>채널 참여</v-btn>
-        <v-btn
-          @click="
-            this.$router.push(
-              `/channel/${this.$store.getters.getChannelId}/thread/view`
-            )
-          "
-          >쓰레드로 이동</v-btn
-        >
-        <v-btn
-          @click="
-            this.$router.push(
-              `/channel/${this.$store.getters.getChannelId}/canvas/view`
-            )
-          "
-          >캔버스로 이동</v-btn
-        >
-        <v-btn
-          @click="
-            this.$router.push(
-              `/channel/${this.$store.getters.getChannelId}/drive/view`
-            )
-          "
-          >드라이브로 이동</v-btn
-        >
+        <v-btn @click="channelMemberCreate">채널 참여</v-btn>
+        <v-btn @click="
+          this.$router.push(
+            `/channel/${this.$store.getters.getChannelId}/thread/view`
+          )
+          ">쓰레드로 이동</v-btn>
+        <v-btn @click="
+          this.$router.push(
+            `/channel/${this.$store.getters.getChannelId}/canvas/view`
+          )
+          ">캔버스로 이동</v-btn>
+        <v-btn @click="
+          this.$router.push(
+            `/channel/${this.$store.getters.getChannelId}/drive/view`
+          )
+          ">드라이브로 이동</v-btn>
       </div>
     </div>
   </div>
@@ -38,6 +29,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+import axios from '@/services/axios';
 export default {
   components: {},
   data() {
@@ -55,10 +47,25 @@ export default {
   mounted() {
     if (!this.getChannelId) {
       console.log("없다...")
-        // 처음 로딩 시점에 channelId가 없다면 로직 실행
+      // 처음 로딩 시점에 channelId가 없다면 로직 실행
     }
   },
   methods: {
+    // 채널 참여 메서드
+    async channelMemberCreate() {
+      this.loading = true;
+      try {
+        const response = await axios.post(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/member/create/${this.getChannelId}`
+        );
+        alert(response.data.status_message); // 성공 메시지 출력
+      } catch (error) {
+        console.error('채널 가입 실패:', error);
+        alert('채널 가입에 실패했습니다.');
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 };
 </script>

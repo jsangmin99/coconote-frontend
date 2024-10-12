@@ -54,6 +54,7 @@ export default {
   },
   computed: {
     ...mapGetters([
+      "getChannelId",
       "getBlockFeId",
       "getBlockFeIdIndex",
       "getTargetBlockPrevFeId",
@@ -92,6 +93,7 @@ export default {
     ...mapActions([
       "setDefaultBlockFeIdsActions",
       "pushBlockFeIdsActions",
+      "appendBlockFeIdsAfterPrevActions",
       "deleteBlockTargetFeIdActions",
     ]),
     handleCanvasIdChange(newCanvasId) {
@@ -135,12 +137,16 @@ export default {
           },
         };
         if (block.content != null) {
-          tempBlockObj.content = [
-            {
-              type: "text",
-              text: block.content == null ? "" : block.content,
-            },
-          ];
+          if (block.type == "image") {
+            tempBlockObj.attrs.src = block.content;
+          } else {
+            tempBlockObj.content = [
+              {
+                type: "text",
+                text: block.content,
+              },
+            ];
+          }
         }
 
         blockToEditorContentArr.push(tempBlockObj);
@@ -171,11 +177,11 @@ export default {
     recvMessage(recv) {
       if (recv.type === "CANVAS") {
         const blockJson = JSON.parse(recv.message);
-        // console.log("blockJson", blockJson);
-        if (this.activeBlockId == blockJson.feId) {
+        console.error("blockJson >> ", blockJson);
+        if (this.activeBlockId == blockJson.feId && blockJson.method === "update") {
           // if (this.member == blockJson.member) {
           console.log(
-            "현 focus 부분이랑 같은 block 수정 중인 부분.. => block Id 동일함"
+            "현 focus 부분이랑 같은 block 수정 중인 부분..인데! update여서 보냄! => block Id 동일함"
           );
         } else {
           console.log("다른 block Id 수정 중!~");
@@ -265,8 +271,9 @@ export default {
     },
     beforeRouteLeave() {
       // 컴포넌트가 파괴되기 전에 구독 해제 및 WebSocket 연결 종료
-      if (this.subscription) {
-        this.subscription.unsubscribe(); // 구독 해제
+      if (this.sock) {
+        this.sock.close(); // SockJS 연결을 닫음
+        this.sock = null;
         console.log("WebSocket subscription unsubscribed.");
       }
       if (this.ws) {
@@ -274,12 +281,22 @@ export default {
           console.log("WebSocket connection closed.");
         });
       }
+      if (this.sockBlock) {
+        this.sockBlock.close(); // SockJS 연결을 닫음
+        this.sockBlock = null;
+        console.log("WebSocket subscription unsubscribed.");
+      }
+      if (this.wsBlock) {
+        this.wsBlock.disconnect(() => {
+          console.log("WebSocket wsBlock connection closed.");
+        });
+      }
     },
 
     // tiptabEditor method
     deleteBlock(blockFeId) {
       const prevBlockId = this.$store.getters.getTargetBlockPrevFeId(blockFeId); //삭제전 prev block id 검색
-      console.log("prevBlockId :: ", prevBlockId)
+      console.log("prevBlockId :: ", prevBlockId);
       this.deleteBlockTargetFeIdActions(blockFeId).then((isDeleteBlock) => {
         console.log("isDeleteBlock :: ", isDeleteBlock);
         if (isDeleteBlock) {
@@ -289,11 +306,13 @@ export default {
             canvasId: this.canvasId,
             prevBlockId: prevBlockId,
             parentBlockId: null,
-            contents: "z",
+            contents: "",
             type: "paragraph", //삭제여서 타입 관계 X
             feId: blockFeId,
             member: this.sender, // 현재 접속한 user ⭐ 추후 변경
           };
+
+          console.log(this.message);
 
           this.sendMessage();
         }
@@ -315,12 +334,12 @@ export default {
       const blockMethod = this.checkBlockMethod(blockFeId, blockContent);
       this.message = {
         method: blockMethod,
-        canvasId: this.canvasId,
+        feId: blockFeId, // block id
         prevBlockId: previousId,
-        parentBlockId: parentId,
+        canvasId: this.canvasId,
+        // parentBlockId: parentId,
         contents: blockContent,
         type: blockElType,
-        feId: blockFeId,
         member: this.sender, // 현재 접속한 user ⭐ 추후 변경
       };
 
@@ -338,12 +357,71 @@ export default {
         return "create";
       }
     },
+    changeOrderBlock(changeOrderObj) {
+      const { prevBlockId, nextBlockId, feId, contents, parentBlockId } =
+        changeOrderObj;
+      console.log(
+        "changeOrderBlock >> ",
+        prevBlockId,
+        nextBlockId,
+        feId,
+        contents,
+        parentBlockId
+      );
 
-    changeCanvasName() {
-      console.error(this.room.title);
+      this.activeBlockId = feId;
+
+      this.message = {
+        canvasId: this.canvasId,
+        method: "changeOrder",
+        ...changeOrderObj,
+        member: this.sender, // 현재 접속한 user ⭐ 추후 변경
+      };
+
+      this.sendMessage();
     },
-    deleteCanvas() {
+    async changeCanvasName() {
+      console.error(this.room.title);
+      const params = {
+        title: this.room.title,
+        parentCanvasId: null,
+        canvasId: this.canvasId,
+        channelId: this.getChannelId,
+      };
+      try {
+        const response = await axios.patch(
+          `${process.env.VUE_APP_API_BASE_URL}/canvas/${this.canvasId}`,
+          params
+        );
+        console.log(response);
+        const updateCanvasTitle = response.data.result.title;
+        this.room.title = updateCanvasTitle;
+        this.updateName();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    updateName() {
+      const obj = {
+        name: this.room.title,
+      };
+      this.$emit("updateName", obj); // 변경된 값을 부모에게 전달
+    },
+    async deleteCanvas() {
       console.log("canvas 삭제 예정");
+      try {
+        const response = await axios.delete(
+          `${process.env.VUE_APP_API_BASE_URL}/canvas/${this.canvasId}`
+        );
+        console.log(response);
+        const obj = {
+          method: "deleteCanvas",
+          canvasId: this.canvasId
+        };
+        this.$emit("updateName", obj); // 변경된 값을 부모에게 전달
+      } catch (error) {
+        console.log(error);
+      }
     },
   },
   beforeUnmount() {
@@ -369,5 +447,8 @@ export default {
       display: none;
     }
   }
+}
+.image-upload-container {
+  margin: 10px 0;
 }
 </style>

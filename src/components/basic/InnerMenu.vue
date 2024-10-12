@@ -209,10 +209,7 @@ export default {
   height: 100% !important;
     display: flex;
   flex-direction: column;
-
-  .selected-item {
-    background-color: #7280a2; /* 선택된 항목의 배경 색상 */
-  }
+  position: static !important;
 }
 
 .menu-container {

@@ -3,25 +3,18 @@
     <div class="modal-content" @click.stop>
       <header>
         <h2>#멤버 초대</h2>
-        <button @click="closeModal">X</button>
+        <button @click="closeModal" class="close-button">X</button>
       </header>
       <div class="search-bar">
-        <input
-          type="text"
-          v-model="searchKeyword"
-          placeholder="멤버 찾기"
-          @input="debouncedSearchMembers"
-        />
+        <input type="text" v-model="searchKeyword" placeholder="멤버 찾기" @input="debouncedSearchMembers" />
       </div>
       <div class="member-list">
         <!-- 현재 채널에 있는 멤버 목록 -->
         <h3>현재 채널 멤버</h3>
         <div v-if="isLoadingMembers">로딩 중...</div>
         <div v-else>
-        <v-list>
-          <v-list-item v-for="member in channelMembers" :key="member.id" class="member-item">
-           
-            <img :src="member.memberInfo.profileImage || defaultProfileImage" alt="프로필 이미지" />
+          <div v-for="member in channelMembers" :key="member.id" class="member-item">
+            <img :src="member.memberInfo.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
             <div class="member-info">
               <v-list-item-title>{{ member.memberInfo.nickname || '별명 없음' }}</v-list-item-title>
               <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}</v-list-item-title>
@@ -40,23 +33,21 @@
         <h3>멤버 검색 결과</h3>
         <div v-if="isLoading">로딩 중...</div>
         <div v-else>
-          <v-list>
-          <v-list-item v-for="member in filteredSearchResults" :key="member.workspaceMemberId" class="member-item">
-            <img :src="member.profileImage || defaultProfileImage" alt="프로필 이미지" />
+          <div v-for="member in filteredSearchResults" :key="member.workspaceMemberId" class="member-item">
+            <img :src="member.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
             <div class="member-info">
               <v-list-item-title>{{ member.nickname || '별명 없음' }}</v-list-item-title>
               <v-list-item-title>{{ member.memberName || '이름 없음' }}</v-list-item-title>
               <v-list-item-title>{{ member.email }}</v-list-item-title>
               <v-list-item-title>{{ member.workspaceMemberId }}</v-list-item-title>
             </div>
-            <div>
-              <v-btn v-if="!isMemberInChannel(member)" @click="inviteMember(member.workspaceMemberId)">
+            <div class="invite-button-wrap">
+              <button v-if="!isMemberInChannel(member)" @click="inviteMember(member.workspaceMemberId)" class="invite-button">
                 초대
-              </v-btn>
-              <span v-else>가입됨</span> <!-- 이미 가입된 멤버를 표시 -->
+              </button>
+              <span v-else>가입됨</span>
             </div>
-          </v-list-item>
-          </v-list>
+          </div>
         </div>
       </div>
     </div>
@@ -128,16 +119,11 @@ export default {
     },
     // 현재 멤버가 채널에 있는지 확인하는 메서드
     isMemberInChannel(member) {
-      // 먼저 채널 멤버 목록을 콘솔로 확인해 봅니다.
-      console.log('채널 멤버 목록:', this.channelMembers);
-
-      // memberInfo와 memberId가 존재하는지 확인하고 안전하게 접근
       return this.channelMembers.some(channelMember => {
         if (!channelMember.memberInfo) {
           console.warn(`memberInfo가 정의되지 않았습니다: ${channelMember}`);
           return false;
         }
-        console.log('불린 확인 : ' + channelMember.memberInfo.workspaceMemberId +  member.workspaceMemberId);
         return channelMember.memberInfo.workspaceMemberId === member.workspaceMemberId;
       });
     },
@@ -148,14 +134,12 @@ export default {
             workspaceMemberId: memberId
           }
         });
-        
+        console.log('멤버 초대 응답:', response.data);
+
         alert('멤버가 성공적으로 초대되었습니다!');
-        
-        // 서버로부터 받은 초대된 멤버의 정보를 채널 멤버 목록에 추가
-        const invitedMember = response.data.result;
-        if (invitedMember) {
-          this.channelMembers.push(invitedMember);
-        }
+
+        // 초대 후 채널 멤버 목록 다시 불러오기
+        this.fetchChannelMembers();
       } catch (error) {
         console.error('멤버 초대 중 오류 발생', error);
       }
@@ -221,17 +205,16 @@ export default {
   border-radius: 5px;
   width: 400px;
   max-width: 90%;
-  position: relative; /* 버튼을 위치시키기 위한 기준 요소 */
+  position: relative;
 }
 
 .modal-content header {
-  position: relative; /* 부모 요소가 위치 기준이 됨 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.modal-content button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+.close-button {
   background: none;
   border: none;
   font-size: 18px;
@@ -264,5 +247,26 @@ export default {
 
 .member-info p {
   margin: 0;
+}
+
+/* 초대 버튼과 가입됨 표시 스타일 */
+.invite-button-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: 20px;
+}
+
+.invite-button {
+  padding: 5px 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.invite-button:hover {
+  background-color: #45a049;
 }
 </style>
