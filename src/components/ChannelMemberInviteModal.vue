@@ -21,10 +21,11 @@
               <v-list-item-title>{{ member.memberInfo.workspaceMemberId }}</v-list-item-title>
               <v-list-item-title>역할: {{ member.channelRole }}</v-list-item-title>
             </div>
-      <div v-if="getChannelRole === 'MANAGER'">
-        <v-btn color="blue" @click="changeRole(member.id)">권한</v-btn>
-        <v-btn color="red" @click="removeMember(member.id)">강퇴</v-btn>
-      </div>
+            <div v-if="getChannelRole === 'MANAGER'">
+              <v-btn color="blue" @click="changeRole(member.id)">권한</v-btn>
+              <v-btn color="red" @click="removeMember(member.id)">강퇴</v-btn>
+            </div>
+          </div>
         </div>    
 
         <!-- 멤버 검색 결과 -->
@@ -47,6 +48,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </div>

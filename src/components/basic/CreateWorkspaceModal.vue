@@ -72,12 +72,12 @@ export default {
                 };
                 this.setMemberInfoActions(myInfo);
         
-                // const chInfo = await axios.get( // 채널 정보도 수정
-                // `${process.env.VUE_APP_API_BASE_URL}/${newWorkspaceId}/channel/first` 
-                // );
-                // this.setChannelInfoActions(chInfo.data.result.channelId); 
-                // this.setChannelNameInfoActions(chInfo.data.result.channelName);
-                // this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
+                const chInfo = await axios.get( // 채널 정보도 수정
+                `${process.env.VUE_APP_API_BASE_URL}/${newWorkspaceId}/channel/first` 
+                );
+                this.setChannelInfoActions(chInfo.data.result.channelId); 
+                this.setChannelNameInfoActions(chInfo.data.result.channelName);
+                this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
 
                 const chMember = await axios.get( // 채널 권한 정보
                 `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${chInfo.data.result.channelId}` 

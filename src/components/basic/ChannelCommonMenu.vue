@@ -37,7 +37,7 @@
     <!-- 드롭다운 메뉴 -->
     <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
       <ul>
-        <li @click="editChannel">채널 수정</li>
+        <li @click="startEditingChannel">채널 수정</li>
         <li @click="deleteChannel">채널 삭제</li>
       </ul>
     </div>
@@ -60,6 +60,46 @@
     <!-- 모달 컴포넌트 -->
     <ChannelMemberModal v-if="isChannelMemberModalOpen" :channelId="getChannelId" :workspaceId="getWorkspaceId"
       @closeModal="closeChannelMemberInviteModal" />
+
+    <v-dialog v-model="channelDialog" width="auto" class="channelDialog">
+    <v-card max-width="400">
+      <v-card-title> 채널 수정 </v-card-title>
+      <v-card-text>
+        <p>채널의 이름을 입력하세요.</p>
+        <v-text-field
+          ref="channelNameInput"
+          color="primary"
+          density="compact"
+          variant="underlined"
+          v-model="updateChannelInfo.channelName"
+          @keyup.enter="saveEditingChannel"
+          placeholder="이름"
+        ></v-text-field>
+        <p>채널의 설명을 입력하세요.</p>
+        <v-text-field
+          color="primary"
+          density="compact"
+          variant="underlined"
+          v-model="updateChannelInfo.channelInfo"
+          @keyup.enter="saveEditingChannel"
+          placeholder="이름"
+        ></v-text-field>
+        <v-radio-group
+          inline
+          label="채널종류"
+          v-model="updateChannelInfo.isPublic"
+        >
+          <v-radio label="공개채널" value="1"></v-radio>
+          <v-radio label="비공개 채널" value="0"></v-radio>
+        </v-radio-group>
+      </v-card-text>
+      <template v-slot:actions>
+        <v-btn class="" text="저장" @click="saveEditingChannel"></v-btn>
+        <v-btn class="" text="닫기" @click="channelDialog = false"></v-btn>
+      </template>
+    </v-card>
+  </v-dialog>
+
   </div>
 </template>
 
@@ -82,6 +122,12 @@ export default {
       toggleBookmarkIsLoading: false,
       defaultProfileImage: 'https://via.placeholder.com/40', // 기본 프로필 이미지 설정,
       isBookmarked: false,
+      channelDialog: false,
+      updateChannelInfo: {
+        channelName: "",
+        channelInfo: "",
+        isPublic: 1,
+      },
     };
   },
   computed: {
@@ -107,6 +153,9 @@ export default {
   },
   methods: {
       ...mapActions([
+      "setChannelInfoActions",
+      "setChannelNameInfoActions",
+      "setChannelDescInfoActions",
       "setChannelRoleInfoActions",
     ]),
     handleClickOutside(event) {
@@ -174,9 +223,27 @@ export default {
         console.error("채널 리스트를 가져오거나 삭제하는 중 오류 발생", error);
       }
     },
-
-    editChannel() {
-      console.log("채널 수정 클릭됨");
+    startEditingChannel() {
+      this.channelDialog = true;
+      this.updateChannelInfo.channelName = this.getChannelName;
+      this.updateChannelInfo.channelInfo = this.getChannelDesc;
+    },
+    async saveEditingChannel() {
+        const data = {
+        channelName: this.updateChannelInfo.channelName,
+        channelInfo: this.updateChannelInfo.channelInfo,
+        isPublic: Number(this.updateChannelInfo.isPublic),
+        };
+      try {
+        await axios.patch(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/update/${this.getChannelId}`,
+          data
+        );
+        alert("채널 수정이 완료되었습니다.");
+        this.$router.push(`/channel/${this.getChannelId}`);
+      } catch (error) {
+        console.error("채널 수정 에러", error);
+      } 
     },
     async fetchBookmark(channelId) {
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${channelId}`);
