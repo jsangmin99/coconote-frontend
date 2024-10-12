@@ -25,8 +25,6 @@
         <v-btn color="blue" @click="changeRole(member.id)">권한</v-btn>
         <v-btn color="red" @click="removeMember(member.id)">강퇴</v-btn>
       </div>
-          </v-list-item>
-        </v-list>
         </div>    
 
         <!-- 멤버 검색 결과 -->
