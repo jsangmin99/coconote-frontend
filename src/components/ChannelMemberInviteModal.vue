@@ -16,13 +16,17 @@
           <div v-for="member in channelMembers" :key="member.id" class="member-item">
             <img :src="member.memberInfo.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
             <div class="member-info">
-              <p>{{ member.memberInfo.nickname || '별명 없음' }}</p>
-              <p>{{ member.memberInfo.memberName || '이름 없음' }}</p>
-              <p>{{ member.memberInfo.workspaceMemberId }}</p>
-              <p>역할: {{ member.channelRole }}</p>
+              <v-list-item-title>{{ member.memberInfo.nickname || '별명 없음' }}</v-list-item-title>
+              <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}</v-list-item-title>
+              <v-list-item-title>{{ member.memberInfo.workspaceMemberId }}</v-list-item-title>
+              <v-list-item-title>역할: {{ member.channelRole }}</v-list-item-title>
+            </div>
+            <div v-if="getChannelRole === 'MANAGER'">
+              <v-btn color="blue" @click="changeRole(member.id)">권한</v-btn>
+              <v-btn color="red" @click="removeMember(member.id)">강퇴</v-btn>
             </div>
           </div>
-        </div>
+        </div>    
 
         <!-- 멤버 검색 결과 -->
         <h3>멤버 검색 결과</h3>
@@ -31,10 +35,10 @@
           <div v-for="member in filteredSearchResults" :key="member.workspaceMemberId" class="member-item">
             <img :src="member.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
             <div class="member-info">
-              <p>{{ member.nickname || '별명 없음' }}</p>
-              <p>{{ member.memberName || '이름 없음' }}</p>
-              <p>{{ member.email }}</p>
-              <p>{{ member.workspaceMemberId }}</p>
+              <v-list-item-title>{{ member.nickname || '별명 없음' }}</v-list-item-title>
+              <v-list-item-title>{{ member.memberName || '이름 없음' }}</v-list-item-title>
+              <v-list-item-title>{{ member.email }}</v-list-item-title>
+              <v-list-item-title>{{ member.workspaceMemberId }}</v-list-item-title>
             </div>
             <div class="invite-button-wrap">
               <button v-if="!isMemberInChannel(member)" @click="inviteMember(member.workspaceMemberId)" class="invite-button">
@@ -44,6 +48,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -52,6 +57,7 @@
 <script>
 import axios from 'axios';
 import { debounce } from 'lodash'; // lodash의 debounce를 import
+import { mapGetters } from "vuex";
 
 export default {
   data() {
@@ -66,6 +72,7 @@ export default {
     };
   },
   computed: {
+    ...mapGetters(["getChannelId", "getChannelRole"]),
     filteredSearchResults() {
       // 현재 채널에 속하지 않은 멤버만 필터링
       return this.searchResults.filter(member =>
@@ -136,7 +143,27 @@ export default {
       } catch (error) {
         console.error('멤버 초대 중 오류 발생', error);
       }
-    }
+    },
+    async changeRole(chMemberId) {
+      try{
+        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/role/${chMemberId}`);
+        alert("권한이 변경되었습니다.");
+      } catch (e) {
+        console.error("실패", e);
+        alert("권한 변경에 실패했습니다.");
+      }
+      
+    },
+    async removeMember(chMemberId) {
+      try{
+        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/channel/member/delete/${chMemberId}`);        
+        alert("회원을 강제 퇴장시켰습니다.");
+
+      } catch (e) {
+        console.error("실패", e);
+        alert("회원 삭제에 실패했습니다.");
+      }
+    },
   },
   created() {
     // searchMembers 메서드에 debounce 적용 (300ms 지연)

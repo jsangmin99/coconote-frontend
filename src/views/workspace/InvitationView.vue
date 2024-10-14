@@ -20,6 +20,8 @@
 
 <script>
 import axios from 'axios';
+import { mapActions } from "vuex";
+
 export default {
   data() {
     return {
@@ -38,6 +40,10 @@ export default {
   },
 
   methods: {
+    ...mapActions([
+      "setWorkspaceInfoActions",
+      "setWorkspaceNameInfoActions",
+    ]),
     async acceptInvitation() {
       this.loading = true;
       this.successMessage = '';
@@ -48,7 +54,11 @@ export default {
       try {
         const response = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/workspace/invite/accept?token=${token}`);
         this.successMessage = response.data.status_message;
-        window.location.href = '/workspace/first'; // 메인 페이지로 이동
+        console.log(response)
+        const inviteWsInfo = response.data.result
+        this.setWorkspaceInfoActions(inviteWsInfo.workspaceId);
+        this.setWorkspaceNameInfoActions(inviteWsInfo.name);
+        window.location.href = '/workspace'; // 메인 페이지로 이동
       } catch (error) {
         this.errorMessage = error.response ? error.response.data.status_message : '가입 처리에 실패했습니다.';
       } finally {

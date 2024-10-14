@@ -6,7 +6,11 @@
       title="워크스페이스 없음"
     >
       <template v-slot:actions>
-        <v-btn class="ms-auto" text="확인" @click="locationToHomeRouter"></v-btn>
+        <v-btn
+          class="ms-auto"
+          text="확인"
+          @click="locationToHomeRouter"
+        ></v-btn>
       </template>
     </v-card>
   </v-dialog>
@@ -26,7 +30,7 @@ export default {
   },
   computed: {},
   created() {
-    this.getMyFirstWorkspace();
+    this.searchMyWorkspace();
   },
   methods: {
     ...mapActions([
@@ -36,8 +40,24 @@ export default {
       "setChannelInfoActions",
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
+      "setChannelRoleInfoActions",
     ]),
-
+    searchMyWorkspace() {
+      // localStorage에 ws 정보 체크 후 분기처리
+      const lsWsId = localStorage.getItem("workspaceId");
+      console.log("생성 후 workspace로 이동 완료 >> ", lsWsId);
+      if (lsWsId != "" && lsWsId != undefined && lsWsId != null) {
+        console.log("이미 workspace가 있음!!")
+        this.workspaceId = lsWsId;
+        const lsWsName = localStorage.getItem("workspaceName");
+        this.setWorkspaceInfoActions(lsWsId);
+        this.setWorkspaceNameInfoActions(lsWsName);
+        this.getMyFirstChannelInWorkspace();
+      } else {
+        console.log("새로운 workspace~~")
+        this.getMyFirstWorkspace();
+      }
+    },
     // 워크스페이스 정보를 가져오는 메소드
     async getMyFirstWorkspace() {
       const response = await axios.get(
@@ -93,8 +113,17 @@ export default {
       this.setChannelInfoActions(response.data.result.channelId);
       this.setChannelNameInfoActions(response.data.result.channelName);
       this.setChannelDescInfoActions(response.data.result.channelInfo);
-      this.$router.push(`/channel/${response.data.result.channelId}`);
 
+
+      const chMember = await axios.get( // 채널 권한 정보
+      `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${response.data.result.channelId}` 
+      );
+      this.setChannelRoleInfoActions(chMember.data.result.channelRole);
+
+      this.$router.push({
+        path: `/channel/${response.data.result.channelId}`,
+        query: { t: response.data.result.channelId }, // 새로운 query 추가로 새로운 key처럼 작동
+      });
     },
 
     // 홈으로 리다이렉트

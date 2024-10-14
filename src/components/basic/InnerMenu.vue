@@ -201,11 +201,13 @@ export default {
 };
 </script>
 
-<style scoped>
+
+<style lang="scss">
 .innerMenu {
   background: #32446e !important;
+  position: static !important;
   height: 100% !important;
-  display: flex;
+    display: flex;
   flex-direction: column;
   position: static !important;
 }
@@ -218,10 +220,6 @@ export default {
   /* 상단 메뉴와 하단 프로필 버튼 분리 */
 }
 
-.selected-item {
-  background-color: #7280a2;
-  /* 선택된 항목의 배경 색상 */
-}
 
 .profile-logout-section {
   display: flex;

@@ -143,7 +143,6 @@ export default {
                 `${process.env.VUE_APP_API_BASE_URL}/${this.getWorkspaceId}/channel/first`
               );
               this.$router.push(`/channel/${response.data.result.channelId}`);
-			this.$router.push("/");
 		},
 	},
 };
