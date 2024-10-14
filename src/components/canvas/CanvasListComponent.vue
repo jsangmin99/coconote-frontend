@@ -24,8 +24,6 @@
 
 <script>
 import axios from "axios";
-import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
 
 export default {
   name: "CanvasListComponent",
@@ -53,10 +51,6 @@ export default {
       channelId: null,
       chatrooms: [],
 
-      // socket 통신용
-
-      ws: null,
-      sock: null,
     };
   },
   methods: {
@@ -104,7 +98,7 @@ export default {
     onCanvasInfoChanged(obj) {
       // 캔버스 정보가 변경되었을 때 실행할 로직
       console.log("obj >> ", obj);
-      if (obj.name) {
+      if (obj.method == "nameChange") {
         const targetCanvas = this.chatrooms.find(
           (item) => item.id === this.canvasIdInList
         );
@@ -122,84 +116,10 @@ export default {
           this.chatrooms.splice(targetIndex, 1);
           console.log(`Canvas ID ${obj.canvasId}가 목록에서 삭제되었습니다.`);
         }
+      } else if (obj.method && obj.method == "update") {
+        this.findAllRoom();
       }
     },
-    connect() {
-      // 캔버스 소켓 연결
-      this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
-      this.ws = Stomp.over(this.sock);
-      this.ws.connect(
-        {},
-        () => {
-          this.ws.subscribe(
-            `/sub/canvas/room/${this.detailCanvasId}`,
-            (message) => {
-              const recv = JSON.parse(message.body);
-              this.recvMessage(recv);
-            }
-          );
-          this.ws.send(
-            `/pub/canvas/message`,
-            {},
-            JSON.stringify({
-              type: "ENTER",
-              roomId: this.detailCanvasId,
-              sender: this.sender,
-            })
-          );
-        },
-        () => {
-          if (this.reconnect++ <= 5) {
-            setTimeout(() => {
-              this.sock = new SockJS(
-                `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
-              );
-              this.ws = Stomp.over(this.sock);
-              this.connect();
-            }, 10 * 1000);
-          }
-        }
-      );
-    },
-    sendMessage() {
-      if (this.ws && this.ws.connected) {
-        this.ws.send(
-          `/pub/block/message`,
-          {},
-          JSON.stringify({
-            type: "CANVAS",
-            roomId: this.detailCanvasId,
-            sender: this.sender,
-            message: JSON.stringify(this.message),
-          })
-        );
-        this.message = "";
-      } else {
-        // console.log("WebSocket is not connected.");
-      }
-    },
-    recvMessage(recv) {
-      if (recv.type === "CANVAS") {
-        const canvasJson = JSON.parse(recv.message);
-        console.error("canvasJson >> ", canvasJson);
-      }
-    },
-    beforeRouteLeave() {
-      // 컴포넌트가 파괴되기 전에 구독 해제 및 WebSocket 연결 종료
-      if (this.sock) {
-        this.sock.close(); // SockJS 연결을 닫음
-        this.sock = null;
-        console.log("WebSocket subscription unsubscribed.");
-      }
-      if (this.ws) {
-        this.ws.disconnect(() => {
-          console.log("WebSocket connection closed.");
-        });
-      }
-    },
-  },
-  beforeUnmount() {
-    this.beforeRouteLeave();
   },
 };
 </script>

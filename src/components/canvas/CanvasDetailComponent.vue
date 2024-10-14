@@ -68,6 +68,8 @@ export default {
       member: "",
       message: "",
       messages: [],
+      ws: null,
+      sock: null,
       wsBlock: null,
       sockBlock: null,
       reconnect: 0,
@@ -156,8 +158,8 @@ export default {
       };
     },
     sendMessage() {
-      if (this.ws && this.ws.connected) {
-        this.ws.send(
+      if (this.wsBlock && this.wsBlock.connected) {
+        this.wsBlock.send(
           `/pub/block/message`,
           {},
           JSON.stringify({
@@ -173,6 +175,7 @@ export default {
       }
     },
     recvMessage(recv) {
+      console.error(recv.type)
       if (recv.type === "CANVAS") {
         const blockJson = JSON.parse(recv.message);
         console.error("blockJson >> ", blockJson);
@@ -195,6 +198,40 @@ export default {
     },
     connect() {
       // block 용 websocket
+      this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
+      this.ws = Stomp.over(this.sock);
+      this.ws.connect(
+        {},
+        () => {
+          this.ws.subscribe(
+            `/sub/canvas/room/${this.detailCanvasId}`,
+            (message) => {
+              const recv = JSON.parse(message.body);
+              this.recvMessage(recv);
+            }
+          );
+          this.ws.send(
+            `/pub/canvas/message`,
+            {},
+            JSON.stringify({
+              type: "ENTER",
+              roomId: this.detailCanvasId,
+              sender: this.sender,
+            })
+          );
+        },
+        () => {
+          if (this.reconnect++ <= 5) {
+            setTimeout(() => {
+              this.sock = new SockJS(
+                `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
+              );
+              this.ws = Stomp.over(this.sock);
+              this.connect();
+            }, 10 * 1000);
+          }
+        }
+      );
       this.sockBlock = new SockJS(
         `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
       );
@@ -234,6 +271,17 @@ export default {
     },
     beforeRouteLeave() {
       // 컴포넌트가 파괴되기 전에 구독 해제 및 WebSocket 연결 종료
+      if (this.sock) {
+        this.sock.close(); // SockJS 연결을 닫음
+        this.sock = null;
+        console.log("WebSocket subscription unsubscribed.");
+      }
+      if (this.ws) {
+        this.ws.disconnect(() => {
+          console.log("WebSocket ws connection closed.");
+        });
+      }
+
       if (this.sockBlock) {
         this.sockBlock.close(); // SockJS 연결을 닫음
         this.sockBlock = null;
@@ -349,16 +397,17 @@ export default {
         console.log(response);
         const updateCanvasTitle = response.data.result.title;
         this.room.title = updateCanvasTitle;
-        this.updateName();
+        this.updateCanvasInfo();
       } catch (error) {
         console.log(error);
       }
     },
-    updateName() {
+    updateCanvasInfo() {
       const obj = {
+        method: "nameChange",
         name: this.room.title,
       };
-      this.$emit("updateName", obj); // 변경된 값을 부모에게 전달
+      this.$emit("updateCanvasInfo", obj); // 변경된 값을 부모에게 전달
     },
     async deleteCanvas() {
       console.log("canvas 삭제 예정");
@@ -371,7 +420,7 @@ export default {
           method: "deleteCanvas",
           canvasId: this.canvasId
         };
-        this.$emit("updateName", obj); // 변경된 값을 부모에게 전달
+        this.$emit("updateCanvasInfo", obj); // 변경된 값을 부모에게 전달
       } catch (error) {
         console.log(error);
       }

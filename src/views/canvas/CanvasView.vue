@@ -72,7 +72,7 @@
             :canvasId="canvasId"
             :key="canvasId"
             :canvas-name="canvasUpdateObj"
-            @updateName="updateCanvasInfo"
+            @updateCanvasInfo="updateCanvasInfo"
           />
         </v-col>
       </v-row>
