@@ -169,6 +169,7 @@
 <script>
 import axios from "axios";
 import { mapGetters, mapActions } from "vuex";
+import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
 // import { first } from '@tiptap/core/dist/packages/core/src/commands';
 
 export default {
@@ -292,8 +293,13 @@ export default {
       const isJoin = response.data.result;
 
       if (isJoin) {
+        const result = await fetchChannelMemberInfo(id);
+        if (result) {
+          this.setChannelRoleInfoActions(result.channelRole);
+        }
         this.$router.push(`/channel/${id}/thread/view`);
       } else {
+        this.setChannelRoleInfoActions(null);
         this.$router.push(`/channel/${id}`);
       }
     },
@@ -333,6 +339,7 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/channel/create`,
           data
         );
+        this.channelDialog = false;
         this.getSectionData();
       } catch (error) {
         console.log(error);

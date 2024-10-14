@@ -19,6 +19,7 @@
 <script>
 import axios from "axios";
 import { mapActions } from "vuex";
+import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
 
 export default {
   components: {},
@@ -122,11 +123,8 @@ export default {
       });
     },
     async getChannelMemberInfo() {
-
-      const chMember = await axios.get( // 채널 권한 정보
-      `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${this.channelId}` 
-      );
-      this.setChannelRoleInfoActions(chMember.data.result.channelRole);
+      const result = await fetchChannelMemberInfo(this.channelId); // 모듈로 함수 호출
+      this.setChannelRoleInfoActions(result.channelRole);
     },
 
     // 홈으로 리다이렉트
