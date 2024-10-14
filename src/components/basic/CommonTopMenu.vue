@@ -57,6 +57,7 @@ export default {
       createWorkspace: false,
       isLoading: false,
       workspaceInfo: [],
+      channelId: null,
     };
   },
   created() {
@@ -118,17 +119,20 @@ export default {
         this.setChannelInfoActions(chInfo.data.result.channelId);
         this.setChannelNameInfoActions(chInfo.data.result.channelName);
         this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
+        this.channelId = chInfo.data.result.channelId;
 
-
-        const chMember = await axios.get( // 채널 권한 정보
-        `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${chInfo.data.result.channelId}` 
-        );
-        this.setChannelRolerInfoActions(chMember.data.result.channelRole);
-
+        this.getChannelMemberInfo();
       this.isLoading = true;
       } catch (e) {
         console.log(e);
       }
+    },
+    async getChannelMemberInfo() {
+
+      const chMember = await axios.get( // 채널 권한 정보
+      `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${this.channelId}` 
+      );
+      this.setChannelRoleInfoActions(chMember.data.result.channelRole);
     },
     async emitSelected() {
       this.$emit("selected", this.selectedValue);

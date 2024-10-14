@@ -105,7 +105,7 @@
 
 <script>
 import ChannelMemberModal from "@/components/ChannelMemberInviteModal.vue";
-import { mapGetters, mapActions } from "vuex";
+import { mapGetters } from "vuex";
 import axios from "axios";
 
 export default {
@@ -152,12 +152,7 @@ export default {
     this.fetchBookmark(this.getChannelId);
   },
   methods: {
-      ...mapActions([
-      "setChannelInfoActions",
-      "setChannelNameInfoActions",
-      "setChannelDescInfoActions",
-      "setChannelRoleInfoActions",
-    ]),
+
     handleClickOutside(event) {
       // 드롭다운 버튼을 클릭한 경우는 무시
       const dropdownToggle = this.$el.querySelector('.mdi-dots-vertical');

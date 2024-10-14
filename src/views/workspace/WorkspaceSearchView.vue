@@ -26,6 +26,7 @@ export default {
     return {
       workspaceId: null,
       dialog: false,
+      channelId: null,
     };
   },
   computed: {},
@@ -53,6 +54,7 @@ export default {
         this.setWorkspaceInfoActions(lsWsId);
         this.setWorkspaceNameInfoActions(lsWsName);
         this.getMyFirstChannelInWorkspace();
+        this.getChannelMemberInfo();
       } else {
         console.log("새로운 workspace~~")
         this.getMyFirstWorkspace();
@@ -113,17 +115,18 @@ export default {
       this.setChannelInfoActions(response.data.result.channelId);
       this.setChannelNameInfoActions(response.data.result.channelName);
       this.setChannelDescInfoActions(response.data.result.channelInfo);
-
-
-      const chMember = await axios.get( // 채널 권한 정보
-      `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${response.data.result.channelId}` 
-      );
-      this.setChannelRoleInfoActions(chMember.data.result.channelRole);
-
-      this.$router.push({
+      this.channelId = response.data.result.channelId;
+          this.$router.push({
         path: `/channel/${response.data.result.channelId}`,
         query: { t: response.data.result.channelId }, // 새로운 query 추가로 새로운 key처럼 작동
       });
+    },
+    async getChannelMemberInfo() {
+
+      const chMember = await axios.get( // 채널 권한 정보
+      `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${this.channelId}` 
+      );
+      this.setChannelRoleInfoActions(chMember.data.result.channelRole);
     },
 
     // 홈으로 리다이렉트
