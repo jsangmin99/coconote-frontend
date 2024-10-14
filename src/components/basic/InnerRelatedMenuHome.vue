@@ -274,10 +274,9 @@ export default {
     },
     // async getChannelMemberInfo(id) {
     //   const chMember = await axios.get( // 채널 권한 정보
-    //   `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${id}` 
+    //   `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${id}`
     //   );
     //   this.changeChannelMemberInfo(chMember.data.result.channelRole);
-
     // },
     async changeChannel(id, name, desc) {
       this.selectedChannelMenuId = id;
@@ -333,6 +332,7 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/channel/create`,
           data
         );
+        this.channelDialog = false;
         this.getSectionData();
       } catch (error) {
         console.log(error);
