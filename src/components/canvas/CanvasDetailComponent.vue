@@ -94,10 +94,6 @@ export default {
       member: "",
       message: "",
       messages: [],
-      canvasMessage: "",
-      canvasMessages: [],
-      ws: null,
-      sock: null,
       wsBlock: null,
       sockBlock: null,
       reconnect: 0,
@@ -115,7 +111,9 @@ export default {
   mounted() {
     console.error("생성중...");
     this.sender = localStorage.getItem("wschat.sender");
-
+    async () => {
+      this.beforeRouteLeave();
+    }
     this.handleCanvasIdChange(this.canvasId);
   },
   methods: {
@@ -193,23 +191,6 @@ export default {
         content: blockToEditorContentArr,
       };
     },
-    sendMessageCanvas() {
-      if (this.ws && this.ws.connected) {
-        this.ws.send(
-          `/pub/canvas/message`,
-          {},
-          JSON.stringify({
-            type: "CANVAS",
-            roomId: this.detailCanvasId,
-            sender: this.sender,
-            message: JSON.stringify(this.canvasMessage),
-          })
-        );
-        this.canvasMessage = "";
-      } else {
-        // console.log("WebSocket is not connected.");
-      }
-    },
     sendMessage() {
       if (this.wsBlock && this.wsBlock.connected) {
         this.wsBlock.send(
@@ -226,9 +207,6 @@ export default {
       } else {
         // console.log("WebSocket is not connected.");
       }
-    },
-    recvCanvasMessage(recv) {
-      console.error("recvCanvasMessage", recv);
     },
     recvMessage(recv) {
       console.error(recv.type);
@@ -257,40 +235,9 @@ export default {
     },
     connect() {
       // block 용 websocket
-      this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
-      this.ws = Stomp.over(this.sock);
-      this.ws.connect(
-        {},
-        () => {
-          this.ws.subscribe(
-            `/sub/canvas/room/${this.detailCanvasId}`,
-            (message) => {
-              const recv = JSON.parse(message.body);
-              this.recvCanvasMessage(recv);
-            }
-          );
-          this.ws.send(
-            `/pub/canvas/message`,
-            {},
-            JSON.stringify({
-              type: "ENTER",
-              roomId: this.detailCanvasId,
-              sender: this.sender,
-            })
-          );
-        },
-        () => {
-          if (this.reconnect++ <= 5) {
-            setTimeout(() => {
-              this.sock = new SockJS(
-                `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
-              );
-              this.ws = Stomp.over(this.sock);
-              this.connect();
-            }, 10 * 1000);
-          }
-        }
-      );
+      if(this.sockBlock != null && this.wsBlock != null){
+        return false;
+      }
       this.sockBlock = new SockJS(
         `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
       );
@@ -330,17 +277,6 @@ export default {
     },
     beforeRouteLeave() {
       // 컴포넌트가 파괴되기 전에 구독 해제 및 WebSocket 연결 종료
-      if (this.sock) {
-        this.sock.close(); // SockJS 연결을 닫음
-        this.sock = null;
-        console.log("WebSocket subscription unsubscribed.");
-      }
-      if (this.ws) {
-        this.ws.disconnect(() => {
-          console.log("WebSocket ws connection closed.");
-        });
-      }
-
       if (this.sockBlock) {
         this.sockBlock.close(); // SockJS 연결을 닫음
         this.sockBlock = null;
@@ -461,25 +397,20 @@ export default {
       }
     },
     updateCanvasInfo() {
-      // const obj = {
-      //   method: "nameChange",
-      //   name: this.room.title,
-      // };
       this.$store.dispatch("setCanvasAllInfoAction", {
         method: "nameChange",
         canvasId: this.canvasId,
         title: this.room.title,
       });
-      // this.$emit("updateCanvasInfo", obj); // 변경된 값을 부모에게 전달
     },
     deleteCanvasView() {
       // 지워졌다고 보이게 하는 용도
-      this.canvasMessage = {
-        method: "delete",
-        canvasId: this.canvasId,
-        member: this.sender, // 현재 접속한 user ⭐ 추후 변경
-      };
-      this.sendMessageCanvas();
+      // this.canvasMessage = {
+      //   method: "delete",
+      //   canvasId: this.canvasId,
+      //   member: this.sender, // 현재 접속한 user ⭐ 추후 변경
+      // };
+      // this.sendMessageCanvas();
       this.$store.dispatch("setCanvasAllInfoAction", {
         method: "delete",
         canvasId: this.canvasId,
