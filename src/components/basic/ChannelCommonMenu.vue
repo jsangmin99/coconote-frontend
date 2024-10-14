@@ -26,7 +26,7 @@
             </div>
           </div>
           <!-- 클릭 이벤트로 드롭다운 토글 -->
-          <v-icon icon="mdi-dots-vertical" @click="toggleDropdown">
+          <v-icon v-if="getChannelRole==='MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown">
             <span @click="console.log('dots clicked')"></span>
           </v-icon>
         </div>
@@ -256,6 +256,7 @@ export default {
       }else{
         this.isBookmarked = false;
       }
+
     },
     async toggleBookmark(channelId) {
       // this.toggleBookmarkIsLoading = true;
