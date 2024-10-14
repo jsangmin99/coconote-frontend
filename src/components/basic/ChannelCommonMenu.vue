@@ -240,7 +240,9 @@ export default {
           data
         );
         alert("채널 수정이 완료되었습니다.");
-        this.$router.push(`/channel/${this.getChannelId}`);
+        this.$router.push("/workspace").then(() => {
+            location.reload(); // URL 변경 후 페이지 새로고침
+          });
       } catch (error) {
         console.error("채널 수정 에러", error);
       } 
@@ -270,7 +272,7 @@ export default {
       }
     },
     isBookmark() {
-      console.log("별 무슨 색깔인지", this.isBookmarked);
+      console.log("즐겨찾기 추가/해제 확인", this.isBookmarked);
       return this.isBookmarked;
     },
   },
