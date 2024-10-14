@@ -621,6 +621,8 @@ export default {
       this.fileList.splice(index, 1);
     },
     handleKeydown(event) {
+      // IME 입력 중이면 아무 동작도 하지 않음
+      if (event.isComposing) return;
       if (event.key === 'Enter') {
         if (event.shiftKey) {
           // Shift + Enter일 경우 개행 추가

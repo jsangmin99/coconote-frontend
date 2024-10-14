@@ -14,9 +14,23 @@ const blockFeIds = {
         pushBlockFeIds(state, newId) {
             state.defaultBlockFeIds.push(newId);
         },
+        appendBlockFeIdsAfterPrev(state, newId, prevId) {
+            if (prevId == null) {
+                // prevId가 null이면 맨 앞에 newId 추가
+                state.defaultBlockFeIds.unshift(newId);
+            } else {
+                const prevIndex = state.defaultBlockFeIds.indexOf(prevId);
+                if (prevIndex !== -1) {
+                    // prevId 뒤에 newId 추가
+                    state.defaultBlockFeIds.splice(prevIndex + 1, 0, newId);
+                } else {
+                    console.warn(`prevId: ${prevId}를 찾을 수 없습니다.`);
+                }
+            }
+        },
         deleteBlockTargetFeId(state, targetId) {
             const index = state.defaultBlockFeIds.indexOf(targetId);
-            console.log("STORE :: deleteFeId >> ",index, " || ",state.defaultBlockFeIds)
+            console.log("STORE :: deleteFeId >> ", index, " || ", state.defaultBlockFeIds)
             if (index > -1) {
                 state.defaultBlockFeIds.splice(index, 1);
                 return true;
@@ -31,6 +45,9 @@ const blockFeIds = {
         },
         pushBlockFeIdsActions({ commit }, newId) {
             commit('pushBlockFeIds', newId);
+        },
+        appendBlockFeIdsAfterPrevActions({ commit }, newId, prevId) {
+            commit('appendBlockFeIdsAfterPrev', newId, prevId);
         },
         deleteBlockTargetFeIdActions({ commit, state }, deleteId) {
             commit('deleteBlockTargetFeId', deleteId);

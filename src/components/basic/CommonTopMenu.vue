@@ -79,10 +79,11 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/workspace/list`
         );
         this.items = response.data.result; // 내 워크스페이스 목록 가져오기
-        if (this.items.length > 0) {
+        if (this.items.length > 0 && (this.selectedValue == "" || this.selectedValue == null)) {
           this.selectedValue = this.items[0].workspaceId; // 첫 번째 워크스페이스 ID 할당
-          this.emitSelected();
+          
         }
+        this.emitSelected();
         this.isLoading = true;
       } catch (e) {
         console.log(e);
