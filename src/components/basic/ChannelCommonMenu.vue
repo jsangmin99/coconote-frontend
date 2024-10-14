@@ -254,6 +254,7 @@ export default {
       }else{
         this.isBookmarked = false;
       }
+
     },
     async toggleBookmark(channelId) {
       // this.toggleBookmarkIsLoading = true;
