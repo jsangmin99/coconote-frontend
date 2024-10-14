@@ -126,7 +126,7 @@ export default {
   name: "InnerRelatedMenuHome",
   components: {},
   computed: {
-    ...mapGetters(["getWorkspaceId", "getWorkspaceName"]), // Vuex getter 매핑
+    ...mapGetters(["getWorkspaceId", "getWorkspaceName", "getWsRole"]), // Vuex getter 매핑
   },
   watch: {
     // 라우터 파라미터 channelId의 변화를 감지
