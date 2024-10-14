@@ -111,7 +111,7 @@
         </div>
           <!-- 내용 작성란 -->
         <div class="text-group">
-          <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
+          <v-file-input v-if="files.length > 0" v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
           <textarea
             type="text"
             class="form-control"
