@@ -18,32 +18,27 @@
     </div>
 
     <v-list>
-        <v-list-subheader class="section-title">
-          <v-icon icon="mdi-star"  color='#ffbb00'/>
-          즐겨찾기
-        </v-list-subheader>
-        <v-list-item
-          v-for="channel in myBookmarks"
-          :key="channel.channelId"
-          :class="{
-            'selected-item': selectedChannelMenuId == channel.channelId,
-          }"
-          class="channel-item"
-          @click="
-            changeChannel(
-              channel.channelId,
-              channel.channelName,
-              channel.channelInfo
-            )
-          "
-        >
-          <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
-            <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
-            <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
-          </template>
+      <v-list-subheader class="section-title">
+        <v-icon icon="mdi-star" color='#ffbb00' />
+        즐겨찾기
+      </v-list-subheader>
+      <v-list-item v-for="channel in myBookmarks" :key="channel.channelId" :class="{
+        'selected-item': selectedChannelMenuId == channel.channelId,
+      }" class="channel-item" @click="
+        changeChannel(
+          channel.channelId,
+          channel.channelName,
+          channel.channelInfo
+        )
+        ">
+        <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
+          <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
+          <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
+        </template>
 
-          <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)"> {{ channel.channelName }}</v-list-item-title>
-        </v-list-item>
+        <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)"> {{ channel.channelName
+          }}</v-list-item-title>
+      </v-list-item>
       <template v-for="section in sections" :key="section.sectionId">
         <div class="header-container">
           <v-list-subheader class="section-title" @click="toggleSection(section.sectionId)">
@@ -285,12 +280,31 @@ export default {
       this.setChannelNameInfoActions(name);
       this.setChannelDescInfoActions(desc);
 
-      const response = await axios.get(
-        `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
-      );
+      let isJoin = false; // 기본값을 false로 설정
 
-      const isJoin = response.data.result;
+      try {
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
+        );
 
+        const isJoin = response.data.result; // 정상 응답일 경우 값을 true 또는 false로 설정
+
+        if (isJoin) {
+          this.$router.push(`/channel/${id}/thread/view`);
+        } else {
+          this.$router.push(`/channel/${id}`);
+        }
+      } catch (error) {
+        // 에러가 EntityNotFoundException일 경우 처리
+        if (error.response && error.response.status === 400) {
+          console.error('EntityNotFoundException: ', error.response.data.message);
+          isJoin = false; // 에러 발생 시 isJoin을 false로 설정
+        } else {
+          console.error('다른 오류가 발생했습니다: ', error);
+        }
+      }
+
+      // isJoin 값에 따라 라우팅 처리
       if (isJoin) {
         this.$router.push(`/channel/${id}/thread/view`);
       } else {
@@ -333,6 +347,7 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/channel/create`,
           data
         );
+        this.channelDialog = false;
         this.getSectionData();
       } catch (error) {
         console.log(error);
@@ -481,7 +496,8 @@ export default {
 
 .header-container {
   display: flex;
-  align-items: center; /* 텍스트와 버튼의 수직 정렬을 맞춤 */
+  align-items: center;
+  /* 텍스트와 버튼의 수직 정렬을 맞춤 */
 }
 
 h1 {
@@ -498,8 +514,10 @@ h1 {
   /* 여백 제거 */
   margin-left: 5px !important;
 }
+
 .section-name {
-  font-size: 1.0rem; /* 원하는 폰트 크기로 설정 */
+  font-size: 1.0rem;
+  /* 원하는 폰트 크기로 설정 */
 }
 
 .channelCreate {
