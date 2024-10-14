@@ -41,6 +41,7 @@
 import axios from "axios";
 import CreateWorkspaceModal from "@/components/basic/CreateWorkspaceModal.vue";
 import { mapGetters, mapActions } from "vuex";
+import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
 
 export default {
   computed: {
@@ -128,11 +129,10 @@ export default {
       }
     },
     async getChannelMemberInfo() {
-
-      const chMember = await axios.get( // 채널 권한 정보
-      `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${this.channelId}` 
-      );
-      this.setChannelRoleInfoActions(chMember.data.result.channelRole);
+      const result = await fetchChannelMemberInfo(this.channelId); // 모듈로 함수 호출
+      if (result) {
+        this.setChannelRoleInfoActions(result.channelRole);
+      }
     },
     async emitSelected() {
       this.$emit("selected", this.selectedValue);
