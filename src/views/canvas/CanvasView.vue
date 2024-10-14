@@ -13,7 +13,6 @@
         <v-col cols="2" class="canvasListContainer pa-0">
           <CanvasListComponent
             @updateCanvasId="updateCanvasId"
-            :canvasUpdateObj="canvasUpdateObj"
           />
           <!-- <v-list class="h-100">
             <v-list-item prepend-icon="mdi-home">Home</v-list-item>
@@ -71,8 +70,6 @@
             v-else
             :canvasId="canvasId"
             :key="canvasId"
-            :canvas-name="canvasUpdateObj"
-            @updateCanvasInfo="updateCanvasInfo"
           />
         </v-col>
       </v-row>
@@ -85,6 +82,8 @@ import ChannelCommonMenu from "@/components/basic/ChannelCommonMenu.vue";
 import CanvasListComponent from "@/components/canvas/CanvasListComponent.vue";
 import CanvasDetailComponent from "@/components/canvas/CanvasDetailComponent.vue";
 
+import { mapGetters } from "vuex";
+
 export default {
   props: {
     channelId: {
@@ -96,6 +95,25 @@ export default {
     ChannelCommonMenu,
     CanvasListComponent,
     CanvasDetailComponent,
+  },
+  computed: {
+    ...mapGetters([
+      "getCanvasAllInfo",
+    ]),
+  },
+  watch: {
+    getCanvasAllInfo: {
+      handler(newVal) {
+        console.log("Canvas Info Updated ########### :", newVal);
+        // canvasInfo 변경 시 동작할 코드 작성
+        if (newVal.method == "update") {
+          this.updateCanvasInfo(newVal);
+        }else if(newVal.method == "delete"){
+          this.updateCanvasInfo(newVal);
+        }
+      },
+      deep: true, // 깊은 상태 변화를 감지
+    },
   },
   data() {
     return {
@@ -115,7 +133,7 @@ export default {
     updateCanvasInfo(obj) {
       console.log("canvas 정보!! 변경!", obj);
       this.canvasUpdateObj = obj; // CanvasDetail에서 전달된 이름으로 업데이트
-      if(obj.method && obj.method == "deleteCanvas"){
+      if (obj.method && obj.method == "delete") {
         this.isCanvasDelete = true;
       }
     },

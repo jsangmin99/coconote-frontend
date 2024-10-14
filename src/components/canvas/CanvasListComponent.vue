@@ -24,6 +24,7 @@
 
 <script>
 import axios from "axios";
+import { mapGetters, mapActions } from "vuex";
 
 export default {
   name: "CanvasListComponent",
@@ -35,6 +36,31 @@ export default {
     canvasUpdateObj(obj) {
       this.onCanvasInfoChanged(obj);
     },
+    getCanvasAllInfo: {
+      handler(newVal) {
+        console.log("Canvas Info Updated !!!!!!!!!!!!!!!!!! :", newVal);
+        // canvasInfo 변경 시 동작할 코드 작성
+        if(newVal.method == "create"){
+          this.findAllRoom();
+        }else if(newVal.method == "update"){
+          this.findAllRoom();
+        }else if(newVal.method == "changeOrder"){
+          this.findAllRoom();
+        }else if(newVal.method == "delete"){
+          this.findAllRoom();
+        }else{
+          console.error("잘못된 method로 접근했습니다.")
+        }
+      },
+      deep: true, // 깊은 상태 변화를 감지
+    },
+  },
+  computed: {
+    ...mapGetters([
+      "getChannelId",
+      // canvas용 vuex
+      "getCanvasAllInfo",
+    ]),
   },
   created() {
     this.channelId = this.$route.params.channelId;
@@ -42,6 +68,7 @@ export default {
       alert("잘못된 접근입니다.");
       return false;
     }
+    this.isFirst = true;
     this.findAllRoom();
   },
   data() {
@@ -50,10 +77,11 @@ export default {
       canvasIdInList: null,
       channelId: null,
       chatrooms: [],
-
+      isFirst: true,
     };
   },
   methods: {
+    ...mapActions(["setCanvasAllInfoAction"]),
     findAllRoom() {
       axios
         .get(
@@ -61,38 +89,69 @@ export default {
         )
         .then((response) => {
           this.chatrooms = response.data.result.content;
-          if (this.chatrooms.length > 0) {
-            this.changeCanvasId(response.data.result.content[0].id); // 첫번째 id 자동선택
+          if (this.chatrooms.length > 0 && this.isFirst) {
+            if (
+              this.$route.params.canvasId &&
+              this.$route.params.canvasId > 0
+            ) {
+              this.changeCanvasId(this.$route.params.canvasId); // url id 선택
+            } else {
+              this.changeCanvasId(response.data.result.content[0].id); // 첫번째 id 자동선택
+            }
+            this.isFirst = false;
           }
         });
     },
-    createCanvas() {
+    async createCanvas() {
       if (this.canvasName === "") {
         alert("캔버스 제목을 입력해 주십시요.");
         return;
       } else {
+        let prevCanvasObj = null;
+        if (this.chatrooms && this.chatrooms.length > 0) {
+          prevCanvasObj = this.chatrooms[this.chatrooms.length - 1];
+        }
         const params = {
           title: this.canvasName,
           parentCanvasId: null,
+          prevCanvasId: prevCanvasObj.id,
           channelId: this.$route.params.channelId,
         };
-        axios
-          .post(`${process.env.VUE_APP_API_BASE_URL}/canvas/create`, params)
-          .then(() => {
-            this.canvasName = "";
-            this.findAllRoom();
-          })
-          .catch(() => {
-            alert("채팅방 개설에 실패하였습니다.");
+
+        try {
+          const response = await axios.post(
+            `${process.env.VUE_APP_API_BASE_URL}/canvas/create`,
+            params
+          );
+          console.log(response);
+          const targetRes = response.data.result;
+          this.canvasName = "";
+
+          this.$store.dispatch("setCanvasAllInfoAction", {
+            method: "create",
+            title: targetRes.title,
+            canvasId: targetRes.canvasId,
+            parentCanvasId: targetRes.parentCanvasId,
+            prevCanvasId: targetRes.prevCanvasId,
+            nextCanvasId: targetRes.nextCanvasId,
+            member: targetRes.member,
           });
+          // this.findAllRoom();
+        } catch (error) {
+          alert("채팅방 개설에 실패하였습니다.");
+        }
       }
     },
     changeCanvasId(canvasId) {
+      console.error("머지..")
       const sender = "테스트유저 " + Date.now();
       if (sender) {
         console.log("changeCanvasId!!", canvasId);
         this.canvasIdInList = canvasId;
         this.$emit("updateCanvasId", canvasId);
+        this.$router.push(
+          `/channel/${this.getChannelId}/canvas/view/${canvasId}`
+        );
       }
     },
     onCanvasInfoChanged(obj) {
