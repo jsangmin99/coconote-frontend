@@ -14,9 +14,36 @@
         </v-list>
       </v-menu>
     </v-btn>
-
     <v-list>
+        <v-list-subheader class="section-title">
+          <v-icon icon="mdi-star"  color='#ffbb00'/>
+          즐겨찾기
+        </v-list-subheader>
+        <v-list-item
+          v-for="channel in myBookmarks"
+          :key="channel.channelId"
+          :class="{
+            'selected-item': selectedChannelMenuId == channel.channelId,
+          }"
+          class="channel-item"
+          @click="
+            changeChannel(
+              channel.channelId,
+              channel.channelName,
+              channel.channelInfo
+            )
+          "
+        >
+          <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
+            <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
+            <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
+          </template>
+
+          <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)"> {{ channel.channelName }}</v-list-item-title>
+        </v-list-item>
       <template v-for="section in sections" :key="section.sectionId">
+
+
         <v-list-subheader class="section-title">
           <v-icon icon="mdi-menu-right" />
           {{ section.sectionName }}
@@ -170,6 +197,7 @@
 <script>
 import axios from "axios";
 import { mapGetters, mapActions } from "vuex";
+// import { first } from '@tiptap/core/dist/packages/core/src/commands';
 
 export default {
   props: {
@@ -208,6 +236,7 @@ export default {
   },
   mounted() {
     this.getSectionData();
+    this.getMyBookmarks();
     this.selectedChannelMenuId = this.$route.params.channelId; //이 변수에서 routerId값이 변경된 것을 감지해서 항상 바뀌었으면 좋겠어
   },
   data() {
@@ -230,6 +259,8 @@ export default {
       // sectionEditMode: false,
       // editedSectionName: "",
       myChannels: [],
+      channelId: null,
+      myBookmarks: [],
     };
   },
   methods: {
@@ -253,26 +284,29 @@ export default {
           this.sections[0].channelList.length > 0
         ) {
           const firstChannel = this.sections[0].channelList[0];
-          const chMember = await axios.get( // 채널 권한 정보
-          `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${firstChannel.channelId}` 
-          );
-          const channelRole = this.setChannelRoleInfoActions(chMember.data.result.channelRole);
+          this.channelId = firstChannel;
           this.changeChannel(
             firstChannel.channelId,
             firstChannel.channelName,
-            firstChannel.channelInfo
-          , channelRole);
+            firstChannel.channelInfo);
         }
+        // this.getChannelMemberInfo(this.channelId);
       } catch (error) {
         console.log(error);
       }
     },
-    async changeChannel(id, name, desc, role) {
+    // async getChannelMemberInfo(id) {
+    //   const chMember = await axios.get( // 채널 권한 정보
+    //   `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${id}` 
+    //   );
+    //   this.changeChannelMemberInfo(chMember.data.result.channelRole);
+
+    // },
+    async changeChannel(id, name, desc) {
       this.selectedChannelMenuId = id;
       this.setChannelInfoActions(id);
       this.setChannelNameInfoActions(name);
       this.setChannelDescInfoActions(desc);
-      this.setChannelRoleInfoActions(role);
 
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
@@ -285,6 +319,9 @@ export default {
       } else {
         this.$router.push(`/channel/${id}`);
       }
+    },
+    async changeChannelMemberInfo(role) {
+      this.setChannelRoleInfoActions(role);
     },
     async createSection() {
       try {
@@ -375,19 +412,12 @@ export default {
         console.log(error);
       }
     },
-    async editSection() {
-      
-    },
-    async deleteSection() {
-    
-    },
     async fetchMyChannels() {
       try {
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.getWorkspaceId}`
         );
         this.myChannels = response.data.result.channels;
-        console.log("내가 속한 채널들", this.myChannels);
       } catch (error) {
         console.log(error);
       }
@@ -395,6 +425,16 @@ export default {
     isMember(id) {
       return this.myChannels.some(channel => channel === id);
     },
+    async getMyBookmarks() {
+      try {
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/bookmark/${this.getWorkspaceId}`
+        );
+        this.myBookmarks = response.data.result;
+      } catch (error) {
+        console.log(error);
+      }
+    }
   },
 };
 </script>
