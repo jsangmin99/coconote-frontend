@@ -9,26 +9,29 @@
         root
       </span>
 
-      <span v-if="breadcrumb.length"> / </span>
+      <span v-if="breadcrumb.length"> > </span>
       <span v-for="(folder, index) in breadcrumb" :key="folder.folderId" class="breadcrumb-item" draggable="true"
         @dragover.prevent @drop="onDrop($event, folder.folderId)" @click="navigateToFolder(folder.folderId)">
         {{ folder.folderName }}
-        <span v-if="index !== breadcrumb.length - 1"> / </span>
+        <span v-if="index !== breadcrumb.length - 1"> > </span>
       </span>
     </div>
 
     <!-- 툴바 -->
     <div class="toolbar">
+      <!-- 뒤로 가기 버튼 -->
+      <!-- eslint-disable-next-line -->
+      <button @click="goBack" class="back-btn"> < 뒤로 가기</button>
 
-      <!-- 파일 선택 라벨, 아이콘 추가 -->
-      <label for="file-upload" class="btn upload-btn">
-        <v-icon icon="mdi-upload" />
-        올리기
-      </label>
-      <input type="file" multiple @change="onFileChange" id="file-upload" hidden />
+          <!-- 파일 선택 라벨, 아이콘 추가 -->
+          <label for="file-upload" class="btn upload-btn">
+            <v-icon icon="mdi-upload" />
+            올리기
+          </label>
+          <input type="file" multiple @change="onFileChange" id="file-upload" hidden />
 
-      <!-- 새 폴더 버튼 -->
-      <button @click="createFolder" class="btn new-folder-btn">새 폴더</button>
+          <!-- 새 폴더 버튼 -->
+          <button @click="createFolder" class="btn new-folder-btn">새 폴더</button>
     </div>
 
     <div v-if="uploadProgress.length">
@@ -46,7 +49,7 @@
         @dragstart="onDragStart($event, 'folder', folder.folderId)" @dragover.prevent
         @drop="onDrop($event, folder.folderId)" @click="navigateToFolder(folder.folderId)"
         @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
-        <i class="folder-icon">📁</i>
+        <img src="@/assets/folder-icon.png" alt="folder icon" class="folder-icon" />
         <span>{{ folder.folderName }}</span>
       </div>
     </div>
@@ -67,10 +70,12 @@
 
         <!-- PDF 파일일 경우 -->
         <template v-else-if="isPdf(file.fileName)">
-          <embed :src="file.fileUrl" type="application/pdf" class="file-preview" />
-          <a :href="file.fileUrl" download :title="file.fileName">
-            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
-          </a>
+          <iframe :src="file.fileUrl" class="file-preview" type="application/pdf"></iframe>
+          <div class="file-name">
+            <a :href="file.fileUrl" download :title="file.fileName">
+              {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+            </a>
+          </div>
         </template>
 
         <!-- SVG 파일일 경우 -->
@@ -216,15 +221,15 @@ export default {
     },
 
 
-    // // 뒤로 가기 기능
-    // goBack() {
-    //   if (this.backButtonHistory.length && this.currentFolderId !== this.rootFolderId) {
-    //     console.log('뒤로 가기:', this.backButtonHistory);
-    //     const previousFolderId = this.backButtonHistory.pop(); // 마지막 폴더 ID를 제거하고 이동
-    //     this.breadcrumb.pop(); // 경로에서 마지막 폴더 제거
-    //     this.navigateToFolder(previousFolderId, false); // false는 뒤로가기 이동 시 기록하지 않기 위함
-    //   }
-    // },
+    // 뒤로 가기 기능
+    goBack() {
+      if (this.backButtonHistory.length && this.currentFolderId !== this.rootFolderId) {
+        console.log('뒤로 가기:', this.backButtonHistory);
+        const previousFolderId = this.backButtonHistory.pop(); // 마지막 폴더 ID를 제거하고 이동
+        this.breadcrumb.pop(); // 경로에서 마지막 폴더 제거
+        this.navigateToFolder(previousFolderId, false); // false는 뒤로가기 이동 시 기록하지 않기 위함
+      }
+    },
 
     // 폴더 탐색
     // async refreshFolderList() {
@@ -662,6 +667,7 @@ export default {
   opacity: 0.9;
 }
 
+/* 폴더 목록과 파일 목록의 스타일 */
 .folder-list,
 .file-list {
   display: flex;
@@ -675,7 +681,13 @@ export default {
   text-align: center;
 }
 
-.folder-item i,
+.folder-item img {
+  width: 110px;
+  height: 70px;
+  object-fit: contain;
+}
+
+/* 파일 아이템 */
 .file-item i {
   width: 120px;
   text-align: center;
@@ -698,12 +710,14 @@ export default {
   opacity: 0.5;
 }
 
-.folder-item i,
-.file-item i {
-  font-size: 24px;
-  display: block;
+/* 폴더 아이콘 크기 조정 */
+.folder-item img {
+  font-size: 40px;
+  color: #007bff;
+  margin-bottom: 5px;
 }
 
+/* 파일 미리보기 */
 .file-preview {
   width: 100px;
   height: 100px;
@@ -717,6 +731,16 @@ export default {
   transform: scale(1.05);
 }
 
+.file-name {
+  margin-top: 5px; /* 미리보기 이미지와 파일 이름 사이의 간격 조정 */
+  text-align: center; /* 파일 이름을 가운데 정렬 */
+}
+
+iframe.file-preview {
+  border: none;
+}
+
+/* 컨텍스트 메뉴 스타일 */
 .context-menu {
   position: absolute;
   background-color: white;

@@ -72,6 +72,7 @@ export default {
       "setChannelInfoActions",
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
+      "setChannelRoleInfoActions",
     ]),
     async fetchMyWorkspaceList() {
       try {
@@ -118,7 +119,13 @@ export default {
         this.setChannelNameInfoActions(chInfo.data.result.channelName);
         this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
 
-        this.isLoading = true;
+
+        const chMember = await axios.get( // 채널 권한 정보
+        `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${chInfo.data.result.channelId}` 
+        );
+        this.setChannelRolerInfoActions(chMember.data.result.channelRole);
+
+      this.isLoading = true;
       } catch (e) {
         console.log(e);
       }
