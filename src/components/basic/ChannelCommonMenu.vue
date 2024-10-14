@@ -126,8 +126,9 @@ export default {
       updateChannelInfo: {
         channelName: "",
         channelInfo: "",
-        isPublic: 1,
+        isPublic: "",
       },
+      isPublic: "",
     };
   },
   computed: {
@@ -149,7 +150,7 @@ export default {
     document.removeEventListener('click', this.handleClickOutside);
   },
   created() {
-    this.fetchBookmark(this.getChannelId);
+    this.fetchChannelInfo(this.getChannelId);
   },
   methods: {
 
@@ -242,7 +243,11 @@ export default {
         console.error("채널 수정 에러", error);
       } 
     },
-    async fetchBookmark(channelId) {
+    async fetchChannelInfo(channelId) {
+      const chInfo = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/channel/detail/${channelId}`);
+      this.updateChannelInfo.isPublic = Number(chInfo.data.result.isPublic);
+      console.log("기존 수정 전 공개범위", Number(chInfo.data.result.isPublic));
+
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${channelId}`);
       if(response.data.result.isBookmark) {
         this.isBookmarked = true;
