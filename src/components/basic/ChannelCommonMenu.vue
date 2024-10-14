@@ -89,8 +89,8 @@
           label="채널종류"
           v-model="updateChannelInfo.isPublic"
         >
-          <v-radio label="공개채널" value="1"></v-radio>
-          <v-radio label="비공개 채널" value="0"></v-radio>
+          <v-radio label="공개채널" :value="1"></v-radio>
+          <v-radio label="비공개 채널" :value="0"></v-radio>
         </v-radio-group>
       </v-card-text>
       <template v-slot:actions>
@@ -130,7 +130,6 @@ export default {
         channelInfo: "",
         isPublic: "",
       },
-      isPublic: "",
     };
   },
   computed: {
