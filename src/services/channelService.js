@@ -10,7 +10,7 @@ export async function fetchChannelMemberInfo(channelId) {
     const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${channelId}`);
     return response.data.result; // 성공 시 결과 반환
   } catch (error) {
-    console.error('채널 북마크 상태를 가져오는 중 오류 발생: ', error);
+    // console.error('채널 북마크 상태를 가져오는 중 오류 발생: ', error);
     return null; // 실패 시 null 반환
   }
 }

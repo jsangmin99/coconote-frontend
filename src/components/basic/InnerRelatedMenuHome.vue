@@ -169,6 +169,7 @@
 <script>
 import axios from "axios";
 import { mapGetters, mapActions } from "vuex";
+import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
 // import { first } from '@tiptap/core/dist/packages/core/src/commands';
 
 export default {
@@ -274,9 +275,10 @@ export default {
     },
     // async getChannelMemberInfo(id) {
     //   const chMember = await axios.get( // 채널 권한 정보
-    //   `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${id}`
+    //   `${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${id}` 
     //   );
     //   this.changeChannelMemberInfo(chMember.data.result.channelRole);
+
     // },
     async changeChannel(id, name, desc) {
       this.selectedChannelMenuId = id;
@@ -291,8 +293,13 @@ export default {
       const isJoin = response.data.result;
 
       if (isJoin) {
+        const result = await fetchChannelMemberInfo(id);
+        if (result) {
+          this.setChannelRoleInfoActions(result.channelRole);
+        }
         this.$router.push(`/channel/${id}/thread/view`);
       } else {
+        this.setChannelRoleInfoActions(null);
         this.$router.push(`/channel/${id}`);
       }
     },
