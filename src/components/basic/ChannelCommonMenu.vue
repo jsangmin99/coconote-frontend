@@ -107,6 +107,8 @@
 import ChannelMemberModal from "@/components/ChannelMemberInviteModal.vue";
 import { mapGetters } from "vuex";
 import axios from "axios";
+import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
+
 
 export default {
   props: ["menu"],
@@ -248,8 +250,8 @@ export default {
       this.updateChannelInfo.isPublic = Number(chInfo.data.result.isPublic);
       console.log("기존 수정 전 공개범위", Number(chInfo.data.result.isPublic));
 
-      const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${channelId}`);
-      if(response.data.result.isBookmark) {
+      const result = await fetchChannelMemberInfo(channelId); // 모듈로 함수 호출
+      if(result.isBookmark) {
         this.isBookmarked = true;
       }else{
         this.isBookmarked = false;
