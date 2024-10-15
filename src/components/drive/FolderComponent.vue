@@ -21,17 +21,18 @@
     <div class="toolbar">
       <!-- 뒤로 가기 버튼 -->
       <!-- eslint-disable-next-line -->
-      <button @click="goBack" class="back-btn"> < 뒤로 가기</button>
+      <button @click="goToParentFolder" class="back-btn">
+        <v-icon icon="mdi-folder-arrow-up" /> 상위폴더로 가기
+      </button>
+      <!-- 파일 선택 라벨, 아이콘 추가 -->
+      <label for="file-upload" class="btn upload-btn">
+        <v-icon icon="mdi-upload" />
+        올리기
+      </label>
+      <input type="file" multiple @change="onFileChange" id="file-upload" hidden />
 
-          <!-- 파일 선택 라벨, 아이콘 추가 -->
-          <label for="file-upload" class="btn upload-btn">
-            <v-icon icon="mdi-upload" />
-            올리기
-          </label>
-          <input type="file" multiple @change="onFileChange" id="file-upload" hidden />
-
-          <!-- 새 폴더 버튼 -->
-          <button @click="createFolder" class="btn new-folder-btn">새 폴더</button>
+      <!-- 새 폴더 버튼 -->
+      <button @click="createFolder" class="btn new-folder-btn">새 폴더</button>
     </div>
 
     <div v-if="uploadProgress.length">
@@ -120,6 +121,7 @@ export default {
       currentFolderId: null, // 현재 탐색 중인 폴더 ID
       rootFolderId: null,    // 루트 폴더 ID 저장
       // backButtonHistory: [], // 이전 폴더 기록
+      parentFolderId: null,  // 현재 폴더의 부모 폴더 ID
       files: [], // 업로드할 파일 배열
       uploadProgress: [], // 파일 업로드 진행 상황
       breadcrumb: [], // 폴더 경로를 저장하는 배열
@@ -142,7 +144,7 @@ export default {
         this.currentFolderId = data.nowFolderId;
         this.folderList = data.folderListDto || [];
         this.fileList = data.fileListDto || [];
-        // '루트' 경로는 이미 있으므로 추가하지 않음
+        this.parentFolderId = null;  // 루트 폴더의 상위 폴더는 없으므로 null로 설정
         this.breadcrumb = data.nowFolderId === this.rootFolderId
           ? []
           : [{ folderId: this.currentFolderId, folderName: data.nowFolderName }];
@@ -221,13 +223,23 @@ export default {
     },
 
 
-    // 뒤로 가기 기능
-    goBack() {
-      if (this.backButtonHistory.length && this.currentFolderId !== this.rootFolderId) {
-        console.log('뒤로 가기:', this.backButtonHistory);
-        const previousFolderId = this.backButtonHistory.pop(); // 마지막 폴더 ID를 제거하고 이동
-        this.breadcrumb.pop(); // 경로에서 마지막 폴더 제거
-        this.navigateToFolder(previousFolderId, false); // false는 뒤로가기 이동 시 기록하지 않기 위함
+    // 상위 폴더로 가기
+    goToParentFolder() {
+      if (this.breadcrumb.length > 1) {
+        // breadcrumb 배열의 마지막 바로 전 폴더가 상위 폴더
+        const parentFolder = this.breadcrumb[this.breadcrumb.length - 2];
+
+        // 상위 폴더로 이동
+        this.navigateToFolder(parentFolder.folderId);
+
+        // breadcrumb에서 현재 폴더를 제거하고 상위 폴더를 유지
+        this.breadcrumb.pop();
+      } else if (this.breadcrumb.length === 1) {
+        // 루트 폴더가 남아있는 경우
+        this.navigateToFolder(this.rootFolderId);
+        this.breadcrumb = [];
+      } else {
+        alert("상위 폴더가 없습니다.");
       }
     },
 
@@ -569,32 +581,36 @@ export default {
     // 폴더 탐색
     // async navigateToFolder(folderId, recordHistory = true) {
     async navigateToFolder(folderId) {
-      // if (recordHistory && this.currentFolderId !== folderId) {
-      // this.backButtonHistory.push(this.currentFolderId);
+      try {
+        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}`);
+        const data = response.data.result;
 
-      if (folderId === this.rootFolderId) {
-        console.log('루트 폴더로 이동');
-        console.log('rootFolderId:', this.rootFolderId);
-        // 루트 폴더일 경우, breadcrumb를 초기화
-        this.breadcrumb = [];
-      } else {
-        const selectedFolder = this.folderList.find(folder => folder.folderId === folderId);
+        // 부모 폴더 ID 설정
+        this.parentFolderId = data.parentFolderId || null;  // 부모 폴더 ID가 있으면 설정
 
-        // 선택한 폴더가 이미 breadcrumb에 있다면, 해당 폴더까지만 남기고 나머지 경로는 삭제
-        const folderIndex = this.breadcrumb.findIndex(bc => bc.folderId === folderId);
-        if (folderIndex !== -1) {
-          this.breadcrumb = this.breadcrumb.slice(0, folderIndex + 1);
-        } else if (selectedFolder) {
-          this.breadcrumb.push({
-            folderId: selectedFolder.folderId,
-            folderName: selectedFolder.folderName,
-          });
+        // Breadcrumb 업데이트 및 탐색 처리
+        if (folderId === this.rootFolderId) {
+          this.breadcrumb = [];
+        } else {
+          const selectedFolder = this.folderList.find(folder => folder.folderId === folderId);
+          const folderIndex = this.breadcrumb.findIndex(bc => bc.folderId === folderId);
+          if (folderIndex !== -1) {
+            this.breadcrumb = this.breadcrumb.slice(0, folderIndex + 1);
+          } else if (selectedFolder) {
+            this.breadcrumb.push({
+              folderId: selectedFolder.folderId,
+              folderName: selectedFolder.folderName,
+            });
+          }
         }
-      }
-      // }
 
-      this.currentFolderId = folderId;
-      await this.refreshFolderList();
+        this.currentFolderId = folderId;
+        this.folderList = data.folderListDto || [];
+        this.fileList = data.fileListDto || [];
+      } catch (error) {
+        console.error('폴더 탐색 실패:', error);
+        alert('폴더 탐색 중 오류가 발생했습니다.');
+      }
     },
 
   },
@@ -732,8 +748,10 @@ export default {
 }
 
 .file-name {
-  margin-top: 5px; /* 미리보기 이미지와 파일 이름 사이의 간격 조정 */
-  text-align: center; /* 파일 이름을 가운데 정렬 */
+  margin-top: 5px;
+  /* 미리보기 이미지와 파일 이름 사이의 간격 조정 */
+  text-align: center;
+  /* 파일 이름을 가운데 정렬 */
 }
 
 iframe.file-preview {
