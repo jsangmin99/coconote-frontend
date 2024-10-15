@@ -72,10 +72,10 @@
       </div>
       
       <!-- 댓글 -->
-      <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0" @click="commentIn(thread)">
-        <div class="comment">
+      <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0 && !isComment" @click="commentIn(thread)">
+        <strong class="comment">
           {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
-        </div>
+        </strong>
       </button>
     </div>
   </div>
@@ -97,7 +97,7 @@
 <script>
 import axios from '@/services/axios';
   export default {
-    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn','isDifferentMember'],
+    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn','isDifferentMember','isComment'],
     data() {
         return {
             message: "",
@@ -433,7 +433,7 @@ import axios from '@/services/axios';
   white-space: nowrap; /* 텍스트 줄 바꿈 방지 */
 }
 .comment {
-    
+  color: blue;
 }
 .update-group{
   border: 1px solid;

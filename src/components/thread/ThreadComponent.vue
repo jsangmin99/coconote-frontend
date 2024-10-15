@@ -82,6 +82,8 @@
         :addTagFilter="addTagFilter"
         :removeTagFilter="removeTagFilter"
         :tagFilter="tagFilter"
+        :isComment="isComment"
+        :isDifferentMember="true"
       />
       <h5>{{ parentThread.childThreads && parentThread.childThreads.length > 0 ? `밑으로 ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
       
@@ -99,6 +101,7 @@
           :addTagFilter="addTagFilter"
           :removeTagFilter="removeTagFilter"
           :tagFilter="tagFilter"
+          :isDifferentMember="index === 0 || message.memberId !=  parentThread.childThreads[index-1].memberId"
         />
       </div>
     </div>
