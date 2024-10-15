@@ -4,14 +4,14 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-          {{ thread.id }}
+       <img :src="thread.image" alt="image" class="profile-image">
       </div>
     </div>
     <div class="thread-content">
       <div class="title">
 
         <!-- 닉네임 생성일 -->
-        <div class="nickName">{{thread.memberName}}</div>
+        <strong class="nickName">{{thread.memberName}}</strong>
         <div class="createdTime">{{createdTime}}</div>
 
         <!-- 태그 -->
@@ -61,16 +61,21 @@
           <div class="file-group">
             <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
             <p class="custom-contents">{{file.fileName}}</p>
+            <div class="more-btn-file2">
+              <button @click="downloadFile(file.fileId,file.fileName)">다운</button>
+            </div>
             <div class="more-btn-file">
-              <button @click="deleteF(file.fileId)">파일삭제</button>
+              <button @click="deleteF(file.fileId)">삭제</button>
             </div>
           </div>
         </div>
       </div>
       
       <!-- 댓글 -->
-      <button v-if="!thread.parentThreadId" @click="commentIn(thread)">
-        <div class="comment">comment</div>
+      <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0" @click="commentIn(thread)">
+        <div class="comment">
+          {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
+        </div>
       </button>
     </div>
   </div>
@@ -81,6 +86,8 @@
   </div>
   <div v-if="isContextMenuVisible || isTagMenuVisible" class="overlay"></div>
   <div v-if="isContextMenuVisible" class="context-menu">
+    <button @click="commentIn(thread)">댓글 쓰기</button>
+    <button>태그 추가</button>
     <button @click="editMessage">수정</button>
     <button @click="deleteM">삭제</button>
   </div>
@@ -88,6 +95,7 @@
 </template>
   
 <script>
+import axios from '@/services/axios';
   export default {
     props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn'],
     data() {
@@ -226,12 +234,40 @@
         console.log("메시지 수정");
         this.isUpdate = true
       },
+      async downloadFile(fileId,fileName) {
+        try {
+          // presigned URL 가져오기
+          const response = await axios.get(`http://localhost:8080/api/v1/files/${fileId}/download`);
+
+          const presignedUrl = response.data.result; // presigned URL 가져오기
+
+          // Blob을 사용하여 파일 다운로드
+          const fileResponse = await axios.get(presignedUrl, { responseType: 'blob' });
+
+          // 파일 이름 추출
+          // const fileName = response.headers['content-disposition']
+          //   ? response.headers['content-disposition'].split('filename=')[1].replace(/"/g, '')
+          //   : 'downloaded_file';
+
+          // Blob을 파일로 변환하여 다운로드
+          const blob = new Blob([fileResponse.data], { type: fileResponse.headers['content-type'] });
+          const link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          link.setAttribute('download', fileName); // 서버에서 전달된 파일 이름으로 설정
+          document.body.appendChild(link);
+          link.click(); // 링크 클릭 이벤트로 다운로드 시작
+          document.body.removeChild(link); // 링크 제거
+        } catch (error) {
+          console.error("파일 다운로드에 실패했습니다.", error);
+          alert("파일 다운로드 중 오류가 발생했습니다.");
+        }
+      },
     },
   };
 </script>
 <style scoped>
 .thread {
-    display: flex;
+  display: flex;
 }
 .thread-wrapper {
   position: relative;
@@ -252,7 +288,10 @@
   display: block;
 }
 .image {
-    margin: 10px;
+  margin: 0 10px;
+  justify-content: center;
+  align-content: center;
+  align-items: center;
 }
 .thread-content {
   gap: 10px;
@@ -266,7 +305,7 @@
 
 }
 .createdTime {
-    
+  
 }
 .tag-group {
   display: flex;
@@ -358,12 +397,23 @@
 .file-group:hover .more-btn-file {
   display: block;
 }
+.file-group:hover .more-btn-file2 {
+  display: block;
+}
 .more-btn-file{
   background: #f8f8f8;
   display: none;
   position: absolute;
   top: 0;
   right: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  z-index: 2;
+}
+.more-btn-file2{
+  background: #f8f8f8;
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
   z-index: 2;
 }
 .custom-contents{
@@ -383,6 +433,15 @@
 }
 input:focus {
   outline: none;
+}
+.profile-image{
+  width: 50px;
+  /* 이미지의 가로 크기 */
+  height: 50px;
+  /* 이미지의 세로 크기 */
+  border-radius: 50%;
+  /* 이미지를 동그랗게 만듦 */
+  object-fit: cover;
 }
 </style>
 
