@@ -32,6 +32,7 @@
           :removeTagFilter="removeTagFilter"
           :tagFilter="tagFilter"
           :commentIn="commentIn"
+          :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index-1].memberId"
         />
       </div>
     </div>
@@ -699,9 +700,11 @@ export default {
 <style scoped>
 .container {
   padding:  0 0 0 24px;
+  height: 100%;
 }
 .list-group {
   overflow-y: auto; /* 세로 스크롤 가능 */
+  height: 100%;
   max-height: calc(100vh - 240px);
   gap: 10px;
 }

@@ -4,11 +4,11 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-       <img :src="thread.image" alt="image" class="profile-image">
+       <img v-if="isDifferentMember" :src="thread.image" alt="image" class="profile-image">
       </div>
     </div>
     <div class="thread-content">
-      <div class="title">
+      <div v-if="isDifferentMember" class="title">
 
         <!-- 닉네임 생성일 -->
         <strong class="nickName">{{thread.memberName}}</strong>
@@ -97,7 +97,7 @@
 <script>
 import axios from '@/services/axios';
   export default {
-    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn'],
+    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn','isDifferentMember'],
     data() {
         return {
             message: "",
@@ -278,7 +278,6 @@ import axios from '@/services/axios';
   position: absolute;
   top: 0;
   right: 20px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
-  transform: translateY(50%); /* 수직으로 중앙 정렬 */
   z-index: 2;
 }
 .thread-wrapper:hover {
@@ -288,10 +287,21 @@ import axios from '@/services/axios';
   display: block;
 }
 .image {
+  width: 50px;
+  /* 이미지의 가로 크기 */
   margin: 0 10px;
   justify-content: center;
   align-content: center;
   align-items: center;
+}
+.profile-image{
+  width: 50px;
+  /* 이미지의 가로 크기 */
+  height: 50px;
+  /* 이미지의 세로 크기 */
+  border-radius: 50%;
+  /* 이미지를 동그랗게 만듦 */
+  object-fit: cover;
 }
 .thread-content {
   gap: 10px;
@@ -433,15 +443,6 @@ import axios from '@/services/axios';
 }
 input:focus {
   outline: none;
-}
-.profile-image{
-  width: 50px;
-  /* 이미지의 가로 크기 */
-  height: 50px;
-  /* 이미지의 세로 크기 */
-  border-radius: 50%;
-  /* 이미지를 동그랗게 만듦 */
-  object-fit: cover;
 }
 </style>
 
