@@ -709,10 +709,10 @@ export default {
   overflow-y: auto; /* 세로 스크롤 가능 */
   height: 100%;
   max-height: calc(100vh - 240px);
-  gap: 10px;
 }
 .list-group-item{
   gap: 10px;
+  padding: 3px 0;
 }
 .input-group {
   position: fixed;
