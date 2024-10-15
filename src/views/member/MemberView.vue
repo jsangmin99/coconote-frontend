@@ -1,18 +1,17 @@
 <template>
   <div>
     <h1>모든 회원</h1>
-              <v-btn @click="showMailSender" color="yellow" text="회원 초대">
+              <v-btn @click="showMailSender" color="#3a8bcd" text="회원 초대">
           </v-btn>
     <v-list v-for="member in workspaceMemberList" :key="member.workspaceMemberId">
-      <v-list-item 
+      <v-list-item
+      
       value="member.workspaceMemberId"
       @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)">
-      <template v-slot:prepend>
-        <v-icon>mdi-person</v-icon>
-        <span>{{ member.nickname }}</span>
-      </template>
-      <v-chip
-        :color="getChipColor(member.wsRole)">
+        <v-list-item-title>{{ member.nickname }}</v-list-item-title>
+   
+        <v-chip small
+          :color="getChipColor(member.wsRole)">
                     {{ member.wsRole }}</v-chip>
       </v-list-item>
     </v-list>
@@ -218,4 +217,6 @@ export default {
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+
+</style>

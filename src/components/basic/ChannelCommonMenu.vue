@@ -267,6 +267,7 @@ export default {
           this.isBookmarked = false;
         }
         console.log("toggleBookmark", response.data.result);
+        window.location.reload();
       } catch (error) {
         console.error("bookmark 토글 중 오류 발생", error);
       } finally {
