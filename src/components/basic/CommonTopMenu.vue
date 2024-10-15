@@ -2,23 +2,14 @@
   <v-app-bar :elevation="2" class="topMenu" height="40">
     <v-app-bar-title class="title"> COCONOTE </v-app-bar-title>
     <template v-slot:append>
-      <v-form @submit.prevent="emitSelected">
-        <v-row>
-          <v-col cols="auto">
-            <v-select v-model="selectedValue" :items="items" item-title="name" item-value="workspaceId" outlined
-              single-line hide-details dense class="inline" style="font-size: 0.9rem"></v-select>
-          </v-col>
-          <v-col cols="auto">
-            <v-btn type="submit">이동</v-btn>
-          </v-col>
-          <v-col cols="auto">
-            <v-btn icon @click="showWorkspaceModal">
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-form>
-    </template>
+    <div class="d-flex align-center justify-end" style="width: 100%;">
+      <v-select v-model="selectedValue" :items="items" item-title="name" item-value="workspaceId" outlined single-line
+        hide-details dense class="inline" style="font-size: 0.9rem" @input="emitSelected"></v-select>
+      <v-btn @click="showWorkspaceModal">
+        <v-icon>mdi-plus</v-icon>
+      </v-btn>
+    </div>
+  </template>
   </v-app-bar>
   <CreateWorkspaceModal v-model="createWorkspace" @update:dialog="createWorkspace = $event">
   </CreateWorkspaceModal>
@@ -31,12 +22,12 @@ import { mapGetters, mapActions } from "vuex";
 import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
 
 export default {
-  computed: {
-    ...mapGetters(["getWorkspaceId", "getWorkspaceName"]), // Vuex getter 매핑
-  },
   name: "CommonTopMenu",
   components: {
     CreateWorkspaceModal,
+  },
+  computed: {
+    ...mapGetters(["getWorkspaceId", "getWorkspaceName"]), // Vuex getter 매핑
   },
   data() {
     return {
@@ -52,6 +43,13 @@ export default {
     this.selectedValue = this.$store.getters.getWorkspaceId;
     console.log("selectedValue >> ", this.selectedValue);
     this.fetchMyWorkspaceList();
+  },
+  watch: {
+    selectedValue(newValue) {
+      if (newValue) {
+        this.emitSelected();
+      }
+    },
   },
   methods: {
     ...mapActions([
