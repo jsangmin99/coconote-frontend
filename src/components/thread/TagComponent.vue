@@ -22,9 +22,9 @@
 				</div>
 			</div>
 		</div>
-		<hr>
+		<!-- <hr>
 		<h4>검색 결과</h4>
-		<div class="filter-result"></div>
+		<div class="filter-result"></div> -->
 
 		<div v-if="isTagMenuVisible" class="context-menu" :style="{ top: menuPosition.y + 'px', left: menuPosition.x + 'px' }">
       <button @click="editTag(selectedTag, $event)">수정</button>
