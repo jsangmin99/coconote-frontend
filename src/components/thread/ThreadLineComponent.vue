@@ -4,7 +4,7 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-       <img :src="thread.image" alt="image" class="profile-image">
+        <img :src="thread.image ? thread.image : require('@/assets/profileImage.png')" alt="image" class="profile-image">
       </div>
     </div>
     <div class="thread-content">
