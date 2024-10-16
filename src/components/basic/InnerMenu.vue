@@ -188,7 +188,11 @@ export default {
         if (result) {//  채널에 가입되어 있다면
           this.setChannelRoleInfoActions(result.channelRole);// 로컬스토리지에 channelRole update
         }
+          this.$router.push("/workspace").then(() => {
+            location.reload(); // URL 변경 후 페이지 새로고침
+          });
         this.isLoading = true;
+
       } catch (e) {
         console.log(e);
       }

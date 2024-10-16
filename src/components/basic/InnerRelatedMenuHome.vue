@@ -273,7 +273,7 @@ export default {
     async getSectionData() {
       try {
         const response = await axios.get(
-          `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.selectedValue}`
+          `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
         );
         this.sections = response.data.result;
 

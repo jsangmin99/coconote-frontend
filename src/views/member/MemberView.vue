@@ -3,18 +3,16 @@
     <h1>모든 회원</h1>
               <v-btn @click="showMailSender" color="#3a8bcd" text="회원 초대">
           </v-btn>
-    <v-list v-for="member in workspaceMemberList" :key="member.workspaceMemberId">
-      <v-list-item
-      
-      value="member.workspaceMemberId"
-      @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)">
-        <v-list-item-title>{{ member.nickname }}</v-list-item-title>
-   
-        <v-chip small
-          :color="getChipColor(member.wsRole)">
-                    {{ member.wsRole }}</v-chip>
-      </v-list-item>
-    </v-list>
+            <v-row>
+              <v-col v-for="member in workspaceMemberList" :key="member.workspaceMemberId" sm="3" md="2">
+                <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card">
+                    <v-img height="200px"></v-img>
+                    <v-card-text class="game-store">{{ member.nickname }}</v-card-text>
+                    <v-card-title class="member-name">{{ member.nickname }}</v-card-title>
+                    <v-chip small :color="getChipColor(member.wsRole)">{{ member.wsRole }}</v-chip>
+                </v-card>
+            </v-col>
+        </v-row>
   </div>
 
     <v-dialog v-model="workspaceMemberModal" max-width="500px" class="workspaceMemberModal">
@@ -218,5 +216,34 @@ export default {
 </script>
 
 <style lang="scss">
+.hover-card {
+    transition: transform 0.2s ease;
+    border-radius: 15px;
+}
+
+.hover-card:hover {
+    transform: translate(0px, -5px);
+}
+
+.custom-padding-card {
+    padding: 30px 20px;
+}
+
+.v-card-title {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.member-name {
+    font-size: 17px;
+}
+
+.game-store {
+    color: #919191;
+    padding-bottom: 0px;
+    font-size: 12px;
+}
+
+
 
 </style>
