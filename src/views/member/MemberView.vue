@@ -1,21 +1,18 @@
 <template>
   <div>
     <h1>모든 회원</h1>
-              <v-btn @click="showMailSender" color="yellow" text="회원 초대">
+              <v-btn @click="showMailSender" color="#3a8bcd" text="회원 초대">
           </v-btn>
-    <v-list v-for="member in workspaceMemberList" :key="member.workspaceMemberId">
-      <v-list-item 
-      value="member.workspaceMemberId"
-      @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)">
-      <template v-slot:prepend>
-        <v-icon>mdi-person</v-icon>
-        <span>{{ member.nickname }}</span>
-      </template>
-      <v-chip
-        :color="getChipColor(member.wsRole)">
-                    {{ member.wsRole }}</v-chip>
-      </v-list-item>
-    </v-list>
+            <v-row>
+              <v-col v-for="member in workspaceMemberList" :key="member.workspaceMemberId" sm="3" md="2">
+                <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card">
+                    <v-img height="200px"></v-img>
+                    <v-card-text class="member-position">{{ member.nickname }}</v-card-text>
+                    <v-card-title class="member-name">{{ member.nickname }}</v-card-title>
+                    <v-chip small :color="getChipColor(member.wsRole)">{{ member.wsRole }}</v-chip>
+                </v-card>
+            </v-col>
+        </v-row>
   </div>
 
     <v-dialog v-model="workspaceMemberModal" max-width="500px" class="workspaceMemberModal">
@@ -43,7 +40,7 @@
         <v-icon v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)">mdi-cog</v-icon>
         </v-card-title>
       <v-card-text>
-         <v-icon size="50">mdi-account-circle</v-icon>
+         <v-img height="200px"></v-img>
          <v-list>
           <v-list-item>이름    {{ workspaceMemberInfo.memberName }}</v-list-item>
           <v-list-item>닉네임    {{ workspaceMemberInfo.nickname }}</v-list-item>
@@ -53,8 +50,9 @@
          </v-list>
       </v-card-text>
       <div v-if="this.getWsRole !== 'USER' && this.workspaceMemberInfo.wsRole !== 'PMANAGER'">
-        <v-btn color="blue" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">권한</v-btn>
-        <v-btn color="red" @click="removeMember(workspaceMemberInfo.workspaceMemberId)">강퇴</v-btn>
+        <v-icon v-if="this.workspaceMemberInfo.wsRole === 'USER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-up</v-icon>
+        <v-icon v-if="this.workspaceMemberInfo.wsRole === 'SMANAGER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-down</v-icon>
+        <v-icon @click="removeMember(workspaceMemberInfo.workspaceMemberId)">mdi-account-remove</v-icon>
       </div>
       <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn>
     </v-card>
@@ -218,4 +216,35 @@ export default {
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.hover-card {
+    transition: transform 0.2s ease;
+    border-radius: 15px;
+}
+
+.hover-card:hover {
+    transform: translate(0px, -5px);
+}
+
+.custom-padding-card {
+    padding: 30px 20px;
+}
+
+.v-card-title {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.member-name {
+    font-size: 17px;
+}
+
+.member-position {
+    color: #919191;
+    padding-bottom: 0px;
+    font-size: 12px;
+}
+
+
+
+</style>
