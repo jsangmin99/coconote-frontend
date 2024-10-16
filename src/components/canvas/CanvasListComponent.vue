@@ -33,31 +33,32 @@ export default {
   },
   watch: {
     // canvasName의 변화를 감지
-    canvasUpdateObj(obj) {
-      this.onCanvasInfoChanged(obj);
-    },
+    // canvasUpdateObj(obj) {
+    //   this.onCanvasInfoChanged(obj);
+    // },
     getPageInfoForComponent: {
       handler(newVal) {
-        console.error(
-          "페이지 변경 list에서 감지!!!!!!!!!!!!!!!!!! :",
-          newVal,
-        );
+        console.error("페이지 변경 list에서 감지!!!!!!!!!!!!!!!!!! :", newVal);
         // canvasInfo 변경 시 동작할 코드 작성
-        // if (newVal.method == "create") {
-        //   console.log("create 예정");
-        //   this.findAllRoom();
-        // } else if (newVal.method == "update") {
-        //   console.log("update 예정");
-        //   this.sendMessageUpdate();
-        // } else if (newVal.method == "changeOrder") {
-        //   console.log("순서변경 예정");
-        //   this.findAllRoom();
-        // } else if (newVal.method == "delete") {
-        //   console.log("삭제 예정");
-        //   this.sendMessageDelete(newVal);
-        // } else {
-        //   console.error("잘못된 method로 접근했습니다.");
-        // }
+        if (newVal == "LIST&DETAIL" || newVal == "LIST") {
+          console.log(newVal, " type 추가가... 예정");
+          this.getCanvasAllInfo_inList = this.getCanvasAllInfo;
+          if (this.getCanvasAllInfo_inList.method == "CREATE_CANVAS") {
+            console.error("생성되어서 findAllRomm 진행!")
+            setTimeout(() => {
+              this.findAllRoom();
+              this.canvasName = "";
+            }, 1000);
+          } else if (this.getCanvasAllInfo_inList.method == "UPDATE_CANVAS") {
+            this.onCanvasInfoChanged();
+          } else if (this.getCanvasAllInfo_inList.method == "CHANGE_ORDER_CANVAS") {
+            this.changeOrderInList();
+          } else if (this.getCanvasAllInfo_inList.method == "DELETE_CANVAS") {
+            this.canvasDeleteInList();
+          } else {
+            console.error("List 에서는 사용 X 혹은 잘못된 method");
+          }
+        }
       },
       deep: true, // 깊은 상태 변화를 감지
     },
@@ -76,7 +77,6 @@ export default {
       alert("잘못된 접근입니다.");
       return false;
     }
-    console.error("before 테스트 2")
     this.isFirst = true;
     this.findAllRoom();
   },
@@ -91,22 +91,19 @@ export default {
 
       canvasMessage: "",
       canvasMessages: [],
+      getCanvasAllInfo_inList: null,
     };
   },
   methods: {
     ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction"]),
     findAllRoom() {
+      console.error("gma...")
       axios
-        .get(
-          `${process.env.VUE_APP_API_BASE_URL}/canvas/${this.channelId}/list`
-        )
+        .get(`${process.env.VUE_APP_API_BASE_URL}/canvas/${this.channelId}/list`)
         .then((response) => {
           this.chatrooms = response.data.result.content;
           if (this.chatrooms.length > 0 && this.isFirst) {
-            if (
-              this.$route.params.canvasId &&
-              this.$route.params.canvasId > 0
-            ) {
+            if (this.$route.params.canvasId && this.$route.params.canvasId > 0) {
               this.changeCanvasId(this.$route.params.canvasId); // url id 선택
             } else {
               this.changeCanvasId(response.data.result.content[0].id); // 첫번째 id 자동선택
@@ -120,25 +117,25 @@ export default {
         alert("캔버스 제목을 입력해 주십시요.");
         return;
       } else {
-        let prevCanvasId = null;
-        if (this.chatrooms && this.chatrooms.length > 0) {
-          prevCanvasId = this.chatrooms[this.chatrooms.length - 1].id;
-        }
-        const params = {
-          title: this.canvasName,
-          parentCanvasId: null,
-          prevCanvasId: prevCanvasId,
-          channelId: this.$route.params.channelId,
-        };
+        // let prevCanvasId = null;
+        // if (this.chatrooms && this.chatrooms.length > 0) {
+        //   prevCanvasId = this.chatrooms[this.chatrooms.length - 1].id;
+        // }
+        // const params = {
+        //   canvasTitle: this.canvasName,
+        //   parentCanvasId: null,
+        //   prevCanvasId: prevCanvasId,
+        //   channelId: this.$route.params.channelId,
+        // };
 
         try {
-          const response = await axios.post(
-            `${process.env.VUE_APP_API_BASE_URL}/canvas/create`,
-            params
-          );
-          console.log(response);
-          const targetRes = response.data.result;
-          this.canvasName = "";
+          // const response = await axios.post(
+          //   `${process.env.VUE_APP_API_BASE_URL}/canvas/create`,
+          //   params
+          // );
+          // console.log(response);
+          // const targetRes = response.data.result;
+          // this.canvasName = "";
 
           // this.$store.dispatch("setCanvasAllInfoAction", {
           //   method: "create",
@@ -149,10 +146,25 @@ export default {
           //   nextCanvasId: targetRes.nextCanvasId,
           //   member: targetRes.member,
           // });
+          let prevCanvasId = null;
+          if (this.chatrooms && this.chatrooms.length > 0) {
+            prevCanvasId = this.chatrooms[this.chatrooms.length - 1].id;
+          }
+          const setInfoObj = {
+            postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
+            page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
+            postEventPage: "LIST", // 이 이벤트를 호출한 페이지
+            method: "CREATE_CANVAS",
 
-          this.$store.dispatch("setInfoTargetAction", {
+            // canvasId: targetRes.canvasId,
+            channelId: this.$route.params.channelId,
+            canvasTitle: this.canvasName,
+            parentCanvasId: null,
+            prevCanvasId: prevCanvasId,
+            nextCanvasId: null,
+          };
 
-          });
+          this.$store.dispatch("setInfoMultiTargetAction", setInfoObj);
 
           // this.findAllRoom();
         } catch (error) {
@@ -166,65 +178,34 @@ export default {
         console.log("changeCanvasId!!", canvasId);
         this.canvasIdInList = canvasId;
         this.$emit("updateCanvasId", canvasId);
-        this.$router.push(
-          `/channel/${this.getChannelId}/canvas/view/${canvasId}`
-        );
+        this.$router.push(`/channel/${this.getChannelId}/canvas/view/${canvasId}`);
       }
     },
-    onCanvasInfoChanged(obj) {
+    onCanvasInfoChanged() {
       // 캔버스 정보가 변경되었을 때 실행할 로직
-      console.log("obj >> ", obj);
-      if (obj.method == "nameChange") {
-        const targetCanvas = this.chatrooms.find(
-          (item) => item.id === this.canvasIdInList
-        );
-
-        if (targetCanvas) {
-          targetCanvas.title = obj.name; // 리스트 항목의 title을 업데이트
-        }
-      } else if (obj.method && obj.method == "deleteCanvas") {
-        const targetIndex = this.chatrooms.findIndex(
-          (item) => item.id === obj.canvasId
-        );
-
-        if (targetIndex !== -1) {
-          // 해당 인덱스의 항목을 배열에서 삭제
-          this.chatrooms.splice(targetIndex, 1);
-          console.log(`Canvas ID ${obj.canvasId}가 목록에서 삭제되었습니다.`);
-        }
-      } else if (obj.method && obj.method == "update") {
-        this.findAllRoom();
+      const targetCanvas = this.chatrooms.find(
+        (item) => item.id === this.getCanvasAllInfo_inList.canvasId
+      );
+      if (targetCanvas) {
+        targetCanvas.title = this.getCanvasAllInfo_inList.canvasTitle; // 리스트 항목의 title을 업데이트
       }
     },
-    
-    sendMessageUpdate(obj) {
-      // 이름이 변경되었을 때
-      console.error("canvas update component >> ", obj, obj.canvasId);
-      this.canvasMessage = {
-        channelId: this.$route.params.channelId,
-        method: "update",
-        canvasId: this.$route.params.canvasId,
-        title: obj.title,
-      };
-      console.log(this.canvasMessage);
+    changeOrderInList() {
+      console.log("change order... ⭐");
     },
-    sendMessageDelete(obj) {
-      console.error("list component >> ", obj, obj.canvasId);
-      this.canvasMessage = {
-        channelId: this.$route.params.channelId,
-        method: "delete",
-        canvasId: this.$route.params.canvasId,
-      };
-      console.log(this.canvasMessage);
-      // channelId;
-      // parentCanvasId = null;
-      // prevCanvasId = null;
-      // nextCanvasId = null;
-      // method;
-      // canvasId;
-      // title = null;
-      // member;
+    canvasDeleteInList() {
+      const targetIndex = this.chatrooms.findIndex(
+        (item) => item.id === this.getCanvasAllInfo_inList.canvasId
+      );
+      console.log("t삭제 테스트" , targetIndex, this.getCanvasAllInfo_inList.canvasId)
 
+      if (targetIndex !== -1) {
+        // 해당 인덱스의 항목을 배열에서 삭제
+        this.chatrooms.splice(targetIndex, 1);
+        console.log(
+          `Canvas ID ${this.getCanvasAllInfo_inList.canvasIdd}가 목록에서 삭제되었습니다.`
+        );
+      }
     },
   },
 };

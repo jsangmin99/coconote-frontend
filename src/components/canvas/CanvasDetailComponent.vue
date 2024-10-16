@@ -53,6 +53,21 @@ export default {
       handler(newVal) {
         console.error("캔버스 페이지 변경 감지 @@@@@@@@@@@@@@ :", newVal);
         // canvasInfo 변경 시 동작할 코드 작성
+        if (newVal == "LIST&DETAIL" || newVal == "DETAIL") {
+          console.log(newVal, " type 추가가@@@ 예정");
+          this.getCanvasAllInfo_inDetail = this.getCanvasAllInfo;
+
+          if (this.getCanvasAllInfo_inDetail.method == "UPDATE_CANVAS") {
+            this.onCanvasInfoChanged();
+          } else if (this.getCanvasAllInfo_inDetail.method == "DELETE_CANVAS") {
+            if(this.getCanvasAllInfo_inDetail.canvasId == this.canvasId){
+              console.log("detail canvas id >> ",this.getCanvasAllInfo_inDetail.canvasId, this.canvasId)
+              this.deleteCanvasView();
+            }
+          } else {
+            console.error("detail 에서는 사용 X 혹은 잘못된 method");
+          }
+        }
         // if (newVal.method == "update") {
         //   if (newVal.title && newVal.title != this.room.title) {
         //     // 이름변경
@@ -94,6 +109,8 @@ export default {
       message: "",
       messages: [],
 
+      getCanvasAllInfo_inDetail: null,
+
       detailCanvasId: null,
       isReadonly: false,
       canvas: {},
@@ -105,7 +122,6 @@ export default {
     };
   },
   mounted() {
-    console.error("생성중...");
     this.sender = localStorage.getItem("wschat.sender");
     async () => {
       this.beforeRouteLeave();
@@ -123,7 +139,6 @@ export default {
       "setCanvasAllInfoAction",
     ]),
     handleCanvasIdChange(newCanvasId) {
-      console.error("생성중...222 >>", newCanvasId);
       this.detailCanvasId = newCanvasId;
       this.getCanvasAndBlockInfo();
     },
@@ -186,44 +201,56 @@ export default {
       };
     },
     sendMessage() {
-      if (this.wsBlock && this.wsBlock.connected) {
-        this.wsBlock.send(
-          `/pub/block/message`,
-          {},
-          JSON.stringify({
-            type: "CANVAS",
-            roomId: this.detailCanvasId,
-            sender: this.sender,
-            message: JSON.stringify(this.message),
-          })
-        );
-        this.message = "";
-      } else {
-        // console.log("WebSocket is not connected.");
-      }
+      // Vuex action 호출
+      const pageSetObj = {
+        postMessageType: "BLOCK", // 현 이벤트가 canvas 인지 block인지 구분
+        page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
+        postEventPage: "DETAIL", // 이 이벤트를 호출한 페이지
+        ...this.message,
+      };
+      this.$store.dispatch("setInfoMultiTargetAction", pageSetObj);
+      // if (this.wsBlock && this.wsBlock.connected) {
+      //   this.wsBlock.send(
+      //     `/pub/block/message`,
+      //     {},
+      //     JSON.stringify({
+      //       type: "CANVAS",
+      //       roomId: this.detailCanvasId,
+      //       sender: this.sender,
+      //       message: JSON.stringify(this.message),
+      //     })
+      //   );
+      //   this.message = "";
+      // } else {
+      //   // console.log("WebSocket is not connected.");
+      // }
     },
-    recvMessage(recv) {
-      console.error(recv.type);
-      if (recv.type === "CANVAS") {
-        const blockJson = JSON.parse(recv.message);
-        console.error("blockJson >> ", blockJson);
-        if (this.activeBlockId == blockJson.feId && blockJson.method === "update") {
-          // if (this.member == blockJson.member) {
-          console.log(
-            "현 focus 부분이랑 같은 block 수정 중인 부분..인데! update여서 보냄! => block Id 동일함"
-          );
-        } else {
-          console.log("다른 block Id 수정 중!~");
-          this.parentUpdateEditorContent = blockJson;
-        }
-      } else {
-        this.messages.unshift({
-          type: recv.type,
-          member: recv.type === "ENTER" ? "[알림]" : recv.member,
-          message: recv.message,
-        });
-      }
-    },
+    // recvMessage(recv) {
+    // console.error(recv.type);
+    // const blockJson = JSON.parse(recv.message);
+    //   console.error("blockJson >> ", blockJson);
+    //   if (
+    //     this.activeBlockId == blockJson.blockFeId &&
+    //     blockJson.method === "UPDATE_BLOCK"
+    //   ) {
+    //     // if (this.member == blockJson.member) {
+    //     console.log(
+    //       "현 focus 부분이랑 같은 block 수정 중인 부분..인데! update여서 보냄! => block Id 동일함"
+    //     );
+    //   } else {
+    //     console.log("다른 block Id 수정 중!~");
+    //     this.parentUpdateEditorContent = blockJson;
+    //   }
+    // if (recv.type === "CANVAS") {
+
+    // } else {
+    // this.messages.unshift({
+    //   type: recv.type,
+    //   member: recv.type === "ENTER" ? "[알림]" : recv.member,
+    //   message: recv.message,
+    // });
+    // }
+    // },
     // tiptabEditor method
     deleteBlock(blockFeId) {
       const prevBlockId = this.$store.getters.getTargetBlockPrevFeId(blockFeId); //삭제전 prev block id 검색
@@ -233,13 +260,14 @@ export default {
         if (isDeleteBlock) {
           // 기존 값에 있어서 삭제했다면
           this.message = {
-            method: "delete",
+            postMessageType: "BLOCK", // 고정
+            method: "DELETE_BLOCK",
             canvasId: this.canvasId,
             prevBlockId: prevBlockId,
             parentBlockId: null,
-            contents: "",
-            type: "paragraph", //삭제여서 타입 관계 X
-            feId: blockFeId,
+            blockContents: "",
+            blockType: "paragraph", //삭제여서 타입 관계 X
+            blockFeId: blockFeId,
             // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
           };
 
@@ -265,12 +293,12 @@ export default {
       const blockMethod = this.checkBlockMethod(blockFeId, blockContent);
       this.message = {
         method: blockMethod,
-        feId: blockFeId, // block id
+        blockFeId: blockFeId, // block id
         prevBlockId: previousId,
         canvasId: this.canvasId,
         // parentBlockId: parentId,
-        contents: blockContent,
-        type: blockElType,
+        blockContents: blockContent,
+        blockType: blockElType,
         // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
       };
 
@@ -282,14 +310,15 @@ export default {
       if (found) {
         // block의 생성, 수정, 삭제 (create, update, delete)
         // console.error("찾은거 하기...", this.recentKeyboardKey);
-        return "update";
+        return "UPDATE_BLOCK";
       } else {
         this.pushBlockFeIdsActions(targetBlockFeId);
-        return "create";
+        return "CREATE_BLOCK";
       }
     },
     changeOrderBlock(changeOrderObj) {
-      const { prevBlockId, nextBlockId, feId, contents, parentBlockId } = changeOrderObj;
+      const { prevBlockId, nextBlockId, feId, contents, parentBlockId } =
+        changeOrderObj;
       console.log(
         "changeOrderBlock >> ",
         prevBlockId,
@@ -303,63 +332,49 @@ export default {
 
       this.message = {
         canvasId: this.canvasId,
-        method: "changeOrder",
-        ...changeOrderObj,
-        // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
+        method: "CHANGE_ORDER_BLOCK",
+        blockFeId: changeOrderObj.feId,
+        prevBlockId: changeOrderObj.prevBlockId,
+        nextBlockId: changeOrderObj.nextBlockId,
+        parentBlockId: null,
+        blockContents: changeOrderObj.contents,
       };
 
       this.sendMessage();
     },
     async changeCanvasName() {
       console.error(this.room.title);
-      const params = {
-        title: this.room.title,
-        parentCanvasId: null,
+      const pageSetObj = {
+        postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
+        page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
+        postEventPage: "DETAIL", // 이 이벤트를 호출한 페이지
+        method: "UPDATE_CANVAS",
         canvasId: this.canvasId,
-        channelId: this.getChannelId,
+        canvasTitle: this.room.title,
       };
-      try {
-        const response = await axios.patch(
-          `${process.env.VUE_APP_API_BASE_URL}/canvas/${this.canvasId}`,
-          params
-        );
-        console.log(response);
-        const updateCanvasTitle = response.data.result.title;
-        this.room.title = updateCanvasTitle;
-        this.updateCanvasInfo();
-      } catch (error) {
-        console.log(error);
-      }
+      this.$store.dispatch("setInfoMultiTargetAction", pageSetObj);
     },
-    updateCanvasInfo() {
-      this.$store.dispatch("setCanvasAllInfoAction", {
-        method: "update",
-        canvasId: this.canvasId,
-        title: this.room.title,
-      });
+    onCanvasInfoChanged() {
+      // 캔버스 정보가 변경되었을 때 실행할 로직
+      if (this.room.title != this.getCanvasAllInfo_inDetail.canvasTitle) {
+        this.room.title = this.getCanvasAllInfo_inDetail.canvasTitle; // 리스트 항목의 title을 업데이트
+      }
     },
     deleteCanvasView() {
       // 지워졌다고 보이게 하는 용도
-      // this.canvasMessage = {
-      //   method: "delete",
-      //   canvasId: this.canvasId,
-      //   member: this.sender, // 현재 접속한 user ⭐ 추후 변경
-      // };
-      // this.sendMessageCanvas();
-      this.$store.dispatch("setCanvasAllInfoAction", {
-        method: "delete",
-        canvasId: this.canvasId,
-        member: this.sender,
-      });
       this.isReadonly = true;
     },
     async deleteCanvas() {
       console.log("canvas 삭제 예정");
-      try {
-        this.deleteCanvasView();
-      } catch (error) {
-        console.log(error);
-      }
+      const pageSetObj = {
+        postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
+        page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
+        postEventPage: "DETAIL", // 이 이벤트를 호출한 페이지
+        method: "DELETE_CANVAS",
+        canvasId: this.canvasId,
+      };
+      this.$store.dispatch("setInfoMultiTargetAction", pageSetObj);
+      this.deleteCanvasView();
     },
   },
   beforeUnmount() {},
