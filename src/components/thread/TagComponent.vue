@@ -6,12 +6,16 @@
 		<div class="tag-list">
 			<div class="tag-container" v-for="(tag,index) in tagList" :key="index" >
 				<div>
-					<strong class="tag" :style="{ backgroundColor: tag.color }">
+					<strong v-if="!isUpdateTagName || selectedTag.id !== tag.id" class="tag" :style="{ backgroundColor: tag.color }">
 						{{tag.name}}
 					</strong>
 					<input
+						v-if="isUpdateTagName && selectedTag.id === tag.id"
 						type="text"
 						class="tag"
+						:style="{ backgroundColor: tag.color }"
+						v-on:keypress.enter="updateTagName"
+						:ref="'tagInput' + tag.id"
 						v-model="tagName"
           >
 					<button class="menu-btn" @click="toggleTagMenu(tag, $event)">⚙️</button>
@@ -21,8 +25,9 @@
 		<hr>
 		<h4>검색 결과</h4>
 		<div class="filter-result"></div>
+
 		<div v-if="isTagMenuVisible" class="context-menu" :style="{ top: menuPosition.y + 'px', left: menuPosition.x + 'px' }">
-      <button @click="editTag(selectedTag)">수정</button>
+      <button @click="editTag(selectedTag, $event)">수정</button>
       <button @click="deleteTag(selectedTag)">삭제</button>
     </div>
   </div>
@@ -44,6 +49,7 @@ export default {
     return {
 			tagList: [],
 			isTagMenuVisible: false,
+			isUpdateTagName: false,
 			selectedTag: null,
       menuPosition: { x: 0, y: 0 },
 			tagName: "",
@@ -67,24 +73,44 @@ export default {
 		toggleTagMenu(tag, event){
 			event.stopPropagation(); // 클릭 이벤트 전파 방지
 			this.selectedTag = tag;
+
+			// 메뉴가 열릴 때 isUpdateTagName이 true라면 false로 설정
+			if (this.isUpdateTagName) {
+        this.isUpdateTagName = false;
+      }
+
       this.isTagMenuVisible = !this.isTagMenuVisible;
       this.menuPosition = { x: event.clientX, y: event.clientY }; 
 		},
 		closeTagMenu() {
+			console.log("closeTagMenu");
+			
       this.isTagMenuVisible = false;
+			if (this.isUpdateTagName) {
+            this.isUpdateTagName = false;
+        }
     },
-		async editTag(tag) {
-      // 태그 수정 로직
-      console.log('Editing tag:', tag);
-      this.closeTagMenu(); // 메뉴 닫기
+		async editTag(tag, event) {
+			event.stopPropagation()
+			this.tagName = tag.name
+      this.isUpdateTagName = true;
+			this.isTagMenuVisible = false;
+			this.$nextTick(() => {
+					this.$refs['tagInput' + tag.id][0].focus(); // 포커스 주기
+      });
     },
     async deleteTag(tag) {
       // 태그 삭제 로직
 			const response = await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/tag/delete/${tag.id}`);
 			console.log(response.data);
 			this.getTagList();
-      this.closeTagMenu(); // 메뉴 닫기
     },
+		async updateTagName(){
+			const response = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/tag/update`,{tagId:this.selectedTag.id, updateTagName:this.tagName});
+			console.log(response.data);
+			this.getTagList();
+			this.isUpdateTagName = false;
+		},
 	},
 };
 </script>
@@ -132,5 +158,8 @@ export default {
 }
 .context-menu button:hover {
   background-color: #f0f0f0;
+}
+input:focus {
+  outline: none;
 }
 </style>

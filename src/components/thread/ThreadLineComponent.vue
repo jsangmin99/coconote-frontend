@@ -246,7 +246,7 @@ import axios from '@/services/axios';
         this.tagMenuPosition = (screenHeight / 1.7 > buttonPosition) ? 'top' : 'bottom';
 
         this.$nextTick(() => {
-        if (this.isTagMenuVisible) {
+          if (this.isTagMenuVisible) {
             this.$refs.tagInput.focus(); // 포커스 주기
           }
         });
