@@ -9,7 +9,7 @@
           </div>
           <h1>{{ getChannelName }}</h1>
           <div>
-            <v-icon icon="mdi-pencil-outline" class="pencil" />
+            <v-icon v-if="getChannelRole==='MANAGER'" icon="mdi-pencil-outline" class="pencil" @click="startEditingChannel" />
           </div>
         </div>
         <div class="col">
@@ -38,7 +38,7 @@
     <!-- 드롭다운 메뉴 -->
     <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
       <ul>
-        <li @click="startEditingChannel">채널 수정</li>
+        <li @click="changeChannelAccessLevel">채널 공개 범위 수정</li>
         <li @click="deleteChannel">채널 삭제</li>
       </ul>
     </div>
@@ -66,26 +66,43 @@
       @closeModal="closeChannelMemberInviteModal" />
 
     <v-dialog v-model="channelDialog" width="auto" class="channelDialog">
-      <v-card max-width="400">
-        <v-card-title> 채널 수정 </v-card-title>
-        <v-card-text>
-          <p>채널의 이름을 입력하세요.</p>
-          <v-text-field ref="channelNameInput" color="primary" density="compact" variant="underlined"
-            v-model="updateChannelInfo.channelName" @keyup.enter="saveEditingChannel" placeholder="이름"></v-text-field>
-          <p>채널의 설명을 입력하세요.</p>
-          <v-text-field color="primary" density="compact" variant="underlined" v-model="updateChannelInfo.channelInfo"
-            @keyup.enter="saveEditingChannel" placeholder="이름"></v-text-field>
-          <v-radio-group inline label="채널종류" v-model="updateChannelInfo.isPublic">
-            <v-radio label="공개채널" :value="1"></v-radio>
-            <v-radio label="비공개 채널" :value="0"></v-radio>
-          </v-radio-group>
-        </v-card-text>
-        <template v-slot:actions>
-          <v-btn class="" text="저장" @click="saveEditingChannel"></v-btn>
-          <v-btn class="" text="닫기" @click="channelDialog = false"></v-btn>
-        </template>
-      </v-card>
-    </v-dialog>
+    <v-card max-width="400">
+      <v-card-title> 채널 수정 </v-card-title>
+      <v-card-text>
+        <p>채널의 이름을 입력하세요.</p>
+        <v-text-field
+          ref="channelNameInput"
+          color="primary"
+          density="compact"
+          variant="underlined"
+          v-model="updateChannelInfo.channelName"
+          @keyup.enter="saveEditingChannel"
+          placeholder="이름"
+        ></v-text-field>
+        <p>채널의 설명을 입력하세요.</p>
+        <v-text-field
+          color="primary"
+          density="compact"
+          variant="underlined"
+          v-model="updateChannelInfo.channelInfo"
+          @keyup.enter="saveEditingChannel"
+          placeholder="이름"
+        ></v-text-field>
+        <!-- <v-radio-group
+          inline
+          label="채널종류"
+          v-model="updateChannelInfo.isPublic"
+        >
+          <v-radio label="공개채널" :value="1"></v-radio>
+          <v-radio label="비공개 채널" :value="0"></v-radio>
+        </v-radio-group> -->
+      </v-card-text>
+      <template v-slot:actions>
+        <v-btn class="" text="저장" @click="saveEditingChannel"></v-btn>
+        <v-btn class="" text="닫기" @click="channelDialog = false"></v-btn>
+      </template>
+    </v-card>
+  </v-dialog>
 
   </div>
 </template>
@@ -115,7 +132,6 @@ export default {
       updateChannelInfo: {
         channelName: "",
         channelInfo: "",
-        isPublic: "",
       },
     };
   },
@@ -219,8 +235,7 @@ export default {
       const data = {
         channelName: this.updateChannelInfo.channelName,
         channelInfo: this.updateChannelInfo.channelInfo,
-        isPublic: Number(this.updateChannelInfo.isPublic),
-      };
+        };
       try {
         await axios.patch(
           `${process.env.VUE_APP_API_BASE_URL}/channel/update/${this.getChannelId}`,
@@ -257,6 +272,7 @@ export default {
           this.isBookmarked = false;
         }
         console.log("toggleBookmark", response.data.result);
+        window.location.reload();
       } catch (error) {
         console.error("bookmark 토글 중 오류 발생", error);
       } finally {
@@ -266,6 +282,17 @@ export default {
     isBookmark() {
       console.log("즐겨찾기 추가/해제 확인", this.isBookmarked);
       return this.isBookmarked;
+    },
+    async changeChannelAccessLevel() {
+      try{
+        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/access/${this.getChannelId}`);
+        alert("공개범위가 변경되었습니다.");
+        this.$router.push("/workspace").then(() => {
+        location.reload(); // URL 변경 후 페이지 새로고침
+        });  
+      } catch (error) {
+        console.error("채널 공개 범위 수정 중 오류 발생", error);
+      }
     },
   },
 };

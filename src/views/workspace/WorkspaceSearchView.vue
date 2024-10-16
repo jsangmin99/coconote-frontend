@@ -27,7 +27,6 @@ export default {
     return {
       workspaceId: null,
       dialog: false,
-      channelId: null,
     };
   },
   computed: {},
@@ -55,7 +54,6 @@ export default {
         this.setWorkspaceInfoActions(lsWsId);
         this.setWorkspaceNameInfoActions(lsWsName);
         this.getMyFirstChannelInWorkspace();
-        this.getChannelMemberInfo();
       } else {
         console.log("새로운 workspace~~")
         this.getMyFirstWorkspace();
@@ -90,7 +88,7 @@ export default {
     async getMemberInfo() {
       try {
         const response = await axios.get(
-          `${process.env.VUE_APP_API_BASE_URL}/workspace/member/${this.workspaceId}`
+          `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.workspaceId}`
         );
 
         if (response.data.result) {
@@ -98,9 +96,10 @@ export default {
             workspaceMemberId: response.data.result.workspaceMemberId,
             profileImage: response.data.result.profileImage,
             nickname: response.data.result.nickname,
-            name: response.data.result.name,
             wsRole: response.data.result.wsRole,
           };
+          console.log("WorkspaceSerarchView wsRole", response.data.result.wsRole);
+
           this.setMemberInfoActions(memberInfo); // Vuex에 멤버 정보 저장
         }
       } catch (error) {
@@ -116,14 +115,15 @@ export default {
       this.setChannelInfoActions(response.data.result.channelId);
       this.setChannelNameInfoActions(response.data.result.channelName);
       this.setChannelDescInfoActions(response.data.result.channelInfo);
-      this.channelId = response.data.result.channelId;
+      const channelId = response.data.result.channelId;
+      this.getChannelMemberInfo(channelId);
           this.$router.push({
         path: `/channel/${response.data.result.channelId}`,
         query: { t: response.data.result.channelId }, // 새로운 query 추가로 새로운 key처럼 작동
       });
     },
-    async getChannelMemberInfo() {
-      const result = await fetchChannelMemberInfo(this.channelId); // 모듈로 함수 호출
+    async getChannelMemberInfo(channelId) {
+      const result = await fetchChannelMemberInfo(channelId); // 모듈로 함수 호출
       this.setChannelRoleInfoActions(result.channelRole);
     },
 

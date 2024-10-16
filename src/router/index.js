@@ -5,7 +5,7 @@ import LoginPage from '@/views/LoginPage.vue';
 import OAuth2Success from '@/views/OAuth2Success.vue'; // OAuth2 성공 페이지 컴포넌트
 import MemberView from '@/views/member/MemberView.vue';
 
-import { canvasRouter } from './canvasRouter';
+import { canvasRouter } from '@/router/canvasRouter';
 import { threadRouter } from '@/router/threadRouter'
 import { channelRouter } from '@/router/channelRouter'
 import { driveRouter } from '@/router/driveRouter'
