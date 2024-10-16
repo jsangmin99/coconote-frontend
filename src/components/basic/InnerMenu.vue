@@ -1,21 +1,14 @@
 <template>
   <v-navigation-drawer class="innerMenu" theme="dark" permanent rail>
     <v-list density="compact" nav class="menu-container">
+
       <!-- 홈 하위 메뉴 버튼 -->
-      <v-list-item 
-        prepend-icon="mdi-home"
-        title="home"
-        @click="changeSelectedMenu('home')"
-        :class="{ 'selected-item': selectedMenu === 'home' }"
-        ></v-list-item>
+      <v-list-item prepend-icon="mdi-home" title="home" @click="changeSelectedMenu('home')"
+        :class="{ 'selected-item': selectedMenu === 'home' }"></v-list-item>
 
       <!-- 워크스페이스 멤버 리스트 하위 메뉴 버튼 -->
-      <v-list-item 
-        prepend-icon="mdi-account-group" 
-        title="member" 
-        @click="changeSelectedMenu('member')"
-        :class="{ 'selected-item': selectedMenu === 'member' }"
-      ></v-list-item>
+      <v-list-item prepend-icon="mdi-account-group" title="member" @click="changeSelectedMenu('member')"
+        :class="{ 'selected-item': selectedMenu === 'member' }"></v-list-item>
 
       <v-list-item prepend-icon="mdi-magnify" title="search" @click="changeSelectedMenu('search')"
         :class="{ 'selected-item': selectedMenu === 'search' }"></v-list-item>
@@ -24,42 +17,26 @@
       <div style="flex-grow: 2;"></div>
 
       <!-- 프로필 및 로그아웃 버튼을 하단에 배치 -->
-      <div ref="profileButton" 
-        class="profile-logout-section" 
-        @click="toggleDialog"
-      >
-        <img 
-          :src="profileImageUrl" 
-          alt="Profile Image" 
-          class="avatar-image" 
-        />
+      <div ref="profileButton" class="profile-logout-section" @click="toggleDialog($event)">
+        <!-- <img :src="profileImageUrl" alt="Profile Image" class="avatar-image" /> -->
+        <img :src="(getProfileImage && getProfileImage !== 'null') ? getProfileImage : require('@/assets/profileImage.png')" alt="Profile Image" class="avatar-image">
       </div>
     </v-list>
 
     <!-- ModalProfileLogout 컴포넌트 호출 -->
-    <ModalProfileLogout 
-      :dialog="dialog" 
-      @update:dialog="dialog = $event" 
-      :modalPosition="modalPosition" 
-    />
+    <ModalProfileLogout :dialog="dialog" @update:dialog="dialog = $event" :modalPosition="modalPosition" />
 
   </v-navigation-drawer>
 
   <!-- 하위 메뉴 컴포넌트 -->
-  <InnerRelatedMenuHome 
-    v-if="selectedMenu === 'home'" 
-    :selectedValue="selectedValue" 
-  />
-  <InnerRelatedMenuMember 
-    v-if="selectedMenu === 'member'" 
-    :selectedValue="selectedValue" 
-  />
+  <InnerRelatedMenuHome v-if="selectedMenu === 'home'" :selectedValue="selectedValue" />
+  <InnerRelatedMenuMember v-if="selectedMenu === 'member'" :selectedValue="selectedValue" />
 </template>
 
 <script>
 import axios from "axios";
 import { mapGetters } from "vuex";
-  
+
 import InnerRelatedMenuHome from "@/components/basic/InnerRelatedMenuHome.vue";
 import InnerRelatedMenuMember from "@/components/basic/InnerRelatedMenuMember.vue";
 import ModalProfileLogout from "@/views/member/ModalProfileLogout.vue"; // 모달 컴포넌트 import
@@ -90,12 +67,13 @@ export default {
   },
   mounted() {
     // 프로필 이미지 설정 로직
-    const profileImage = this.$store.getters.getProfileImage;
-    console.log("[InnerMenu] mounted().profileImage = ", profileImage);
-    if (profileImage == "null" || profileImage == null) {
-      console.log("[InnerMenu] mounted(). if (!profileImage) profileImage = ", profileImage);
-      this.profileImageUrl = require('@/assets/profileImage.png');
-    }
+    // let profileImage = this.getProfileImage;
+    // console.log("[InnerMenu] mounted().profileImage = ", profileImage);
+    // if (profileImage == "null" || profileImage == null) {
+    //   console.log("[InnerMenu] mounted(). if (!profileImage) profileImage = ", profileImage);
+    //   profileImage = require('@/assets/profileImage.png');
+    // }
+    // this.profileImageUrl = profileImage;
   },
   methods: {
     changeSelectedMenu(name) {
@@ -112,25 +90,21 @@ export default {
           break;
       }
     },
-
     async locationHome() {
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/${this.getWorkspaceId}/channel/first`
       );
       this.$router.push(`/channel/${response.data.result.channelId}`);
     },
-
     setModalPosition() {
       const button = this.$refs.profileButton; // 버튼 요소 참조
       const rect = button.getBoundingClientRect(); // 버튼 위치 정보 가져오기
-      console.log(rect),
-        console.log(button),
-        this.modalPosition = {
-          top: rect.top - 90, // 버튼 위쪽으로 50px 위에 모달 위치
-          left: rect.right + 10, // 버튼 오른쪽에 모달 위치
-        };
+      this.modalPosition = {
+        top: rect.top - 90, // 버튼 위쪽으로 50px 위에 모달 위치
+        left: rect.right + 10, // 버튼 오른쪽에 모달 위치
+      };
     },
-    toggleDialog() {
+    toggleDialog(event) {
       event.stopPropagation(); // 클릭 이벤트 전파를 막습니다.
       this.dialog = !this.dialog;
       if (this.dialog) {
@@ -141,7 +115,6 @@ export default {
         document.removeEventListener('click', this.handleOutsideClick);
       }
     },
-
     handleOutsideClick(event) {
       // 클릭이 모달 외부인지 확인
       if (!this.$refs.profileButton.contains(event.target)) {
@@ -166,13 +139,12 @@ export default {
 };
 </script>
 
-
 <style lang="scss">
 .innerMenu {
   background: #32446e !important;
   position: static !important;
   height: 100% !important;
-    display: flex;
+  display: flex;
   flex-direction: column;
   position: static !important;
 }
@@ -184,7 +156,6 @@ export default {
   justify-content: space-between;
   /* 상단 메뉴와 하단 프로필 버튼 분리 */
 }
-
 
 .profile-logout-section {
   display: flex;

@@ -15,8 +15,8 @@
 
             <!-- 이름과 닉네임 필드 컬럼 -->
             <v-col cols="12" sm="6">
-              <v-text-field label="Nickname" v-model="profileData.nickname" :rules="nameRules" required clearable rounded
-                variant="outlined" class="common-text-field rounded"></v-text-field>
+              <v-text-field label="Nickname" v-model="profileData.nickname" :rules="nameRules" required clearable
+                rounded variant="outlined" class="common-text-field rounded"></v-text-field>
               <v-text-field label="Name" v-model="profileData.memberName" variant="outlined" clearable rounded
                 class="common-text-field rounded"></v-text-field>
             </v-col>
@@ -29,8 +29,8 @@
                 prepend-inner-icon="mdi-domain" class="common-text-field rounded"></v-text-field>
               <v-text-field label="Position" v-model="profileData.position" clearable rounded variant="outlined"
                 prepend-inner-icon="mdi-briefcase-outline" class="common-text-field rounded"></v-text-field>
-              <v-text-field label="Rank" clearable rounded variant="outlined" prepend-inner-icon="mdi-star-circle-outline"
-                class="common-text-field rounded"></v-text-field>
+              <v-text-field label="Rank" clearable rounded variant="outlined"
+                prepend-inner-icon="mdi-star-circle-outline" class="common-text-field rounded"></v-text-field>
             </v-col>
 
             <v-col cols="12" sm="6">
@@ -90,6 +90,9 @@ export default {
   mounted() {
     // 페이지 로드 시 localStorage에서 profileImage 불러오기
     const localProfileImage = this.$store.getters.getProfileImage;
+    if (localProfileImage == null || localProfileImage == 'null') {
+      this.previewImage = require('@/assets/profileImage.png');
+    }
     console.log("mounted() -> localProfileImage = this.$store.getters.getProfileImage : ", localProfileImage);
     if (localProfileImage) {
       this.profileData.profileImage = localProfileImage;
@@ -163,7 +166,8 @@ body {
 }
 
 .common-text-field {
-  color: #6495ED; /* 텍스트 색상 설정 */
+  color: #6495ED;
+  /* 텍스트 색상 설정 */
 }
 
 .my-card-action {
