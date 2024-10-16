@@ -155,6 +155,7 @@ export default {
     },
     // 드래그 시작 시 호출
     onDragStart(event, type, id) {
+      event.dataTransfer.setData("fileId", id);
       this.draggedItem = id;
       this.draggedType = type;
       // event.dataTransfer.effectAllowed = 'move';

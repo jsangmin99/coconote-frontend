@@ -4,7 +4,8 @@
       <div class="titleArea">
         <div class="col">
           <div>
-            <v-icon @click.stop="toggleBookmark(getChannelId)" :color="isBookmarked ? '#ffbb00' : 'grey'" class="star active">mdi-star</v-icon>
+            <v-icon @click.stop="toggleBookmark(getChannelId)" :color="isBookmarked ? '#ffbb00' : 'grey'"
+              class="star active">mdi-star</v-icon>
           </div>
           <h1>{{ getChannelName }}</h1>
           <div>
@@ -26,7 +27,7 @@
             </div>
           </div>
           <!-- 클릭 이벤트로 드롭다운 토글 -->
-          <v-icon v-if="getChannelRole==='MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown">
+          <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown">
             <span @click="console.log('dots clicked')"></span>
           </v-icon>
         </div>
@@ -55,7 +56,7 @@
       <button @click="moveMenu('tag')" :class="{ active: menu === 'tag' }">
         태그
       </button>
-      <button class="badge">
+      <button class="badge" @click="goToSplitView">
         2분할 보기 <v-icon icon="mdi-eye-outline" class="eye" />
       </button>
     </div>
@@ -180,6 +181,9 @@ export default {
     moveMenu(name) {
       this.$router.push(`/channel/${this.$store.getters.getChannelId}/${name}/view`);
     },
+    goToSplitView() {
+      this.$router.push(`/channel/${this.getChannelId}/split-view`);
+    },
     openChannelMemberInviteModal() {
       this.isChannelMemberModalOpen = false; // 일단 false로 설정하여 초기화
       this.$nextTick(() => {
@@ -228,7 +232,7 @@ export default {
       this.updateChannelInfo.channelInfo = this.getChannelDesc;
     },
     async saveEditingChannel() {
-        const data = {
+      const data = {
         channelName: this.updateChannelInfo.channelName,
         channelInfo: this.updateChannelInfo.channelInfo,
         };
@@ -239,11 +243,11 @@ export default {
         );
         alert("채널 수정이 완료되었습니다.");
         this.$router.push("/workspace").then(() => {
-            location.reload(); // URL 변경 후 페이지 새로고침
-          });
+          location.reload(); // URL 변경 후 페이지 새로고침
+        });
       } catch (error) {
         console.error("채널 수정 에러", error);
-      } 
+      }
     },
     async fetchChannelInfo(channelId) {
       const chInfo = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/channel/detail/${channelId}`);
@@ -251,9 +255,9 @@ export default {
       console.log("기존 수정 전 공개범위", Number(chInfo.data.result.isPublic));
 
       const result = await fetchChannelMemberInfo(channelId); // 모듈로 함수 호출
-      if(result.isBookmark) {
+      if (result.isBookmark) {
         this.isBookmarked = true;
-      }else{
+      } else {
         this.isBookmarked = false;
       }
 
@@ -262,7 +266,7 @@ export default {
       // this.toggleBookmarkIsLoading = true;
       try {
         const response = await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/bookmark/${channelId}`);
-        if(response.data.result) {
+        if (response.data.result) {
           this.isBookmarked = true;
         } else {
           this.isBookmarked = false;

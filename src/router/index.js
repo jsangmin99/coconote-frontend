@@ -12,7 +12,7 @@ import { driveRouter } from '@/router/driveRouter'
 import SearchComponent from '@/components/search/SearchComponent.vue';
 import { workspaceRouter } from '@/router/workspaceRouter';
 import { memberRouter } from '@/router/memberRouter';
-
+import SplitView from '@/views/SplitView.vue';
 import Invitation from '@/views/workspace/InvitationView.vue'; // Invitation.vue 컴포넌트 추가
 
 const routes = [
@@ -58,6 +58,12 @@ const routes = [
         meta: { showHeaderAndSidebar: false },
         component: Invitation, // Invitation 컴포넌트를 연결
         props: (route) => ({ token: route.query.token })  // 초대 링크의 token 쿼리 파라미터를 props로 전달
+    },
+    {
+        path: '/channel/:channelId/split-view',
+        name: 'SplitView',
+        component: SplitView,
+        props: true, // to pass channelId as a prop
     },
     ...workspaceRouter,
     ...channelRouter,
