@@ -32,6 +32,7 @@
           :removeTagFilter="removeTagFilter"
           :tagFilter="tagFilter"
           :commentIn="commentIn"
+          :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index-1].memberId"
         />
       </div>
     </div>
@@ -85,6 +86,8 @@
         :addTagFilter="addTagFilter"
         :removeTagFilter="removeTagFilter"
         :tagFilter="tagFilter"
+        :isComment="isComment"
+        :isDifferentMember="true"
       />
       <h5>{{ parentThread.childThreads && parentThread.childThreads.length > 0 ? `밑으로 ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
       
@@ -102,6 +105,7 @@
           :addTagFilter="addTagFilter"
           :removeTagFilter="removeTagFilter"
           :tagFilter="tagFilter"
+          :isDifferentMember="index === 0 || message.memberId !=  parentThread.childThreads[index-1].memberId"
         />
       </div>
     </div>
@@ -723,14 +727,16 @@ export default {
 <style scoped>
 .container {
   padding:  0 0 0 24px;
+  height: 100%;
 }
 .list-group {
   overflow-y: auto; /* 세로 스크롤 가능 */
+  height: 100%;
   max-height: calc(100vh - 240px);
-  gap: 10px;
 }
 .list-group-item{
   gap: 10px;
+  padding: 3px 0;
 }
 .input-group {
   position: fixed;
