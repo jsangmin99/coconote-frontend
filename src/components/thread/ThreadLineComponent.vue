@@ -4,18 +4,18 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-        <img :src="thread.image ? thread.image : require('@/assets/profileImage.png')" alt="image" class="profile-image">
+        <img v-if="isDifferentMember" :src="thread.image ? thread.image : require('@/assets/profileImage.png')" alt="image" class="profile-image">
       </div>
     </div>
     <div class="thread-content">
       <div class="title">
 
         <!-- 닉네임 생성일 -->
-        <strong class="nickName">{{thread.memberName}}</strong>
-        <div class="createdTime">{{createdTime}}</div>
+        <strong v-if="isDifferentMember" class="nickName">{{thread.memberName}}</strong>
+        <div v-if="isDifferentMember" class="createdTime">{{createdTime}}</div>
 
         <!-- 태그 -->
-        <div class="tag-group">
+        <div v-if="isDifferentMember" class="tag-group">
           <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
             <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
             <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
@@ -44,15 +44,43 @@
       </div>
 
       <!-- 내용 -->
-      <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
-      <div v-if="isUpdate" class="update-group">
-        <textarea
-          type="text"
-          class="form-control"
-          v-model="message"
-          v-on:keypress.enter="update"
-          @keydown="handleKeydown"
-        />
+      <div class="content-group">
+        <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
+        <div v-if="isUpdate" class="update-group">
+          <textarea
+            type="text"
+            class="form-control"
+            v-model="message"
+            v-on:keypress.enter="update"
+            @keydown="handleKeydown"
+          />
+        </div>
+        <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
+          <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
+            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+          </div>
+          <button @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
+          <div class="tag-toggle">
+            <input
+              v-if="isTagMenuVisible"
+              type="text"
+              class="tag-input"
+              placeholder="tags"
+              v-model="tagName"
+              v-on:keypress.enter="createTag"
+              v-on:input="adjustWidth"
+              ref="tagInput"
+              :style="{ width: inputWidth + 'px'}"
+            >
+            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
+              <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
+                <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+              </div>
+              <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
+            </div>
+          </div>
+        </div>
       </div>
       
       <!-- 파일 -->
@@ -72,10 +100,10 @@
       </div>
       
       <!-- 댓글 -->
-      <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0" @click="commentIn(thread)">
-        <div class="comment">
+      <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0 && !isComment" @click="commentIn(thread)">
+        <strong class="comment">
           {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
-        </div>
+        </strong>
       </button>
     </div>
   </div>
@@ -87,7 +115,7 @@
   <div v-if="isContextMenuVisible || isTagMenuVisible" class="overlay"></div>
   <div v-if="isContextMenuVisible" class="context-menu">
     <button @click="commentIn(thread)">댓글 쓰기</button>
-    <button>태그 추가</button>
+    <button @click="toggleTagMenu">태그 추가</button>
     <button @click="editMessage">수정</button>
     <button @click="deleteM">삭제</button>
   </div>
@@ -97,7 +125,7 @@
 <script>
 import axios from '@/services/axios';
   export default {
-    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn'],
+    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn','isDifferentMember','isComment'],
     data() {
         return {
             message: "",
@@ -218,7 +246,7 @@ import axios from '@/services/axios';
         this.tagMenuPosition = (screenHeight / 1.7 > buttonPosition) ? 'top' : 'bottom';
 
         this.$nextTick(() => {
-        if (this.isTagMenuVisible) {
+          if (this.isTagMenuVisible) {
             this.$refs.tagInput.focus(); // 포커스 주기
           }
         });
@@ -278,7 +306,6 @@ import axios from '@/services/axios';
   position: absolute;
   top: 0;
   right: 20px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
-  transform: translateY(50%); /* 수직으로 중앙 정렬 */
   z-index: 2;
 }
 .thread-wrapper:hover {
@@ -288,10 +315,21 @@ import axios from '@/services/axios';
   display: block;
 }
 .image {
+  width: 50px;
+  /* 이미지의 가로 크기 */
   margin: 0 10px;
   justify-content: center;
   align-content: center;
   align-items: center;
+}
+.profile-image{
+  width: 50px;
+  /* 이미지의 가로 크기 */
+  height: 50px;
+  /* 이미지의 세로 크기 */
+  border-radius: 50%;
+  /* 이미지를 동그랗게 만듦 */
+  object-fit: cover;
 }
 .thread-content {
   gap: 10px;
@@ -311,6 +349,7 @@ import axios from '@/services/axios';
   display: flex;
   flex-direction: row;
   gap: 5px;
+  max-height: 12px;
 }
 .tag-container {
   position: relative;
@@ -356,6 +395,11 @@ import axios from '@/services/axios';
   width: 200px;
   max-height: 220px;
   overflow-y: auto;
+}
+.content-group{
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 }
 .content {
   white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */
@@ -423,7 +467,7 @@ import axios from '@/services/axios';
   white-space: nowrap; /* 텍스트 줄 바꿈 방지 */
 }
 .comment {
-    
+  color: blue;
 }
 .update-group{
   border: 1px solid;
@@ -433,15 +477,6 @@ import axios from '@/services/axios';
 }
 input:focus {
   outline: none;
-}
-.profile-image{
-  width: 50px;
-  /* 이미지의 가로 크기 */
-  height: 50px;
-  /* 이미지의 세로 크기 */
-  border-radius: 50%;
-  /* 이미지를 동그랗게 만듦 */
-  object-fit: cover;
 }
 </style>
 
