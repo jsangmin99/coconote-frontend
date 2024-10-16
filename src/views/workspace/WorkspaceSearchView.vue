@@ -47,9 +47,9 @@ export default {
     searchMyWorkspace() {
       // localStorage에 ws 정보 체크 후 분기처리
       const lsWsId = localStorage.getItem("workspaceId");
-      console.log("생성 후 workspace로 이동 완료 >> ", lsWsId);
+      console.log("[WorkspaceSearchView] 생성 후 workspace로 이동 완료 >> ", lsWsId);
       if (lsWsId != "" && lsWsId != undefined && lsWsId != null) {
-        console.log("이미 workspace가 있음!!")
+        console.log("[WorkspaceSearchView] 이미 workspace가 있음!!");
         this.workspaceId = lsWsId;
         const lsWsName = localStorage.getItem("workspaceName");
         this.setWorkspaceInfoActions(lsWsId);
@@ -66,7 +66,7 @@ export default {
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/workspace/first`
       );
-      console.log(response);
+      console.log("[WorkspaceSearchView] getMyFirstWorkspace().response", response);
       if (!response.data.result) {
         // 해당 유저의 workspace가 존재하지 않을 때
         this.dialog = true;
@@ -74,25 +74,27 @@ export default {
       }
       const firstData = response.data.result;
       this.workspaceId = firstData.workspaceId;
+      console.log("[WorkspaceSearchView] getMyFirstWorkspace(). firstData.workspaceId : ", firstData.workspaceId);
 
       // Vuex store에 워크스페이스 정보 업데이트
-      this.setWorkspaceInfoActions(firstData.workspaceId);
+      this.setWorkspaceInfoActions(this.workspaceId);
       this.setWorkspaceNameInfoActions(firstData.name);
 
-      // 멤버 정보 가져오기 추가
-      await this.getMemberInfo();
+      // 워크스페이스 멤버 정보 가져오기 추가
+      await this.getWorkspaceMemberInfo(this.workspaceId);
 
       // 첫 번째 채널 정보 가져오기
       this.getMyFirstChannelInWorkspace();
     },
 
     // 멤버 정보를 가져와 Vuex에 저장하는 메소드 추가
-    async getMemberInfo() {
+    async getWorkspaceMemberInfo(workspaceId) {
       try {
+        console.log("[WorkspaceSearchView] getWorkspaceMemberInfo()./member/me/workspace/workspaceId : ");
         const response = await axios.get(
-          `${process.env.VUE_APP_API_BASE_URL}/workspace/member/${this.workspaceId}`
+          `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${workspaceId}`
         );
-
+        console.log("[WorkspaceSearchView] getWorkspaceMemberInfo().response : ", response);
         if (response.data.result) {
           const memberInfo = {
             workspaceMemberId: response.data.result.workspaceMemberId,
@@ -101,6 +103,7 @@ export default {
             name: response.data.result.name,
             wsRole: response.data.result.wsRole,
           };
+          console.log("[WorkspaceSearchView] getMemberInfo() profileImage: ", response.data.result.profileImage);
           this.setMemberInfoActions(memberInfo); // Vuex에 멤버 정보 저장
         }
       } catch (error) {
@@ -117,10 +120,10 @@ export default {
       this.setChannelNameInfoActions(response.data.result.channelName);
       this.setChannelDescInfoActions(response.data.result.channelInfo);
       this.channelId = response.data.result.channelId;
-          this.$router.push({
-        path: `/channel/${response.data.result.channelId}`,
-        query: { t: response.data.result.channelId }, // 새로운 query 추가로 새로운 key처럼 작동
-      });
+      //     this.$router.push({
+      //   path: `/channel/${response.data.result.channelId}`,
+      //   query: { t: response.data.result.channelId }, // 새로운 query 추가로 새로운 key처럼 작동
+      // });
     },
     async getChannelMemberInfo() {
       const result = await fetchChannelMemberInfo(this.channelId); // 모듈로 함수 호출

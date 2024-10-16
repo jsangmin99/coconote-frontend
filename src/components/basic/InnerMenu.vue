@@ -3,8 +3,8 @@
     <v-list density="compact" nav class="menu-container">
       <!-- 홈 하위 메뉴 버튼 -->
       <v-list-item 
-        prepend-icon="mdi-home" 
-        title="home" 
+        prepend-icon="mdi-home"
+        title="home"
         @click="changeSelectedMenu('home')"
         :class="{ 'selected-item': selectedMenu === 'home' }"
         ></v-list-item>
@@ -89,14 +89,12 @@ export default {
     };
   },
   mounted() {
-    const profileImage = this.$store.getters.getProfileImage;
-    const nickname = this.$store.getters.getNickname;
-
     // 프로필 이미지 설정 로직
-    if (profileImage !== 'null') {
-      this.profileImageUrl = profileImage;
-    } else {
-      this.generateAvatar(nickname);
+    const profileImage = this.$store.getters.getProfileImage;
+    console.log("[InnerMenu] mounted().profileImage = ", profileImage);
+    if (profileImage == "null" || profileImage == null) {
+      console.log("[InnerMenu] mounted(). if (!profileImage) profileImage = ", profileImage);
+      this.profileImageUrl = require('@/assets/profileImage.png');
     }
   },
   methods: {
@@ -131,39 +129,6 @@ export default {
           top: rect.top - 90, // 버튼 위쪽으로 50px 위에 모달 위치
           left: rect.right + 10, // 버튼 오른쪽에 모달 위치
         };
-    },
-    generateAvatar(name) {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      const size = 100;
-      canvas.width = size;
-      canvas.height = size;
-
-      // 배경 색상 설정 (랜덤 또는 고정)
-      const backgroundColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
-      context.fillStyle = backgroundColor;
-      context.fillRect(0, 0, size, size);
-
-      // 닉네임 첫 글자 추출
-      const firstLetter = name && name !== 'null' ? name.charAt(0).toUpperCase() : 'G';
-      context.font = '50px Arial';
-      context.fillStyle = '#ffffff';
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      context.fillText(firstLetter, size / 2, size / 2);
-
-      // 생성한 이미지를 데이터 URL로 변환하여 profileImageUrl에 저장
-      const profileImage = canvas.toDataURL('image/png');
-
-      // Vuex mutation을 이용하여 profileImageUrl과 nickname을 저장
-      this.$store.commit('setMemberInfo', {
-        nickname: name,
-        profileImage: profileImage,
-        workspaceMemberId: this.$store.getters.getWorkspaceMemberId
-      });
-
-      // profileImageUrl 업데이트
-      this.profileImageUrl = profileImage;
     },
     toggleDialog() {
       event.stopPropagation(); // 클릭 이벤트 전파를 막습니다.

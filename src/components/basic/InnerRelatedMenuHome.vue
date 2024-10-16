@@ -417,6 +417,7 @@ export default {
     },
     async fetchMyChannels() {
       try {
+        console.log("[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ", this.getWorkspaceId);
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.getWorkspaceId}`
         );

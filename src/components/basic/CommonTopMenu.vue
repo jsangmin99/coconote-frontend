@@ -86,6 +86,7 @@ export default {
         this.setWorkspaceInfoActions(wsInfo.data.result.workspaceId);
         this.setWorkspaceNameInfoActions(wsInfo.data.result.name);
 
+        console.log("[CommonTopMenu] /member/me/workspace/this.selectedValue : ", this.selectedValue);
         const response = await axios.get(
           // 내 워크스페이스 회원 정보
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.selectedValue}`
