@@ -17,10 +17,10 @@
     </div>
     <div class="splitContent">
       <div class="leftPane">
-        <component :is="getComponentForTab(leftTab)" :id="channelId" :canvasId="canvasId" />
+        <component :is="getComponentForTab(leftTab)" :id="channelId" :splitCanvasId="canvasId" />
       </div>
       <div class="rightPane">
-        <component :is="getComponentForTab(rightTab)" :id="channelId" :canvasId="canvasId" />
+        <component :is="getComponentForTab(rightTab)" :id="channelId" :splitCanvasId="canvasId" />
       </div>
     </div>
   </div>
@@ -29,7 +29,7 @@
 <script>
 import ChannelCommonMenu from "@/components/basic/ChannelCommonMenu.vue";
 import ThreadComponent from "@/components/thread/ThreadComponent.vue";
-import CanvasDetailComponent from "@/components/canvas/CanvasDetailComponent.vue";
+import CanvasView from "@/views/canvas/CanvasView.vue";
 import FolderComponent from "@/components/drive/FolderComponent.vue";
 
 export default {
@@ -42,7 +42,7 @@ export default {
   components: {
     ChannelCommonMenu,
     ThreadComponent,
-    CanvasDetailComponent,
+    CanvasView,
     FolderComponent,
   },
   data() {
@@ -58,7 +58,7 @@ export default {
         case 'thread':
           return 'ThreadComponent';
         case 'canvas':
-          return 'CanvasDetailComponent';
+          return 'CanvasView';
         case 'drive':
           return 'FolderComponent';
         default:

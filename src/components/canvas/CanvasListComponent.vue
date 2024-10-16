@@ -173,7 +173,9 @@ export default {
       if (sender) {
         this.canvasIdInList = canvasId;
         this.$emit("updateCanvasId", canvasId);
-        this.$router.push(`/channel/${this.getChannelId}/canvas/view/${canvasId}`);
+        if(this.$route.params.name == "CanvasView"){
+          this.$router.push(`/channel/${this.getChannelId}/canvas/view/${canvasId}`);
+        }
       }
     },
     onCanvasInfoChanged() {
