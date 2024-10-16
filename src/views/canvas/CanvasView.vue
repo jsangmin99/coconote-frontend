@@ -84,6 +84,10 @@ import CanvasDetailComponent from "@/components/canvas/CanvasDetailComponent.vue
 
 import { mapGetters } from "vuex";
 
+// socket용 import
+import SockJS from "sockjs-client";
+import { Stomp } from "@stomp/stompjs";
+
 export default {
   props: {
     channelId: {
@@ -98,19 +102,30 @@ export default {
   },
   computed: {
     ...mapGetters([
+      // socket용 vuex
       "getCanvasAllInfo",
     ]),
+  },
+  async created() {
+    this.channelId = this.$route.params.channelId;
+    if (this.channelId == "" || this.channelId == undefined) {
+      alert("잘못된 접근입니다.");
+      return false;
+    }
+    this.canvasId = this.$route.params.canvasId;
+    await this.beforeRouteLeave();
+    this.connect();
   },
   watch: {
     getCanvasAllInfo: {
       handler(newVal) {
-        console.log("Canvas Info Updated ########### :", newVal);
+        console.error("store가 업데이트 되어서 view.vue 에서 수정해야하 : ", newVal);
         // canvasInfo 변경 시 동작할 코드 작성
-        if (newVal.method == "update") {
-          this.updateCanvasInfo(newVal);
-        }else if(newVal.method == "delete"){
-          this.updateCanvasInfo(newVal);
-        }
+        // if (newVal.method == "update") {
+        //   this.updateCanvasInfo(newVal);
+        // }else if(newVal.method == "delete"){
+        //   this.updateCanvasInfo(newVal);
+        // }
       },
       deep: true, // 깊은 상태 변화를 감지
     },
@@ -121,9 +136,15 @@ export default {
       isCanvasDelete: false,
       canvasId: null, // 초기 canvasId 값
       canvasUpdateObj: null,
+
+      // websocket용도
+      ws: null,
+      sock: null,
+      reconnect: 0,
     };
   },
   methods: {
+    // 자식요소에게 전달해주는 메소드 -------- 시작
     updateCanvasId(newCanvasId) {
       this.isLoading = true;
       console.log("canvasId 변경!", newCanvasId);
@@ -137,6 +158,94 @@ export default {
         this.isCanvasDelete = true;
       }
     },
+    // 자식요소에게 전달해주는 메소드 -------- 종료
+    connect() {
+      this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
+      this.ws = Stomp.over(this.sock);
+      this.ws.connect(
+        {},
+        () => {
+          this.ws.subscribe(
+            `/sub/canvas/room/${this.canvasId}`,
+            (message) => {
+              const recv = JSON.parse(message.body);
+              console.error("sub!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", recv);
+              this.recvCanvasMessage(recv);
+            }
+          );
+          this.ws.send(
+            `/pub/canvas/message`,
+            {},
+            JSON.stringify({
+              type: "ENTER",
+              roomId: this.canvasId,
+              sender: this.sender,
+            })
+          );
+        },
+        () => {
+          if (this.reconnect++ <= 5) {
+            setTimeout(() => {
+              this.sock = new SockJS(
+                `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
+              );
+              this.ws = Stomp.over(this.sock);
+              this.connect();
+            }, 10 * 1000);
+          }
+        }
+      );
+    },
+
+    // 실제 socket에 message를 전송하는 영역
+    sendMessageCanvas() {
+      if (this.ws && this.ws.connected) {
+        const postMessage = 
+        this.ws.send(
+          `/pub/canvas/message`,
+          {},
+          JSON.stringify({
+            type: "CANVAS",
+            roomId: this.canvasId,
+            sender: this.sender,
+            message: JSON.stringify(this.canvasMessage),
+          })
+        );
+        this.canvasMessage = "";
+      } else {
+        // console.log("WebSocket is not connected.");
+      }
+    },
+    
+    // socket에서 메시지를 전달받는 부분
+    recvCanvasMessage(recv) {
+      console.error("recv >>> ", recv);
+      
+    },
+
+
+    beforeRouteLeave() {
+      console.error("before 테스트 1")
+      if (this.sock) {
+        this.sock.close(); // SockJS 연결을 닫음
+        this.sock = null;
+        console.log("WebSocket subscription unsubscribed.");
+      }
+      if (this.ws) {
+        this.ws.disconnect(() => {
+          console.log("WebSocket ws connection closed.");
+        });
+        this.ws = null;
+      }
+    },
+  },
+  beforeUnmount() {
+    if (this.ws) {
+      this.ws.disconnect(() => {
+        console.log("WebSocket ws connection closed.");
+      });
+    }
+    this.beforeRouteLeave();
   },
 };
 </script>

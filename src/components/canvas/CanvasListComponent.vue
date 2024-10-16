@@ -26,9 +26,6 @@
 import axios from "axios";
 import { mapGetters, mapActions } from "vuex";
 
-import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
-
 export default {
   name: "CanvasListComponent",
   props: {
@@ -39,29 +36,28 @@ export default {
     canvasUpdateObj(obj) {
       this.onCanvasInfoChanged(obj);
     },
-    getCanvasAllInfo: {
+    getPageInfoForComponent: {
       handler(newVal) {
-        console.log(
-          "Canvas Info Updated !!!!!!!!!!!!!!!!!! :",
+        console.error(
+          "페이지 변경 list에서 감지!!!!!!!!!!!!!!!!!! :",
           newVal,
-          newVal.method
         );
         // canvasInfo 변경 시 동작할 코드 작성
-        if (newVal.method == "create") {
-          console.log("create 예정");
-          this.findAllRoom();
-        } else if (newVal.method == "update") {
-          console.log("update 예정");
-          this.sendMessageUpdate();
-        } else if (newVal.method == "changeOrder") {
-          console.log("순서변경 예정");
-          this.findAllRoom();
-        } else if (newVal.method == "delete") {
-          console.log("삭제 예정");
-          this.sendMessageDelete(newVal);
-        } else {
-          console.error("잘못된 method로 접근했습니다.");
-        }
+        // if (newVal.method == "create") {
+        //   console.log("create 예정");
+        //   this.findAllRoom();
+        // } else if (newVal.method == "update") {
+        //   console.log("update 예정");
+        //   this.sendMessageUpdate();
+        // } else if (newVal.method == "changeOrder") {
+        //   console.log("순서변경 예정");
+        //   this.findAllRoom();
+        // } else if (newVal.method == "delete") {
+        //   console.log("삭제 예정");
+        //   this.sendMessageDelete(newVal);
+        // } else {
+        //   console.error("잘못된 method로 접근했습니다.");
+        // }
       },
       deep: true, // 깊은 상태 변화를 감지
     },
@@ -71,6 +67,7 @@ export default {
       "getChannelId",
       // canvas용 vuex
       "getCanvasAllInfo",
+      "getPageInfoForComponent",
     ]),
   },
   async created() {
@@ -79,11 +76,9 @@ export default {
       alert("잘못된 접근입니다.");
       return false;
     }
-    await this.beforeRouteLeave();
     console.error("before 테스트 2")
     this.isFirst = true;
     this.findAllRoom();
-    this.connect();
   },
   data() {
     return {
@@ -94,16 +89,12 @@ export default {
       isFirst: true,
       sender: null,
 
-      // websocket용도
-      ws: null,
-      sock: null,
-
       canvasMessage: "",
       canvasMessages: [],
     };
   },
   methods: {
-    ...mapActions(["setCanvasAllInfoAction"]),
+    ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction"]),
     findAllRoom() {
       axios
         .get(
@@ -149,15 +140,20 @@ export default {
           const targetRes = response.data.result;
           this.canvasName = "";
 
-          this.$store.dispatch("setCanvasAllInfoAction", {
-            method: "create",
-            title: targetRes.title,
-            canvasId: targetRes.canvasId,
-            parentCanvasId: targetRes.parentCanvasId,
-            prevCanvasId: targetRes.prevCanvasId,
-            nextCanvasId: targetRes.nextCanvasId,
-            member: targetRes.member,
+          // this.$store.dispatch("setCanvasAllInfoAction", {
+          //   method: "create",
+          //   title: targetRes.title,
+          //   canvasId: targetRes.canvasId,
+          //   parentCanvasId: targetRes.parentCanvasId,
+          //   prevCanvasId: targetRes.prevCanvasId,
+          //   nextCanvasId: targetRes.nextCanvasId,
+          //   member: targetRes.member,
+          // });
+
+          this.$store.dispatch("setInfoTargetAction", {
+
           });
+
           // this.findAllRoom();
         } catch (error) {
           alert("채팅방 개설에 실패하였습니다.");
@@ -200,44 +196,7 @@ export default {
         this.findAllRoom();
       }
     },
-    connect() {
-
-      this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
-      this.ws = Stomp.over(this.sock);
-      this.ws.connect(
-        {},
-        () => {
-          this.ws.subscribe(
-            `/sub/canvas/room/${this.$route.params.canvasId}`,
-            (message) => {
-              const recv = JSON.parse(message.body);
-              console.error("sub!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", recv);
-              this.recvCanvasMessage(recv);
-            }
-          );
-          this.ws.send(
-            `/pub/canvas/message`,
-            {},
-            JSON.stringify({
-              type: "ENTER",
-              roomId: this.$route.params.canvasId,
-              sender: this.sender,
-            })
-          );
-        },
-        () => {
-          if (this.reconnect++ <= 5) {
-            setTimeout(() => {
-              this.sock = new SockJS(
-                `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
-              );
-              this.ws = Stomp.over(this.sock);
-              this.connect();
-            }, 10 * 1000);
-          }
-        }
-      );
-    },
+    
     sendMessageUpdate(obj) {
       // 이름이 변경되었을 때
       console.error("canvas update component >> ", obj, obj.canvasId);
@@ -257,7 +216,6 @@ export default {
         canvasId: this.$route.params.canvasId,
       };
       console.log(this.canvasMessage);
-      this.sendMessageCanvas();
       // channelId;
       // parentCanvasId = null;
       // prevCanvasId = null;
@@ -267,71 +225,7 @@ export default {
       // title = null;
       // member;
 
-      this.sendMessageCanvas();
     },
-    sendMessageCanvas() {
-      if (this.ws && this.ws.connected) {
-        this.ws.send(
-          `/pub/canvas/message`,
-          {},
-          JSON.stringify({
-            type: "CANVAS",
-            roomId: this.$route.params.canvasId,
-            sender: this.sender,
-            message: JSON.stringify(this.canvasMessage),
-          })
-        );
-        this.canvasMessage = "";
-      } else {
-        // console.log("WebSocket is not connected.");
-      }
-    },
-    recvCanvasMessage(recv) {
-      console.error("recv >>> ", recv);
-      if (recv.type === "CANVAS") {
-        const canvasJson = JSON.parse(recv.message);
-        console.log("canvas Json >> ", canvasJson);
-        // if(recv.sender != this.sender && canvasJson.canvasId == this.$route.params.canvasId){
-        // 작성한 사람이 다르고, 현 canvasId랑 다르다면 >> 추후 멤버 추가 시 작업
-        // if (canvasJson.canvasId == this.$route.params.canvasId) {
-        //   console.log("변경해야함!");
-        // }else{
-
-        // }
-        if (canvasJson.method === "create") {
-          this.findAllRoom(); // 생성해서 list 재로딩
-          // }else if (canvasJson.method === "update") {
-        } else if (canvasJson.method === "delete") {
-          this.$store.dispatch("setCanvasAllInfoAction", {
-            method: "delete",
-            canvasId: this.canvasId,
-            member: this.sender,
-          });
-        }
-      }
-    },
-    beforeRouteLeave() {
-      console.error("before 테스트 1")
-      if (this.sock) {
-        this.sock.close(); // SockJS 연결을 닫음
-        this.sock = null;
-        console.log("WebSocket subscription unsubscribed.");
-      }
-      if (this.ws) {
-        this.ws.disconnect(() => {
-          console.log("WebSocket ws connection closed.");
-        });
-        this.ws = null;
-      }
-    },
-  },
-  beforeUnmount() {
-    if (this.ws) {
-      this.ws.disconnect(() => {
-        console.log("WebSocket ws connection closed.");
-      });
-    }
-    this.beforeRouteLeave();
   },
 };
 </script>
