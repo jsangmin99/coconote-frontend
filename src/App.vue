@@ -4,13 +4,13 @@
       <v-row no-gutters>
         <v-col cols="12" class="CommonTopContainer" v-if="!isHiddenPage">
           <!-- CommonTopMenu에서 selected 이벤트 수신 -->
-          <CommonTopMenu v-if="!isHiddenPage" @selected="handleSelected" />
+          <CommonTopMenu v-if="!isHiddenPage" />
         </v-col>
       </v-row>
       <v-row no-gutters style="height: 100%">
         <v-col cols="2" v-if="!isHiddenPage">
           <div class="d-flex innerMenuContainer">
-            <InnerMenu v-if="!isHiddenPage" :selectedValue="selectedValue" />
+            <InnerMenu v-if="!isHiddenPage" />
           </div>
         </v-col>
         <v-col :cols="showHeaderAndSidebar ? 10 : 12">
@@ -48,15 +48,10 @@ export default {
   },
   data() {
     return {
-      selectedValue: null, // CommonTopMenu에서 전달받은 workspaceId 값을 저장
       workspaceInfo: [],
     };
   },
   methods: {
-    handleSelected(value) {
-      console.log("[App.vue]Selected Value from CommonTopMenu:", value); // 로그 출력
-      this.selectedValue = value; // selectedValue에 값 할당
-    },
   },
 };
 </script>
