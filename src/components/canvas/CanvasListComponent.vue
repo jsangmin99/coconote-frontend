@@ -38,13 +38,10 @@ export default {
     // },
     getPageInfoForComponent: {
       handler(newVal) {
-        console.error("페이지 변경 list에서 감지!!!!!!!!!!!!!!!!!! :", newVal);
         // canvasInfo 변경 시 동작할 코드 작성
         if (newVal == "LIST&DETAIL" || newVal == "LIST") {
-          console.log(newVal, " type 추가가... 예정");
           this.getCanvasAllInfo_inList = this.getCanvasAllInfo;
           if (this.getCanvasAllInfo_inList.method == "CREATE_CANVAS") {
-            console.error("생성되어서 findAllRomm 진행!")
             setTimeout(() => {
               this.findAllRoom();
               this.canvasName = "";
@@ -97,7 +94,6 @@ export default {
   methods: {
     ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction"]),
     findAllRoom() {
-      console.error("gma...")
       axios
         .get(`${process.env.VUE_APP_API_BASE_URL}/canvas/${this.channelId}/list`)
         .then((response) => {
@@ -175,7 +171,6 @@ export default {
     changeCanvasId(canvasId) {
       const sender = "테스트유저 " + Date.now();
       if (sender) {
-        console.log("changeCanvasId!!", canvasId);
         this.canvasIdInList = canvasId;
         this.$emit("updateCanvasId", canvasId);
         this.$router.push(`/channel/${this.getChannelId}/canvas/view/${canvasId}`);
@@ -197,7 +192,6 @@ export default {
       const targetIndex = this.chatrooms.findIndex(
         (item) => item.id === this.getCanvasAllInfo_inList.canvasId
       );
-      console.log("t삭제 테스트" , targetIndex, this.getCanvasAllInfo_inList.canvasId)
 
       if (targetIndex !== -1) {
         // 해당 인덱스의 항목을 배열에서 삭제

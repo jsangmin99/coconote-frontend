@@ -114,24 +114,19 @@ export default {
   watch: {
     getCanvasAllInfo: {
       handler(newVal) {
-        console.error("store가 업데이트 되어서 view.vue 에서 수정해야하 : ", newVal);
         if (newVal.page != "VIEW") {
           return false;
         }
 
         if (newVal.postMessageType == "CANVAS") {
           if (newVal.method == "CREATE_CANVAS") {
-            console.log("canvas create 예정");
             this.sendMessageCanvas();
           } else if (newVal.method == "UPDATE_CANVAS") {
-            console.log("canvas UPDATE_CANVAS 예정");
             this.sendMessageCanvas();
           } else if (newVal.method == "CHANGE_ORDER_CANVAS") {
-            console.log("canvas CHANGE_ORDER_CANVAS 예정");
             this.sendMessageCanvas();
           } else if (newVal.method == "DELETE_CANVAS") {
             //삭제 캔버스
-            console.log("canvas DELETE_CANVAS 예정");
             this.isCanvasDelete = true;
             this.sendMessageCanvas();
           } else {
@@ -193,12 +188,10 @@ export default {
     // 자식요소에게 전달해주는 메소드 -------- 시작
     updateCanvasId(newCanvasId) {
       this.isLoading = true;
-      console.log("canvasId 변경!", newCanvasId);
       this.canvasId = newCanvasId;
       this.isCanvasDelete = false;
     },
     updateCanvasInfo(obj) {
-      console.log("canvas 정보!! 변경!", obj);
       this.canvasUpdateObj = obj; // CanvasDetail에서 전달된 이름으로 업데이트
       if (obj.method && obj.method == "delete") {
         this.isCanvasDelete = true;
@@ -211,22 +204,20 @@ export default {
       }
       this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
       this.ws = Stomp.over(this.sock);
-      console.error(this.authToken,"zzzzzzzzzzzz");
       this.ws.connect(
         { Authorization: this.authToken },
         () => {
           this.ws.subscribe(`/sub/canvas/room/${this.channelId}`, (message) => {
-            console.log("sub <<<>>>>>", message);
-            console.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>", `/sub/canvas/room/${this.channelId}`);
             const recv = JSON.parse(message.body);
-            console.error("sub!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", recv);
             this.recvCanvasMessage(recv);
           });
         },
         () => {
           if (this.reconnect++ <= 5) {
             setTimeout(() => {
-              this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
+              this.sock = new SockJS(
+                `${process.env.VUE_APP_API_BASE_URL}/ws-stomp`
+              );
               this.ws = Stomp.over(this.sock);
               this.connect();
             }, 10 * 1000);
@@ -237,12 +228,9 @@ export default {
     sendMessageCanvasCreate() {},
     // 실제 socket에 message를 전송하는 영역
     sendMessageCanvas() {
-      console.error("sendMessageCanvas >>> ", this.ws, this.ws.connected);
       if (this.ws && this.ws.connected) {
-        console.error("socket이 연결이 되어있으니 정보 보내기!");
         const postMessage = this.getCanvasAllInfo;
         postMessage.channelId = this.channelId;
-        console.error(postMessage, JSON.stringify(postMessage));
         this.ws.send(
           `/pub/canvas/message`,
           { Authorization: this.authToken },
@@ -256,15 +244,13 @@ export default {
 
     // socket에서 메시지를 전달받는 부분
     async recvCanvasMessage(recv) {
-      console.error("recv >>> ", recv);
       let setInfoObj = {};
       const pageReset = {
-        page : ""
-      }
+        page: "",
+      };
       await this.$store.dispatch("setInfoMultiTargetAction", pageReset); // 값을 보내기 위해 page null로 초기화
 
       if (recv.method == "CREATE_CANVAS") {
-        console.error("recv", "CREATE_CANVAS");
 
         setInfoObj = {
           postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
@@ -280,7 +266,6 @@ export default {
           nextCanvasId: recv.nextCanvasId,
         };
       } else if (recv.method == "UPDATE_CANVAS") {
-        console.error("recv", "UPDATE_CANVAS");
 
         setInfoObj = {
           postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
@@ -298,7 +283,6 @@ export default {
       } else if (recv.method == "CHANGE_ORDER_CANVAS") {
         console.error("recv", "CHANGE_ORDER_CANVAS");
       } else if (recv.method == "DELETE_CANVAS") {
-        console.error("recv", "DELETE_CANVAS");
         setInfoObj = {
           postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
           page: "LIST&DETAIL", // 이 이벤트를 받아야하는 타겟 페이지
@@ -307,17 +291,40 @@ export default {
 
           canvasId: recv.canvasId,
         };
-        if(recv.canvasId == this.canvasId){
+        if (recv.canvasId == this.canvasId) {
           this.isCanvasDelete = true;
         }
-      } else if (recv.method == "CREATE_BLOCK") {
-        console.error("recv", "CREATE_BLOCK");
-      } else if (recv.method == "UPDATE_BLOCK") {
-        console.error("recv", "UPDATE_BLOCK");
-      } else if (recv.method == "CHANGE_ORDER_BLOCK") {
-        console.error("recv", "CHANGE_ORDER_BLOCK");
-      } else if (recv.method == "DELETE_BLOCK") {
-        console.error("recv", "DELETE_BLOCK");
+      } else if (
+        recv.method == "CREATE_BLOCK" ||
+        recv.method == "UPDATE_BLOCK" ||
+        recv.method == "CHANGE_ORDER_BLOCK" ||
+        recv.method == "CHANGE_ORDER_BLOCK" ||
+        recv.method == "DELETE_BLOCK"
+      ) {
+        console.error("recv", "block~!");
+        setInfoObj = {
+          postMessageType: "BLOCK",
+          page: "DETAIL",
+          postEventPage: "VIEW", // 이 이벤트를 호출한 페이지
+          method: recv.method,
+
+          channelId: recv.channelId,
+          canvasId: recv.canvasId,
+
+          blockId: recv.blockId,
+          blockFeId: recv.blockFeId,
+          prevBlockId: recv.prevBlockId,
+          nextBlockId: recv.nextBlockId, // changeOrder 용도 전용
+          parentBlockId: recv.parentBlockId,
+          blockContents: recv.blockContents,
+          blockType: recv.blockType,
+        };
+      // } else if (recv.method == "UPDATE_BLOCK") {
+      //   console.error("recv", "UPDATE_BLOCK");
+      // } else if (recv.method == "CHANGE_ORDER_BLOCK") {
+      //   console.error("recv", "CHANGE_ORDER_BLOCK");
+      // } else if (recv.method == "DELETE_BLOCK") {
+      //   console.error("recv", "DELETE_BLOCK");
       } else {
         console.error("잘못된 method...");
         return false;

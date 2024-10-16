@@ -36,6 +36,7 @@ import TipTabEditor from "@/components/tiptab/TipTabEditor.vue";
 import axios from "axios";
 
 import { mapGetters, mapActions } from "vuex";
+import { debounce } from "lodash";
 
 export default {
   name: "CanvasDetailComponent",
@@ -60,10 +61,22 @@ export default {
           if (this.getCanvasAllInfo_inDetail.method == "UPDATE_CANVAS") {
             this.onCanvasInfoChanged();
           } else if (this.getCanvasAllInfo_inDetail.method == "DELETE_CANVAS") {
-            if(this.getCanvasAllInfo_inDetail.canvasId == this.canvasId){
-              console.log("detail canvas id >> ",this.getCanvasAllInfo_inDetail.canvasId, this.canvasId)
+            if (this.getCanvasAllInfo_inDetail.canvasId == this.canvasId) {
+              console.log(
+                "detail canvas id >> ",
+                this.getCanvasAllInfo_inDetail.canvasId,
+                this.canvasId
+              );
               this.deleteCanvasView();
             }
+          } else if (
+            this.getCanvasAllInfo_inDetail.method == "CREATE_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method == "UPDATE_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method == "DELETE_BLOCK"
+          ) {
+            this.recvMessage();
           } else {
             console.error("detail 에서는 사용 X 혹은 잘못된 method");
           }
@@ -119,6 +132,8 @@ export default {
       activeBlockId: null,
       editorContent: null,
       parentUpdateEditorContent: "초기 값",
+
+      debounceMap: {} // 각 blockFeId별 debounce 함수를 저장할 객체
     };
   },
   mounted() {
@@ -201,56 +216,67 @@ export default {
       };
     },
     sendMessage() {
-      // Vuex action 호출
-      const pageSetObj = {
-        postMessageType: "BLOCK", // 현 이벤트가 canvas 인지 block인지 구분
-        page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
-        postEventPage: "DETAIL", // 이 이벤트를 호출한 페이지
-        ...this.message,
-      };
-      this.$store.dispatch("setInfoMultiTargetAction", pageSetObj);
-      // if (this.wsBlock && this.wsBlock.connected) {
-      //   this.wsBlock.send(
-      //     `/pub/block/message`,
-      //     {},
-      //     JSON.stringify({
-      //       type: "CANVAS",
-      //       roomId: this.detailCanvasId,
-      //       sender: this.sender,
-      //       message: JSON.stringify(this.message),
-      //     })
-      //   );
-      //   this.message = "";
+      const blockFeId = this.message.blockFeId;
+
+      // 이전 debounce된 함수가 있다면, 그것을 취소하지 않고 마지막 내용만 남김
+      if (!this.debounceMap[blockFeId]) {
+        // blockFeId에 해당하는 debounce 함수가 없을 때 새로 만듦
+        this.debounceMap[blockFeId] = debounce(() => {
+          const pageSetObj = {
+            postMessageType: "BLOCK",
+            page: "VIEW",
+            postEventPage: "DETAIL",
+            ...this.message,
+          };
+          
+          // Vuex action 호출
+          this.$store.dispatch("setInfoMultiTargetAction", pageSetObj).then(() => {
+            // 메시지를 보낸 후 debounceMap에서 해당 blockFeId를 삭제
+            delete this.debounceMap[blockFeId];
+          });
+        }, 500);
+      }
+
+      // debounce 함수를 호출함
+      this.debounceMap[blockFeId]();
+    },
+
+    clearDebounceForBlockFeId(newBlockFeId) {
+      // 새로운 blockFeId가 들어오면 기존에 있던 다른 blockFeId의 debounce를 제거
+      Object.keys(this.debounceMap).forEach((id) => {
+        if (id !== newBlockFeId) {
+          // 새로운 blockFeId가 아닐 경우 이전 debounce를 취소함
+          delete this.debounceMap[id];
+        }
+      });
+    },
+    recvMessage() {
+      console.error("in detail recv >> ", this.getCanvasAllInfo_inDetail);
+      // const recv = this.getCanvasAllInfo_inDetail;
+      const blockJson = this.getCanvasAllInfo_inDetail;
+      console.error("blockJson >> ", blockJson);
+      if (
+        this.activeBlockId == blockJson.blockFeId &&
+        blockJson.method === "UPDATE_BLOCK"
+      ) {
+        // if (this.member == blockJson.member) {
+        console.log(
+          "현 focus 부분이랑 같은 block 수정 중인 부분..인데! update여서 보냄! => block Id 동일함"
+        );
+      } else {
+        console.log("다른 block Id 수정 중!~");
+        this.parentUpdateEditorContent = Object.assign({}, blockJson);
+        // this.parentUpdateEditorContent = blockJson;
+      }
+      // if (recv.type === "CANVAS") {
       // } else {
-      //   // console.log("WebSocket is not connected.");
+      //   this.messages.unshift({
+      //     type: recv.type,
+      //     member: recv.type === "ENTER" ? "[알림]" : recv.member,
+      //     message: recv.message,
+      //   });
       // }
     },
-    // recvMessage(recv) {
-    // console.error(recv.type);
-    // const blockJson = JSON.parse(recv.message);
-    //   console.error("blockJson >> ", blockJson);
-    //   if (
-    //     this.activeBlockId == blockJson.blockFeId &&
-    //     blockJson.method === "UPDATE_BLOCK"
-    //   ) {
-    //     // if (this.member == blockJson.member) {
-    //     console.log(
-    //       "현 focus 부분이랑 같은 block 수정 중인 부분..인데! update여서 보냄! => block Id 동일함"
-    //     );
-    //   } else {
-    //     console.log("다른 block Id 수정 중!~");
-    //     this.parentUpdateEditorContent = blockJson;
-    //   }
-    // if (recv.type === "CANVAS") {
-
-    // } else {
-    // this.messages.unshift({
-    //   type: recv.type,
-    //   member: recv.type === "ENTER" ? "[알림]" : recv.member,
-    //   message: recv.message,
-    // });
-    // }
-    // },
     // tiptabEditor method
     deleteBlock(blockFeId) {
       const prevBlockId = this.$store.getters.getTargetBlockPrevFeId(blockFeId); //삭제전 prev block id 검색
