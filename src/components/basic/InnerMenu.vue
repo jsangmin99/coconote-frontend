@@ -105,9 +105,6 @@ export default {
   created() {
     this.fetchMyWorkspaceList();
   },
-  created() {
-    this.fetchMyWorkspaceList();
-  },
   methods: {
         ...mapActions([
       "setWorkspaceInfoActions",
