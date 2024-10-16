@@ -3,15 +3,27 @@
     <!-- 현재 경로 표시 -->
     <div class="breadcrumb">
       <!-- 루트 경로로 드래그 앤 드롭 가능하게 설정 -->
-      <span @click="navigateToFolder(rootFolderId)" class="breadcrumb-item"
-        :class="{ active: currentFolderId === rootFolderId }" draggable="true" @dragover.prevent
-        @drop="onDrop($event, rootFolderId)">
+      <span
+        @click="navigateToFolder(rootFolderId)"
+        class="breadcrumb-item"
+        :class="{ active: currentFolderId === rootFolderId }"
+        draggable="true"
+        @dragover.prevent
+        @drop="onDrop($event, rootFolderId)"
+      >
         root
       </span>
 
       <span v-if="breadcrumb.length"> > </span>
-      <span v-for="(folder, index) in breadcrumb" :key="folder.folderId" class="breadcrumb-item" draggable="true"
-        @dragover.prevent @drop="onDrop($event, folder.folderId)" @click="navigateToFolder(folder.folderId)">
+      <span
+        v-for="(folder, index) in breadcrumb"
+        :key="folder.folderId"
+        class="breadcrumb-item"
+        draggable="true"
+        @dragover.prevent
+        @drop="onDrop($event, folder.folderId)"
+        @click="navigateToFolder(folder.folderId)"
+      >
         {{ folder.folderName }}
         <span v-if="index !== breadcrumb.length - 1"> > </span>
       </span>
@@ -46,35 +58,65 @@
 
     <!-- 폴더 목록 -->
     <div class="folder-list">
-      <div v-for="folder in folderList" :key="folder.folderId" class="folder-item" draggable="true"
-        @dragstart="onDragStart($event, 'folder', folder.folderId)" @dragover.prevent
-        @drop="onDrop($event, folder.folderId)" @click="navigateToFolder(folder.folderId)"
-        @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
-        <img src="@/assets/folder-icon.png" alt="folder icon" class="folder-icon" />
+      <div
+        v-for="folder in folderList"
+        :key="folder.folderId"
+        class="folder-item"
+        draggable="true"
+        @dragstart="onDragStart($event, 'folder', folder.folderId)"
+        @dragover.prevent
+        @drop="onDrop($event, folder.folderId)"
+        @click="navigateToFolder(folder.folderId)"
+        @contextmenu.prevent="showContextMenu($event, 'folder', folder)"
+      >
+        <img
+          src="@/assets/images/folder-icon.png"
+          alt="folder icon"
+          class="folder-icon"
+        />
         <span>{{ folder.folderName }}</span>
       </div>
     </div>
 
     <!-- 파일 목록 -->
     <div class="file-list">
-      <div v-for="file in fileList" :key="file.fileId" class="file-item" draggable="true"
-        @dragstart="onDragStart($event, 'file', file.fileId)" @dragover.prevent @drop="onDrop($event, null)"
-        @contextmenu.prevent="showContextMenu($event, 'file', file)" @click="showFullFileName(file.fileId)">
-
+      <div
+        v-for="file in fileList"
+        :key="file.fileId"
+        class="file-item"
+        draggable="true"
+        @dragstart="onDragStart($event, 'file', file.fileId)"
+        @dragover.prevent
+        @drop="onDrop($event, null)"
+        @contextmenu.prevent="showContextMenu($event, 'file', file)"
+        @click="showFullFileName(file.fileId)"
+      >
         <!-- 이미지 파일일 경우 -->
         <template v-if="isImage(file.fileName)">
           <img :src="file.fileUrl" alt="Image Preview" class="file-preview" />
           <a :href="file.fileUrl" download :title="file.fileName">
-            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+            {{
+              clickedFileId === file.fileId
+                ? file.fileName
+                : truncateFileName(file.fileName)
+            }}
           </a>
         </template>
 
         <!-- PDF 파일일 경우 -->
         <template v-else-if="isPdf(file.fileName)">
-          <iframe :src="file.fileUrl" class="file-preview" type="application/pdf"></iframe>
+          <iframe
+            :src="file.fileUrl"
+            class="file-preview"
+            type="application/pdf"
+          ></iframe>
           <div class="file-name">
             <a :href="file.fileUrl" download :title="file.fileName">
-              {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+              {{
+                clickedFileId === file.fileId
+                  ? file.fileName
+                  : truncateFileName(file.fileName)
+              }}
             </a>
           </div>
         </template>
@@ -83,7 +125,11 @@
         <template v-else-if="isSvg(file.fileName)">
           <img :src="file.fileUrl" alt="SVG Preview" class="file-preview" />
           <a :href="file.fileUrl" download :title="file.fileName">
-            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+            {{
+              clickedFileId === file.fileId
+                ? file.fileName
+                : truncateFileName(file.fileName)
+            }}
           </a>
         </template>
 
@@ -91,37 +137,45 @@
         <template v-else>
           <i class="file-icon">📄</i>
           <a :href="file.fileUrl" download :title="file.fileName">
-            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+            {{
+              clickedFileId === file.fileId
+                ? file.fileName
+                : truncateFileName(file.fileName)
+            }}
           </a>
         </template>
       </div>
     </div>
 
     <!-- 컨텍스트 메뉴 -->
-    <div v-if="contextMenuVisible" class="context-menu"
-      :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }">
+    <div
+      v-if="contextMenuVisible"
+      class="context-menu"
+      :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }"
+    >
       <ul>
         <li v-if="selectedItemType === 'folder'" @click="renameItem">이름 변경</li>
-        <li v-if="selectedItemType === 'file'" @click="downloadFile(selectedItem.fileId)">다운로드</li>
+        <li v-if="selectedItemType === 'file'" @click="downloadFile(selectedItem.fileId)">
+          다운로드
+        </li>
         <li @click="deleteItem">삭제</li>
       </ul>
     </div>
-
   </div>
 </template>
 
 <script>
-import axios from '@/services/axios';
+import axios from "@/services/axios";
 
 export default {
   data() {
     return {
-      folderList: [],  // 현재 폴더 내 폴더 목록
-      fileList: [],    // 현재 폴더 내 파일 목록
+      folderList: [], // 현재 폴더 내 폴더 목록
+      fileList: [], // 현재 폴더 내 파일 목록
       currentFolderId: null, // 현재 탐색 중인 폴더 ID
-      rootFolderId: null,    // 루트 폴더 ID 저장
+      rootFolderId: null, // 루트 폴더 ID 저장
       // backButtonHistory: [], // 이전 폴더 기록
-      parentFolderId: null,  // 현재 폴더의 부모 폴더 ID
+      parentFolderId: null, // 현재 폴더의 부모 폴더 ID
       files: [], // 업로드할 파일 배열
       uploadProgress: [], // 파일 업로드 진행 상황
       breadcrumb: [], // 폴더 경로를 저장하는 배열
@@ -138,19 +192,22 @@ export default {
     async loadChannelDrive() {
       const channelId = this.$route.params.channelId; // URL에서 채널 ID 추출
       try {
-        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/channel/${channelId}/drive`);
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/${channelId}/drive`
+        );
         const data = response.data.result;
         this.rootFolderId = data.nowFolderId; // 루트 폴더 설정
         this.currentFolderId = data.nowFolderId;
         this.folderList = data.folderListDto || [];
         this.fileList = data.fileListDto || [];
-        this.parentFolderId = null;  // 루트 폴더의 상위 폴더는 없으므로 null로 설정
-        this.breadcrumb = data.nowFolderId === this.rootFolderId
-          ? []
-          : [{ folderId: this.currentFolderId, folderName: data.nowFolderName }];
+        this.parentFolderId = null; // 루트 폴더의 상위 폴더는 없으므로 null로 설정
+        this.breadcrumb =
+          data.nowFolderId === this.rootFolderId
+            ? []
+            : [{ folderId: this.currentFolderId, folderName: data.nowFolderName }];
       } catch (error) {
-        console.error('채널 드라이브 로딩 실패:', error);
-        alert('채널 드라이브 로딩 중 오류가 발생했습니다.');
+        console.error("채널 드라이브 로딩 실패:", error);
+        alert("채널 드라이브 로딩 중 오류가 발생했습니다.");
       }
     },
     // 드래그 시작 시 호출
@@ -164,35 +221,35 @@ export default {
     // 드롭 시 호출
     async onDrop(event, targetFolderId) {
       if (targetFolderId === null || targetFolderId === undefined) {
-        alert('유효한 폴더 ID를 입력하세요.');
+        alert("유효한 폴더 ID를 입력하세요.");
         return;
       }
       // 폴더가 파일 안에 이동하지 않도록 처리
-      if (this.draggedType === 'folder' && !targetFolderId) {
-        alert('폴더는 파일 안에 이동할 수 없습니다.');
+      if (this.draggedType === "folder" && !targetFolderId) {
+        alert("폴더는 파일 안에 이동할 수 없습니다.");
         return;
       }
 
       // 자기 자신에게 드롭하지 못하도록 하기 (폴더와 파일 구분)
-      if (this.draggedType === 'folder' && this.draggedItem === targetFolderId) {
-        alert('같은 폴더로 이동할 수 없습니다.');
+      if (this.draggedType === "folder" && this.draggedItem === targetFolderId) {
+        alert("같은 폴더로 이동할 수 없습니다.");
         return;
       }
 
-      if (this.draggedType === 'file' && this.currentFolderId === targetFolderId) {
-        alert('같은 위치로 파일을 이동할 수 없습니다.');
+      if (this.draggedType === "file" && this.currentFolderId === targetFolderId) {
+        alert("같은 위치로 파일을 이동할 수 없습니다.");
         return;
       }
 
       try {
-        if (this.draggedType === 'file') {
+        if (this.draggedType === "file") {
           // 파일을 targetFolderId로 이동
           await this.moveFile(this.draggedItem, targetFolderId);
-          alert('파일이 성공적으로 이동되었습니다.');
-        } else if (this.draggedType === 'folder') {
+          alert("파일이 성공적으로 이동되었습니다.");
+        } else if (this.draggedType === "folder") {
           // 폴더를 targetFolderId로 이동
           await this.moveFolder(this.draggedItem, targetFolderId);
-          alert('폴더가 성공적으로 이동되었습니다.');
+          alert("폴더가 성공적으로 이동되었습니다.");
         }
       } catch (error) {
         console.error(`${this.draggedType} 이동 실패:`, error);
@@ -207,22 +264,23 @@ export default {
       this.refreshFolderList();
     },
 
-
     // 폴더 생성
     async createFolder() {
       try {
-        const response = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/drive/folder/create`, {
-          channelId: this.$route.params.channelId, // URL에서 채널 ID 추출
-          parentFolderId: this.currentFolderId,
-        });
-        alert(response.data.result.message || '폴더 생성 완료');
+        const response = await axios.post(
+          `${process.env.VUE_APP_API_BASE_URL}/drive/folder/create`,
+          {
+            channelId: this.$route.params.channelId, // URL에서 채널 ID 추출
+            parentFolderId: this.currentFolderId,
+          }
+        );
+        alert(response.data.result.message || "폴더 생성 완료");
         this.refreshFolderList();
       } catch (error) {
-        console.error('폴더 생성 실패:', error);
-        alert('폴더 생성 중 오류가 발생했습니다.');
+        console.error("폴더 생성 실패:", error);
+        alert("폴더 생성 중 오류가 발생했습니다.");
       }
     },
-
 
     // 상위 폴더로 가기
     goToParentFolder() {
@@ -260,12 +318,14 @@ export default {
     // 폴더/파일 목록 갱신
     async refreshFolderList() {
       try {
-        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/drive/folder/${this.currentFolderId}`);
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/drive/folder/${this.currentFolderId}`
+        );
         this.folderList = response.data.result.folderListDto || [];
         this.fileList = response.data.result.fileListDto || [];
       } catch (error) {
-        console.error('폴더/파일 목록 갱신 실패:', error);
-        alert('목록 갱신 중 오류가 발생했습니다.');
+        console.error("폴더/파일 목록 갱신 실패:", error);
+        alert("목록 갱신 중 오류가 발생했습니다.");
       }
     },
 
@@ -286,25 +346,30 @@ export default {
 
       try {
         // 서버에 presigned URLs 요청
-        const presignedUrlResponse = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/files/presigned-urls`, this.files.map(file => ({
-          fileName: file.name,
-          fileSize: file.size
-        })));
+        const presignedUrlResponse = await axios.post(
+          `${process.env.VUE_APP_API_BASE_URL}/files/presigned-urls`,
+          this.files.map((file) => ({
+            fileName: file.name,
+            fileSize: file.size,
+          }))
+        );
 
         const presignedUrls = presignedUrlResponse.data.result;
 
         // 각 파일에 대해 Presigned URL을 이용하여 S3에 업로드
-        const uploadedFileUrls = await Promise.all(this.files.map(file => this.uploadFileToS3(file, presignedUrls[file.name])));
+        const uploadedFileUrls = await Promise.all(
+          this.files.map((file) => this.uploadFileToS3(file, presignedUrls[file.name]))
+        );
 
         // 파일 중 업로드가 실패한 파일이 있으면 필터링
-        const successfulUploads = uploadedFileUrls.filter(url => url !== null);
+        const successfulUploads = uploadedFileUrls.filter((url) => url !== null);
 
         // 성공적으로 업로드된 파일만 메타데이터 저장
         if (successfulUploads.length) {
           await this.saveFileMetadata(successfulUploads);
-          alert('파일이 성공적으로 업로드되었습니다.');
+          alert("파일이 성공적으로 업로드되었습니다.");
         } else {
-          alert('모든 파일 업로드에 실패했습니다.');
+          alert("모든 파일 업로드에 실패했습니다.");
         }
 
         // 업로드 후 상태 초기화
@@ -312,8 +377,8 @@ export default {
         this.uploadProgress = [];
         this.refreshFolderList();
       } catch (error) {
-        console.error('Upload failed:', error);
-        alert('파일 업로드 중 오류가 발생했습니다.');
+        console.error("Upload failed:", error);
+        alert("파일 업로드 중 오류가 발생했습니다.");
       }
     },
 
@@ -322,11 +387,13 @@ export default {
       try {
         const config = {
           headers: {
-            'Content-Type': file.type, // 파일 타입 지정
+            "Content-Type": file.type, // 파일 타입 지정
           },
           onUploadProgress: (progressEvent) => {
             const index = this.files.indexOf(file); // 인덱스 찾기
-            this.uploadProgress[index] = Math.round((progressEvent.loaded * 100) / progressEvent.total); // 업로드 진행상황 업데이트
+            this.uploadProgress[index] = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            ); // 업로드 진행상황 업데이트
           },
         };
 
@@ -342,7 +409,7 @@ export default {
 
     // Presigned URL에서 ? 이전의 S3 URL만 남김
     extractS3Url(presignedUrl) {
-      return presignedUrl.split('?')[0]; // ? 기준으로 앞부분만 추출
+      return presignedUrl.split("?")[0]; // ? 기준으로 앞부분만 추출
     },
 
     // 파일 메타데이터 저장
@@ -354,7 +421,7 @@ export default {
       const metadataDto = {
         channelId: this.$route.params.channelId, // 적절한 채널 ID로 수정
         folderId: this.currentFolderId,
-        fileType: 'OTHER',
+        fileType: "OTHER",
         fileSaveListDto: uploadedFileUrls.map((url, index) => ({
           fileName: this.files[index].name,
           fileUrl: url,
@@ -366,23 +433,29 @@ export default {
     async downloadFile(fileId) {
       try {
         // presigned URL 가져오기
-        const response = await axios.get(`http://localhost:8080/api/v1/files/${fileId}/download`);
+        const response = await axios.get(
+          `http://localhost:8080/api/v1/files/${fileId}/download`
+        );
 
         const presignedUrl = response.data.result; // presigned URL 가져오기
 
         // Blob을 사용하여 파일 다운로드
-        const fileResponse = await axios.get(presignedUrl, { responseType: 'blob' });
+        const fileResponse = await axios.get(presignedUrl, { responseType: "blob" });
 
         // 파일 이름 추출
-        const fileName = response.headers['content-disposition']
-          ? response.headers['content-disposition'].split('filename=')[1].replace(/"/g, '')
-          : 'downloaded_file';
+        const fileName = response.headers["content-disposition"]
+          ? response.headers["content-disposition"]
+              .split("filename=")[1]
+              .replace(/"/g, "")
+          : "downloaded_file";
 
         // Blob을 파일로 변환하여 다운로드
-        const blob = new Blob([fileResponse.data], { type: fileResponse.headers['content-type'] });
-        const link = document.createElement('a');
+        const blob = new Blob([fileResponse.data], {
+          type: fileResponse.headers["content-type"],
+        });
+        const link = document.createElement("a");
         link.href = window.URL.createObjectURL(blob);
-        link.setAttribute('download', fileName); // 서버에서 전달된 파일 이름으로 설정
+        link.setAttribute("download", fileName); // 서버에서 전달된 파일 이름으로 설정
         document.body.appendChild(link);
         link.click(); // 링크 클릭 이벤트로 다운로드 시작
         document.body.removeChild(link); // 링크 제거
@@ -408,7 +481,6 @@ export default {
       return fileName;
     },
 
-
     isImage(fileName) {
       return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(fileName);
     },
@@ -421,7 +493,6 @@ export default {
       return /\.svg$/i.test(fileName);
     },
 
-
     // 파일 삭제
     async deleteFile(fileId) {
       try {
@@ -429,11 +500,11 @@ export default {
         if (!confirmed) return;
 
         await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/files/${fileId}`);
-        alert('파일이 성공적으로 삭제되었습니다.');
+        alert("파일이 성공적으로 삭제되었습니다.");
         this.refreshFolderList();
       } catch (error) {
-        console.error('파일 삭제 실패:', error);
-        alert('파일 삭제 중 오류가 발생했습니다.');
+        console.error("파일 삭제 실패:", error);
+        alert("파일 삭제 중 오류가 발생했습니다.");
       }
     },
 
@@ -461,10 +532,10 @@ export default {
       try {
         await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/files/move`, {
           fileId: fileId,
-          folderId: newFolderId
+          folderId: newFolderId,
         });
       } catch (error) {
-        console.error('파일 이동 실패:', error);
+        console.error("파일 이동 실패:", error);
       }
     },
 
@@ -472,16 +543,19 @@ export default {
     async moveFolder(folderId, newFolderId) {
       try {
         // MoveFolderReqDto에 맞는 형식으로 데이터를 전송
-        const response = await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/drive/folder/move`, {
-          folderId: folderId,     // 이동할 폴더 ID
-          parentId: newFolderId   // 새로운 부모 폴더 ID
-        });
+        const response = await axios.patch(
+          `${process.env.VUE_APP_API_BASE_URL}/drive/folder/move`,
+          {
+            folderId: folderId, // 이동할 폴더 ID
+            parentId: newFolderId, // 새로운 부모 폴더 ID
+          }
+        );
         console.log(response.data.result.message);
-        alert('폴더가 성공적으로 이동되었습니다.');
+        alert("폴더가 성공적으로 이동되었습니다.");
         this.refreshFolderList();
       } catch (error) {
-        console.error('폴더 이동 실패:', error);
-        alert('폴더 이동 중 오류가 발생했습니다.');
+        console.error("폴더 이동 실패:", error);
+        alert("폴더 이동 중 오류가 발생했습니다.");
       }
     },
 
@@ -499,7 +573,6 @@ export default {
       });
     },
 
-
     // 우클릭 메뉴 숨기기
     hideContextMenu() {
       this.contextMenuVisible = false;
@@ -507,22 +580,21 @@ export default {
       this.selectedItemType = null;
     },
 
-
     // 이름 변경
     async renameItem() {
-      if (this.selectedItemType === 'folder') {
+      if (this.selectedItemType === "folder") {
         await this.renameFolder(this.selectedItem.folderId);
-      } else if (this.selectedItemType === 'file') {
-        alert('파일 이름 변경은 현재 지원되지 않습니다.');
+      } else if (this.selectedItemType === "file") {
+        alert("파일 이름 변경은 현재 지원되지 않습니다.");
       }
 
       this.hideContextMenu();
     },
     // 삭제
     async deleteItem() {
-      if (this.selectedItemType === 'folder') {
+      if (this.selectedItemType === "folder") {
         await this.deleteFolder(this.selectedItem.folderId);
-      } else if (this.selectedItemType === 'file') {
+      } else if (this.selectedItemType === "file") {
         await this.deleteFile(this.selectedItem.fileId);
       }
 
@@ -533,9 +605,9 @@ export default {
       const newFolderId = prompt("이동할 폴더 ID를 입력하세요:");
       if (!newFolderId) return;
 
-      if (this.selectedItemType === 'folder') {
+      if (this.selectedItemType === "folder") {
         await this.moveFolder(this.selectedItem.folderId, newFolderId);
-      } else if (this.selectedItemType === 'file') {
+      } else if (this.selectedItemType === "file") {
         await this.moveFile(this.selectedItem.fileId, newFolderId);
       }
 
@@ -548,12 +620,14 @@ export default {
         const confirmed = confirm("정말로 이 폴더를 삭제하시겠습니까?");
         if (!confirmed) return;
 
-        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}`);
-        alert('폴더가 성공적으로 삭제되었습니다.');
+        await axios.delete(
+          `${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}`
+        );
+        alert("폴더가 성공적으로 삭제되었습니다.");
         this.refreshFolderList();
       } catch (error) {
-        console.error('폴더 삭제 실패:', error);
-        alert('폴더 삭제 중 오류가 발생했습니다.');
+        console.error("폴더 삭제 실패:", error);
+        alert("폴더 삭제 중 오류가 발생했습니다.");
       }
     },
 
@@ -567,34 +641,42 @@ export default {
 
       try {
         // 백엔드의 API 경로에 맞춰서 folderId를 URL에 삽입
-        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}/update/name`, null, {
-          params: {
-            folderName: newFolderName, // 요청 파라미터로 폴더 이름 전달
-          },
-        });
-        alert('폴더 이름이 성공적으로 변경되었습니다.');
+        await axios.patch(
+          `${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}/update/name`,
+          null,
+          {
+            params: {
+              folderName: newFolderName, // 요청 파라미터로 폴더 이름 전달
+            },
+          }
+        );
+        alert("폴더 이름이 성공적으로 변경되었습니다.");
         this.refreshFolderList(); // 목록 갱신
       } catch (error) {
-        console.error('폴더 이름 변경 실패:', error);
-        alert('폴더 이름 변경 중 오류가 발생했습니다.');
+        console.error("폴더 이름 변경 실패:", error);
+        alert("폴더 이름 변경 중 오류가 발생했습니다.");
       }
     },
     // 폴더 탐색
     // async navigateToFolder(folderId, recordHistory = true) {
     async navigateToFolder(folderId) {
       try {
-        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}`);
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}`
+        );
         const data = response.data.result;
 
         // 부모 폴더 ID 설정
-        this.parentFolderId = data.parentFolderId || null;  // 부모 폴더 ID가 있으면 설정
+        this.parentFolderId = data.parentFolderId || null; // 부모 폴더 ID가 있으면 설정
 
         // Breadcrumb 업데이트 및 탐색 처리
         if (folderId === this.rootFolderId) {
           this.breadcrumb = [];
         } else {
-          const selectedFolder = this.folderList.find(folder => folder.folderId === folderId);
-          const folderIndex = this.breadcrumb.findIndex(bc => bc.folderId === folderId);
+          const selectedFolder = this.folderList.find(
+            (folder) => folder.folderId === folderId
+          );
+          const folderIndex = this.breadcrumb.findIndex((bc) => bc.folderId === folderId);
           if (folderIndex !== -1) {
             this.breadcrumb = this.breadcrumb.slice(0, folderIndex + 1);
           } else if (selectedFolder) {
@@ -609,11 +691,10 @@ export default {
         this.folderList = data.folderListDto || [];
         this.fileList = data.fileListDto || [];
       } catch (error) {
-        console.error('폴더 탐색 실패:', error);
-        alert('폴더 탐색 중 오류가 발생했습니다.');
+        console.error("폴더 탐색 실패:", error);
+        alert("폴더 탐색 중 오류가 발생했습니다.");
       }
     },
-
   },
   created() {
     // this.currentFolderId = this.currentFolderId || 1;
@@ -621,12 +702,12 @@ export default {
   },
   mounted() {
     // window 클릭 이벤트 추가 (컨텍스트 메뉴 밖을 클릭하면 메뉴를 숨김)
-    window.addEventListener('click', this.hideContextMenu);
+    window.addEventListener("click", this.hideContextMenu);
   },
   beforeUnmount() {
     // 컴포넌트가 파괴되기 전 window 클릭 이벤트 제거
-    window.removeEventListener('click', this.hideContextMenu);
-  }
+    window.removeEventListener("click", this.hideContextMenu);
+  },
 };
 </script>
 
@@ -712,8 +793,8 @@ export default {
   transition: border-color 0.3s;
 }
 
-.folder-item[draggable='true'],
-.file-item[draggable='true'] {
+.folder-item[draggable="true"],
+.file-item[draggable="true"] {
   cursor: grab;
 }
 

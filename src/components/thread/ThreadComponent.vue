@@ -46,7 +46,7 @@
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index">
           <button type="button" @click="deleteImage(index)">삭제</button>
-          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
           <p class="custom-contents">{{file.name}}</p>
         </div>
       </div>
@@ -119,7 +119,7 @@
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index">
           <button type="button" @click="deleteImage(index)">삭제</button>
-          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
           <p class="custom-contents">{{file.name}}</p>
         </div>
       </div>
