@@ -22,7 +22,6 @@
             </v-col>
           </v-row>
 
-
           <!-- 다른 필드들을 위한 또 다른 v-row -->
           <v-row>
             <v-col cols="12" sm="6">
