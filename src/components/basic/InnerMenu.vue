@@ -155,7 +155,7 @@ export default {
       }
     },
     async selectWorkspace(workspaceId) {
-        try {
+         try {
         const wsInfo = await axios.get(
           // 워크스페이스 정보
           `${process.env.VUE_APP_API_BASE_URL}/workspace/info/${workspaceId}`

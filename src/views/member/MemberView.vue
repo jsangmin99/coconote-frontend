@@ -50,8 +50,9 @@
          </v-list>
       </v-card-text>
       <div v-if="this.getWsRole !== 'USER' && this.workspaceMemberInfo.wsRole !== 'PMANAGER'">
-        <v-btn color="blue" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">권한</v-btn>
-        <v-btn color="red" @click="removeMember(workspaceMemberInfo.workspaceMemberId)">강퇴</v-btn>
+        <v-icon v-if="this.workspaceMemberInfo.wsRole === 'USER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-up</v-icon>
+        <v-icon v-if="this.workspaceMemberInfo.wsRole === 'SMANAGER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-down</v-icon>
+        <v-icon @click="removeMember(workspaceMemberInfo.workspaceMemberId)">mdi-account-remove</v-icon>
       </div>
       <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn>
     </v-card>

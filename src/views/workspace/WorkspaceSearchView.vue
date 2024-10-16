@@ -88,7 +88,7 @@ export default {
     async getMemberInfo() {
       try {
         const response = await axios.get(
-          `${process.env.VUE_APP_API_BASE_URL}/workspace/member/${this.workspaceId}`
+          `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.workspaceId}`
         );
 
         if (response.data.result) {
@@ -96,7 +96,6 @@ export default {
             workspaceMemberId: response.data.result.workspaceMemberId,
             profileImage: response.data.result.profileImage,
             nickname: response.data.result.nickname,
-            name: response.data.result.name,
             wsRole: response.data.result.wsRole,
           };
           this.setMemberInfoActions(memberInfo); // Vuex에 멤버 정보 저장
