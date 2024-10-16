@@ -52,6 +52,9 @@
       <button @click="moveMenu('drive')" :class="{ active: menu === 'drive' }">
         드라이브
       </button>
+      <button @click="moveMenu('tag')" :class="{ active: menu === 'tag' }">
+        태그
+      </button>
       <button class="badge">
         2분할 보기 <v-icon icon="mdi-eye-outline" class="eye" />
       </button>
