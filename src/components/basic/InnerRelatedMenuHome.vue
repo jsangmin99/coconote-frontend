@@ -18,18 +18,13 @@
     </div>
 
     <v-list>
-        <v-list-subheader class="section-title">
-          <v-icon icon="mdi-star"  color='#ffbb00'/>
-          즐겨찾기
-        </v-list-subheader>
-        <v-list-item
-          v-for="channel in myBookmarks"
-          :key="channel.channelId"
-          :class="{
-            'selected-item': selectedChannelMenuId == channel.channelId,
-          }"
-          class="channel-item"
-          @click="
+      <v-list-subheader class="section-title">
+        <v-icon icon="mdi-star" color='#ffbb00' />
+        즐겨찾기
+      </v-list-subheader>
+      <v-list-item v-for="channel in myBookmarks" :key="channel.channelId" :class="{
+        'selected-item': selectedChannelMenuId == channel.channelId,
+      }" class="channel-item" @click="
             changeChannel(
               channel.channelId,
               channel.channelName,
@@ -43,8 +38,10 @@
             <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
           </template>
 
-          <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)"> {{ channel.channelName }}</v-list-item-title>
-        </v-list-item>
+
+        <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)"> {{ channel.channelName
+          }}</v-list-item-title>
+      </v-list-item>
       <template v-for="section in sections" :key="section.sectionId">
         <div class="header-container">
           <v-list-subheader class="section-title" @click="toggleSection(section.sectionId)">
@@ -302,26 +299,28 @@ export default {
 
     // },
     async changeChannel(id, name, desc) {
-      this.selectedChannelMenuId = id;
-      this.setChannelInfoActions(id);
-      this.setChannelNameInfoActions(name);
-      this.setChannelDescInfoActions(desc);
+      if (id) {
+        this.selectedChannelMenuId = id;
+        this.setChannelInfoActions(id);
+        this.setChannelNameInfoActions(name);
+        this.setChannelDescInfoActions(desc);
 
-      const response = await axios.get(
-        `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
-      );
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
+        );
 
-      const isJoin = response.data.result;
+        const isJoin = response.data.result;
 
-      if (isJoin) {
-        const result = await fetchChannelMemberInfo(id);
-        if (result) {
-          this.setChannelRoleInfoActions(result.channelRole);
+        if (isJoin) {
+          const result = await fetchChannelMemberInfo(id);
+          if (result) {
+            this.setChannelRoleInfoActions(result.channelRole);
+          }
+          this.$router.push(`/channel/${id}/thread/view`);
+        } else {
+          this.setChannelRoleInfoActions(null);
+          this.$router.push(`/channel/${id}`);
         }
-        this.$router.push(`/channel/${id}/thread/view`);
-      } else {
-        this.setChannelRoleInfoActions(null);
-        this.$router.push(`/channel/${id}`);
       }
     },
     async changeChannelMemberInfo(role) {
@@ -441,6 +440,7 @@ export default {
     },
     async fetchMyChannels() {
       try {
+        console.log("[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ", this.getWorkspaceId);
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.getWorkspaceId}`
         );
@@ -557,7 +557,8 @@ export default {
 
 .header-container {
   display: flex;
-  align-items: center; /* 텍스트와 버튼의 수직 정렬을 맞춤 */
+  align-items: center;
+  /* 텍스트와 버튼의 수직 정렬을 맞춤 */
 }
 
 h1 {
@@ -574,8 +575,10 @@ h1 {
   /* 여백 제거 */
   margin-left: 5px !important;
 }
+
 .section-name {
-  font-size: 1.0rem; /* 원하는 폰트 크기로 설정 */
+  font-size: 1.0rem;
+  /* 원하는 폰트 크기로 설정 */
 }
 
 .channelCreate {
