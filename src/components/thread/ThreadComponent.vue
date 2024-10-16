@@ -37,7 +37,11 @@
     </div>
     
     <!-- 입력 그룹 -->
-    <div class="input-group">
+    <div 
+      class="input-group" 
+      @dragover.prevent 
+      @drop="handleDrop"
+    >
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index">
           <button type="button" @click="deleteImage(index)">삭제</button>
@@ -102,7 +106,11 @@
       </div>
     </div>
     <!-- 입력 그룹 -->
-    <div class="input-group">
+    <div 
+      class="input-group" 
+      @dragover.prevent 
+      @drop="handleDrop"
+    >
       <!-- 파일 올리기 -->
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index">
@@ -173,6 +181,7 @@ export default {
       tagFilterOneToZero: false,
       isComment: false,
       parentThread: null,
+      dragedFileId: null,
     };
   },
   created() {
@@ -543,6 +552,21 @@ export default {
         });
         this.files = null;
     },
+
+    async handleDrop(event) {
+      event.preventDefault();
+
+      // DataTransfer 객체에서 드래그된 파일의 ID를 가져옴
+      this.dragedFileId= event.dataTransfer.getData("fileId");
+      if (this.dragedFileId) {
+        console.log("Dropped file with ID:", this.dragedFileId);
+      // 여기에 파일 업로드나 추가 작업을 수행할 로직을 작성
+      } else {
+        console.log("No file was dragged.");
+      }
+    },
+    
+
     async getMessageList() {
       try {
         let params = {
