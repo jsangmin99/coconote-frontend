@@ -7,7 +7,7 @@
               <v-col v-for="member in workspaceMemberList" :key="member.workspaceMemberId" sm="3" md="2">
                 <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card">
                     <v-img height="200px"></v-img>
-                    <v-card-text class="game-store">{{ member.nickname }}</v-card-text>
+                    <v-card-text class="member-position">{{ member.nickname }}</v-card-text>
                     <v-card-title class="member-name">{{ member.nickname }}</v-card-title>
                     <v-chip small :color="getChipColor(member.wsRole)">{{ member.wsRole }}</v-chip>
                 </v-card>
@@ -238,7 +238,7 @@ export default {
     font-size: 17px;
 }
 
-.game-store {
+.member-position {
     color: #919191;
     padding-bottom: 0px;
     font-size: 12px;
