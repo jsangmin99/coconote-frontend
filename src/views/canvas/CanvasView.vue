@@ -1,6 +1,10 @@
 <template>
   <div class="channelInsideContainer">
-    <ChannelCommonMenu :menu="'canvas'" :channelId="channelId" />
+    <ChannelCommonMenu
+      v-if="this.$route.params.name == 'CanvasView'"
+      :menu="'canvas'"
+      :channelId="channelId"
+    />
     <div class="channelInsideContentWrap">
       <v-alert
         v-if="isCanvasDelete"
@@ -84,10 +88,10 @@ import { Stomp } from "@stomp/stompjs";
 
 export default {
   props: {
-    // channelId: {
-    //   type: String,
-    //   required: true,
-    // },
+    splitCanvasId: {
+      type: String,
+      required: true,
+    },
   },
   components: {
     ChannelCommonMenu,
@@ -108,7 +112,15 @@ export default {
       return false;
     }
     this.authToken = localStorage.getItem("accessToken");
-    this.canvasId = this.$route.params.canvasId;
+    if (this.$route.name === "CanvasView") {
+      // URL에서 canvasId를 가져옴
+      this.canvasId = this.$route.params.canvasId;
+    } else {
+      // props로 전달된 splitCanvasId 사용
+      this.canvasId = this.splitCanvasId;
+    }
+    console.log("canvasID >> ", this.canvasId)
+
     this.connect();
   },
   watch: {
@@ -191,8 +203,15 @@ export default {
     // 자식요소에게 전달해주는 메소드 -------- 시작
     updateCanvasId(newCanvasId) {
       this.isLoading = true;
+      let isReconnect = false;
+      if(this.canvasId == null){
+        isReconnect = true;
+      }
       this.canvasId = newCanvasId;
       this.isCanvasDelete = false;
+      if(isReconnect){
+        this.connect();
+      }
     },
     updateCanvasInfo(obj) {
       this.canvasUpdateObj = obj; // CanvasDetail에서 전달된 이름으로 업데이트
@@ -202,6 +221,7 @@ export default {
     },
     // 자식요소에게 전달해주는 메소드 -------- 종료
     connect() {
+      console.error("connect canvasID >> ", this.canvasId)
       if (!this.canvasId) {
         return false;
       }
