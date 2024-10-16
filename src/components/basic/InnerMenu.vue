@@ -35,7 +35,7 @@
       <!-- 프로필 및 로그아웃 버튼을 하단에 배치 -->
       <div ref="profileButton" class="profile-logout-section" @click="toggleDialog($event)">
         <!-- <img :src="profileImageUrl" alt="Profile Image" class="avatar-image" /> -->
-        <img :src="(getProfileImage && getProfileImage !== 'null') ? getProfileImage : require('@/assets/profileImage.png')" alt="Profile Image" class="avatar-image">
+        <img :src="(getProfileImage && getProfileImage !== 'null') ? getProfileImage : require('@/assets/images/profileImage.png')" alt="Profile Image" class="avatar-image">
       </div>
     </v-list>
 

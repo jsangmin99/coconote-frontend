@@ -91,7 +91,7 @@ export default {
     // 페이지 로드 시 localStorage에서 profileImage 불러오기
     const localProfileImage = this.$store.getters.getProfileImage;
     if (localProfileImage == null || localProfileImage == 'null') {
-      this.previewImage = require('@/assets/profileImage.png');
+      this.previewImage = require('@/assets/images/profileImage.png');
     }
     console.log("mounted() -> localProfileImage = this.$store.getters.getProfileImage : ", localProfileImage);
     if (localProfileImage) {

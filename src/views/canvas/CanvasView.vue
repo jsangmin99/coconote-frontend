@@ -1,7 +1,7 @@
 <template>
   <div class="channelInsideContainer">
     <ChannelCommonMenu
-      v-if="this.$route.params.name == 'CanvasView'"
+      v-if="this.$route.name == 'CanvasView' || this.$route.name == 'CanvasEmptyView'"
       :menu="'canvas'"
       :channelId="channelId"
     />
