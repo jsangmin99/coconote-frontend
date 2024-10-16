@@ -4,7 +4,7 @@
       <div class="titleArea">
         <div class="col">
           <div>
-            <v-icon icon="mdi-star" class="star active" @click="toggleBookmark" />
+            <v-icon @click.stop="toggleBookmark(getChannelId)" :color="isBookmarked ? '#ffbb00' : 'grey'" class="star active">mdi-star</v-icon>
           </div>
           <h1>{{ getChannelName }}</h1>
           <div>
@@ -26,7 +26,7 @@
             </div>
           </div>
           <!-- 클릭 이벤트로 드롭다운 토글 -->
-          <v-icon icon="mdi-dots-vertical" @click="toggleDropdown">
+          <v-icon v-if="getChannelRole==='MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown">
             <span @click="console.log('dots clicked')"></span>
           </v-icon>
         </div>
@@ -37,7 +37,7 @@
     <!-- 드롭다운 메뉴 -->
     <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
       <ul>
-        <li @click="editChannel">채널 수정</li>
+        <li @click="startEditingChannel">채널 수정</li>
         <li @click="deleteChannel">채널 삭제</li>
       </ul>
     </div>
@@ -52,6 +52,9 @@
       <button @click="moveMenu('drive')" :class="{ active: menu === 'drive' }">
         드라이브
       </button>
+      <button @click="moveMenu('tag')" :class="{ active: menu === 'tag' }">
+        태그
+      </button>
       <button class="badge">
         2분할 보기 <v-icon icon="mdi-eye-outline" class="eye" />
       </button>
@@ -60,6 +63,46 @@
     <!-- 모달 컴포넌트 -->
     <ChannelMemberModal v-if="isChannelMemberModalOpen" :channelId="getChannelId" :workspaceId="getWorkspaceId"
       @closeModal="closeChannelMemberInviteModal" />
+
+    <v-dialog v-model="channelDialog" width="auto" class="channelDialog">
+    <v-card max-width="400">
+      <v-card-title> 채널 수정 </v-card-title>
+      <v-card-text>
+        <p>채널의 이름을 입력하세요.</p>
+        <v-text-field
+          ref="channelNameInput"
+          color="primary"
+          density="compact"
+          variant="underlined"
+          v-model="updateChannelInfo.channelName"
+          @keyup.enter="saveEditingChannel"
+          placeholder="이름"
+        ></v-text-field>
+        <p>채널의 설명을 입력하세요.</p>
+        <v-text-field
+          color="primary"
+          density="compact"
+          variant="underlined"
+          v-model="updateChannelInfo.channelInfo"
+          @keyup.enter="saveEditingChannel"
+          placeholder="이름"
+        ></v-text-field>
+        <v-radio-group
+          inline
+          label="채널종류"
+          v-model="updateChannelInfo.isPublic"
+        >
+          <v-radio label="공개채널" :value="1"></v-radio>
+          <v-radio label="비공개 채널" :value="0"></v-radio>
+        </v-radio-group>
+      </v-card-text>
+      <template v-slot:actions>
+        <v-btn class="" text="저장" @click="saveEditingChannel"></v-btn>
+        <v-btn class="" text="닫기" @click="channelDialog = false"></v-btn>
+      </template>
+    </v-card>
+  </v-dialog>
+
   </div>
 </template>
 
@@ -67,6 +110,8 @@
 import ChannelMemberModal from "@/components/ChannelMemberInviteModal.vue";
 import { mapGetters } from "vuex";
 import axios from "axios";
+import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
+
 
 export default {
   props: ["menu"],
@@ -80,7 +125,14 @@ export default {
       isChannelMemberModalOpen: false,
       isDropdownOpen: false, // 드롭다운 상태 관리
       toggleBookmarkIsLoading: false,
-      defaultProfileImage: 'https://via.placeholder.com/40', // 기본 프로필 이미지 설정
+      defaultProfileImage: 'https://via.placeholder.com/40', // 기본 프로필 이미지 설정,
+      isBookmarked: false,
+      channelDialog: false,
+      updateChannelInfo: {
+        channelName: "",
+        channelInfo: "",
+        isPublic: "",
+      },
     };
   },
   computed: {
@@ -88,6 +140,8 @@ export default {
       "getChannelId",
       "getChannelName",
       "getChannelDesc",
+      "getChannelRole",
+      "getIsBookmark",
       "getWorkspaceId",
       "getWorkspaceName",
     ]),
@@ -99,7 +153,11 @@ export default {
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
   },
+  created() {
+    this.fetchChannelInfo(this.getChannelId);
+  },
   methods: {
+
     handleClickOutside(event) {
       // 드롭다운 버튼을 클릭한 경우는 무시
       const dropdownToggle = this.$el.querySelector('.mdi-dots-vertical');
@@ -165,20 +223,62 @@ export default {
         console.error("채널 리스트를 가져오거나 삭제하는 중 오류 발생", error);
       }
     },
-
-    editChannel() {
-      console.log("채널 수정 클릭됨");
+    startEditingChannel() {
+      this.channelDialog = true;
+      this.updateChannelInfo.channelName = this.getChannelName;
+      this.updateChannelInfo.channelInfo = this.getChannelDesc;
     },
-    async toggleBookmark() {
-      this.toggleBookmarkIsLoading = true;
+    async saveEditingChannel() {
+        const data = {
+        channelName: this.updateChannelInfo.channelName,
+        channelInfo: this.updateChannelInfo.channelInfo,
+        isPublic: Number(this.updateChannelInfo.isPublic),
+        };
       try {
-        const response = await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/bookmark/${this.channelId}`);
-        console.log("toggleBookmark", response);
+        await axios.patch(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/update/${this.getChannelId}`,
+          data
+        );
+        alert("채널 수정이 완료되었습니다.");
+        this.$router.push("/workspace").then(() => {
+            location.reload(); // URL 변경 후 페이지 새로고침
+          });
+      } catch (error) {
+        console.error("채널 수정 에러", error);
+      } 
+    },
+    async fetchChannelInfo(channelId) {
+      const chInfo = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/channel/detail/${channelId}`);
+      this.updateChannelInfo.isPublic = Number(chInfo.data.result.isPublic);
+      console.log("기존 수정 전 공개범위", Number(chInfo.data.result.isPublic));
+
+      const result = await fetchChannelMemberInfo(channelId); // 모듈로 함수 호출
+      if(result.isBookmark) {
+        this.isBookmarked = true;
+      }else{
+        this.isBookmarked = false;
+      }
+
+    },
+    async toggleBookmark(channelId) {
+      // this.toggleBookmarkIsLoading = true;
+      try {
+        const response = await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/bookmark/${channelId}`);
+        if(response.data.result) {
+          this.isBookmarked = true;
+        } else {
+          this.isBookmarked = false;
+        }
+        console.log("toggleBookmark", response.data.result);
       } catch (error) {
         console.error("bookmark 토글 중 오류 발생", error);
       } finally {
-        this.toggleBookmarkIsLoading = false;
+        // this.toggleBookmarkIsLoading = false;
       }
+    },
+    isBookmark() {
+      console.log("즐겨찾기 추가/해제 확인", this.isBookmarked);
+      return this.isBookmarked;
     },
   },
 };

@@ -4,18 +4,18 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-          {{ thread.id }}
+       <img v-if="isDifferentMember" :src="thread.image" alt="image" class="profile-image">
       </div>
     </div>
     <div class="thread-content">
       <div class="title">
 
         <!-- 닉네임 생성일 -->
-        <div class="nickName">{{thread.memberName}}</div>
-        <div class="createdTime">{{createdTime}}</div>
+        <strong v-if="isDifferentMember" class="nickName">{{thread.memberName}}</strong>
+        <div v-if="isDifferentMember" class="createdTime">{{createdTime}}</div>
 
         <!-- 태그 -->
-        <div class="tag-group">
+        <div v-if="isDifferentMember" class="tag-group">
           <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
             <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
             <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
@@ -44,15 +44,43 @@
       </div>
 
       <!-- 내용 -->
-      <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
-      <div v-if="isUpdate" class="update-group">
-        <textarea
-          type="text"
-          class="form-control"
-          v-model="message"
-          v-on:keypress.enter="update"
-          @keydown="handleKeydown"
-        />
+      <div class="content-group">
+        <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
+        <div v-if="isUpdate" class="update-group">
+          <textarea
+            type="text"
+            class="form-control"
+            v-model="message"
+            v-on:keypress.enter="update"
+            @keydown="handleKeydown"
+          />
+        </div>
+        <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
+          <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
+            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+          </div>
+          <button @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
+          <div class="tag-toggle">
+            <input
+              v-if="isTagMenuVisible"
+              type="text"
+              class="tag-input"
+              placeholder="tags"
+              v-model="tagName"
+              v-on:keypress.enter="createTag"
+              v-on:input="adjustWidth"
+              ref="tagInput"
+              :style="{ width: inputWidth + 'px'}"
+            >
+            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
+              <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
+                <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+              </div>
+              <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
+            </div>
+          </div>
+        </div>
       </div>
       
       <!-- 파일 -->
@@ -61,16 +89,21 @@
           <div class="file-group">
             <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
             <p class="custom-contents">{{file.fileName}}</p>
+            <div class="more-btn-file2">
+              <button @click="downloadFile(file.fileId,file.fileName)">다운</button>
+            </div>
             <div class="more-btn-file">
-              <button @click="deleteF(file.fileId)">파일삭제</button>
+              <button @click="deleteF(file.fileId)">삭제</button>
             </div>
           </div>
         </div>
       </div>
       
       <!-- 댓글 -->
-      <button v-if="!thread.parentThreadId" @click="commentIn(thread)">
-        <div class="comment">comment</div>
+      <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0 && !isComment" @click="commentIn(thread)">
+        <strong class="comment">
+          {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
+        </strong>
       </button>
     </div>
   </div>
@@ -81,6 +114,8 @@
   </div>
   <div v-if="isContextMenuVisible || isTagMenuVisible" class="overlay"></div>
   <div v-if="isContextMenuVisible" class="context-menu">
+    <button @click="commentIn(thread)">댓글 쓰기</button>
+    <button @click="toggleTagMenu">태그 추가</button>
     <button @click="editMessage">수정</button>
     <button @click="deleteM">삭제</button>
   </div>
@@ -88,8 +123,9 @@
 </template>
   
 <script>
+import axios from '@/services/axios';
   export default {
-    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn'],
+    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn','isDifferentMember','isComment'],
     data() {
         return {
             message: "",
@@ -210,7 +246,7 @@
         this.tagMenuPosition = (screenHeight / 1.7 > buttonPosition) ? 'top' : 'bottom';
 
         this.$nextTick(() => {
-        if (this.isTagMenuVisible) {
+          if (this.isTagMenuVisible) {
             this.$refs.tagInput.focus(); // 포커스 주기
           }
         });
@@ -226,12 +262,40 @@
         console.log("메시지 수정");
         this.isUpdate = true
       },
+      async downloadFile(fileId,fileName) {
+        try {
+          // presigned URL 가져오기
+          const response = await axios.get(`http://localhost:8080/api/v1/files/${fileId}/download`);
+
+          const presignedUrl = response.data.result; // presigned URL 가져오기
+
+          // Blob을 사용하여 파일 다운로드
+          const fileResponse = await axios.get(presignedUrl, { responseType: 'blob' });
+
+          // 파일 이름 추출
+          // const fileName = response.headers['content-disposition']
+          //   ? response.headers['content-disposition'].split('filename=')[1].replace(/"/g, '')
+          //   : 'downloaded_file';
+
+          // Blob을 파일로 변환하여 다운로드
+          const blob = new Blob([fileResponse.data], { type: fileResponse.headers['content-type'] });
+          const link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          link.setAttribute('download', fileName); // 서버에서 전달된 파일 이름으로 설정
+          document.body.appendChild(link);
+          link.click(); // 링크 클릭 이벤트로 다운로드 시작
+          document.body.removeChild(link); // 링크 제거
+        } catch (error) {
+          console.error("파일 다운로드에 실패했습니다.", error);
+          alert("파일 다운로드 중 오류가 발생했습니다.");
+        }
+      },
     },
   };
 </script>
 <style scoped>
 .thread {
-    display: flex;
+  display: flex;
 }
 .thread-wrapper {
   position: relative;
@@ -242,7 +306,6 @@
   position: absolute;
   top: 0;
   right: 20px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
-  transform: translateY(50%); /* 수직으로 중앙 정렬 */
   z-index: 2;
 }
 .thread-wrapper:hover {
@@ -252,7 +315,21 @@
   display: block;
 }
 .image {
-    margin: 10px;
+  width: 50px;
+  /* 이미지의 가로 크기 */
+  margin: 0 10px;
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+}
+.profile-image{
+  width: 50px;
+  /* 이미지의 가로 크기 */
+  height: 50px;
+  /* 이미지의 세로 크기 */
+  border-radius: 50%;
+  /* 이미지를 동그랗게 만듦 */
+  object-fit: cover;
 }
 .thread-content {
   gap: 10px;
@@ -266,12 +343,13 @@
 
 }
 .createdTime {
-    
+  
 }
 .tag-group {
   display: flex;
   flex-direction: row;
   gap: 5px;
+  max-height: 12px;
 }
 .tag-container {
   position: relative;
@@ -318,6 +396,11 @@
   max-height: 220px;
   overflow-y: auto;
 }
+.content-group{
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
 .content {
   white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */
 }
@@ -358,12 +441,23 @@
 .file-group:hover .more-btn-file {
   display: block;
 }
+.file-group:hover .more-btn-file2 {
+  display: block;
+}
 .more-btn-file{
   background: #f8f8f8;
   display: none;
   position: absolute;
   top: 0;
   right: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  z-index: 2;
+}
+.more-btn-file2{
+  background: #f8f8f8;
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
   z-index: 2;
 }
 .custom-contents{
@@ -373,7 +467,7 @@
   white-space: nowrap; /* 텍스트 줄 바꿈 방지 */
 }
 .comment {
-    
+  color: blue;
 }
 .update-group{
   border: 1px solid;

@@ -2,38 +2,16 @@
   <v-app-bar :elevation="2" class="topMenu" height="40">
     <v-app-bar-title class="title"> COCONOTE </v-app-bar-title>
     <template v-slot:append>
-      <v-form @submit.prevent="emitSelected">
-        <v-row>
-          <v-col cols="auto">
-            <v-select
-              v-model="selectedValue"
-              :items="items"
-              item-title="name"
-              item-value="workspaceId"
-              outlined
-              single-line
-              hide-details
-              dense
-              class="inline"
-              style="font-size: 0.9rem"
-            ></v-select>
-          </v-col>
-          <v-col cols="auto">
-            <v-btn type="submit">이동</v-btn>
-          </v-col>
-          <v-col cols="auto">
-            <v-btn icon @click="showWorkspaceModal">
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-form>
-    </template>
+    <div class="d-flex align-center justify-end" style="width: 100%;">
+      <v-select v-model="selectedValue" :items="items" item-title="name" item-value="workspaceId" outlined single-line
+        hide-details dense class="inline" style="font-size: 0.9rem" @input="emitSelected"></v-select>
+      <v-btn @click="showWorkspaceModal">
+        <v-icon>mdi-plus</v-icon>
+      </v-btn>
+    </div>
+  </template>
   </v-app-bar>
-  <CreateWorkspaceModal
-    v-model="createWorkspace"
-    @update:dialog="createWorkspace = $event"
-  >
+  <CreateWorkspaceModal v-model="createWorkspace" @update:dialog="createWorkspace = $event">
   </CreateWorkspaceModal>
 </template>
 
@@ -41,14 +19,15 @@
 import axios from "axios";
 import CreateWorkspaceModal from "@/components/basic/CreateWorkspaceModal.vue";
 import { mapGetters, mapActions } from "vuex";
+import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
 
 export default {
-  computed: {
-    ...mapGetters(["getWorkspaceId", "getWorkspaceName"]), // Vuex getter 매핑
-  },
   name: "CommonTopMenu",
   components: {
     CreateWorkspaceModal,
+  },
+  computed: {
+    ...mapGetters(["getWorkspaceId", "getWorkspaceName"]), // Vuex getter 매핑
   },
   data() {
     return {
@@ -57,12 +36,20 @@ export default {
       createWorkspace: false,
       isLoading: false,
       workspaceInfo: [],
+      channelId: null,
     };
   },
   created() {
     this.selectedValue = this.$store.getters.getWorkspaceId;
     console.log("selectedValue >> ", this.selectedValue);
     this.fetchMyWorkspaceList();
+  },
+  watch: {
+    selectedValue(newValue) {
+      if (newValue) {
+        this.emitSelected();
+      }
+    },
   },
   methods: {
     ...mapActions([
@@ -72,6 +59,7 @@ export default {
       "setChannelInfoActions",
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
+      "setChannelRoleInfoActions",
     ]),
     async fetchMyWorkspaceList() {
       try {
@@ -81,7 +69,7 @@ export default {
         this.items = response.data.result; // 내 워크스페이스 목록 가져오기
         if (this.items.length > 0 && (this.selectedValue == "" || this.selectedValue == null)) {
           this.selectedValue = this.items[0].workspaceId; // 첫 번째 워크스페이스 ID 할당
-          
+
         }
         this.emitSelected();
         this.isLoading = true;
@@ -114,10 +102,15 @@ export default {
           // 채널 정보
           `${process.env.VUE_APP_API_BASE_URL}/${this.selectedValue}/channel/first`
         );
+        this.channelId = chInfo.data.result.channelId;
         this.setChannelInfoActions(chInfo.data.result.channelId);
         this.setChannelNameInfoActions(chInfo.data.result.channelName);
         this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
 
+        const result = await fetchChannelMemberInfo(this.channelId); // 모듈로 함수 호출
+        if (result) {//  채널에 가입되어 있다면
+          this.setChannelRoleInfoActions(result.channelRole);// 로컬스토리지에 channelRole update
+        }
         this.isLoading = true;
       } catch (e) {
         console.log(e);
@@ -140,13 +133,17 @@ export default {
 .topMenu {
   &.v-toolbar {
     background-color: #383f4a !important;
+
     * {
       color: #fff;
     }
   }
+
   .title {
-    font-size: 0.9rem; /* v-app-bar-title의 폰트 크기 설정 */
+    font-size: 0.9rem;
+    /* v-app-bar-title의 폰트 크기 설정 */
   }
+
   .v-select * {
     font-size: 0.8rem;
   }

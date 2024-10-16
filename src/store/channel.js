@@ -3,6 +3,7 @@ function initState(){
         channelId : null, //현 접속한 channelId
         channelName : null,
         channelDesc : null,
+        channelRole: null, // 내 권한(매니저, 일반유저)
     };
 }
 
@@ -21,7 +22,11 @@ const channel = {
         setChannelDescInfo(state, channelDescValue) {
             state.channelDesc = channelDescValue;
             localStorage.setItem("channelDesc", channelDescValue);
-        }
+        },
+        setChannelRoleInfo(state, channelRoleValue) {
+            state.channelRole = channelRoleValue;
+            localStorage.setItem("channelRole", channelRoleValue);
+        },
     },
     actions: {
         setChannelInfoActions({ commit }, channelValue) {
@@ -32,6 +37,9 @@ const channel = {
         },
         setChannelDescInfoActions({ commit }, channelDescValue) {
             commit('setChannelDescInfo', channelDescValue);
+        },
+        setChannelRoleInfoActions({ commit }, channelRoleValue) {
+            commit('setChannelRoleInfo', channelRoleValue);
         }
     },
     getters: {
@@ -66,6 +74,18 @@ const channel = {
             if(returnState == null){
                 setTimeout(() => {
                     return (state.channelDesc == null) ? localStorage.getItem("channelDesc") : state.channelDesc
+                }, 100);
+                return false;
+            }
+            return returnState;
+        },
+        getChannelRole(state){
+            let returnState = null;
+            returnState = (state.channelRole == null) ? localStorage.getItem("channelRole") : state.channelRole
+            console.log("getChannelName",returnState)
+            if(returnState == null){
+                setTimeout(() => {
+                    return (state.channelRole == null) ? localStorage.getItem("channelRole") : state.channelRole
                 }, 100);
                 return false;
             }

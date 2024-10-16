@@ -19,6 +19,7 @@
 <script>
 import axios from "axios";
 import { mapActions } from "vuex";
+import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
 
 export default {
   components: {},
@@ -26,6 +27,7 @@ export default {
     return {
       workspaceId: null,
       dialog: false,
+      channelId: null,
     };
   },
   computed: {},
@@ -40,6 +42,7 @@ export default {
       "setChannelInfoActions",
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
+      "setChannelRoleInfoActions",
     ]),
     searchMyWorkspace() {
       // localStorage에 ws 정보 체크 후 분기처리
@@ -52,6 +55,7 @@ export default {
         this.setWorkspaceInfoActions(lsWsId);
         this.setWorkspaceNameInfoActions(lsWsName);
         this.getMyFirstChannelInWorkspace();
+        this.getChannelMemberInfo();
       } else {
         console.log("새로운 workspace~~")
         this.getMyFirstWorkspace();
@@ -112,10 +116,15 @@ export default {
       this.setChannelInfoActions(response.data.result.channelId);
       this.setChannelNameInfoActions(response.data.result.channelName);
       this.setChannelDescInfoActions(response.data.result.channelInfo);
-      this.$router.push({
+      this.channelId = response.data.result.channelId;
+          this.$router.push({
         path: `/channel/${response.data.result.channelId}`,
         query: { t: response.data.result.channelId }, // 새로운 query 추가로 새로운 key처럼 작동
       });
+    },
+    async getChannelMemberInfo() {
+      const result = await fetchChannelMemberInfo(this.channelId); // 모듈로 함수 호출
+      this.setChannelRoleInfoActions(result.channelRole);
     },
 
     // 홈으로 리다이렉트
