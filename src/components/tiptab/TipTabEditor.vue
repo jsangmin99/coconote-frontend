@@ -208,9 +208,13 @@ export default {
     };
   },
   watch: {
-    // 부모에서 전달받은 content 값이 변경될 때 실행할 함수
-    parentUpdateEditorContent(newVal) {
-      this.onContentChanged(newVal);
+    parentUpdateEditorContent: {
+      // 부모에서 전달받은 content 값이 변경될 때 실행할 함수
+      handler(newVal) {
+        console.error("부모에게 전달받은 값 보는 중.", newVal);
+        this.onContentChanged(newVal);
+      },
+      deep: true, // 객체 내부의 변경사항도 감지
     },
   },
   mounted() {
@@ -322,7 +326,11 @@ export default {
         if (this.dragCheckSelectionNode == null) {
           //drag 중이 아닐 때 가능
           const updateAfterNodes = selectedNode.$anchor.path[0].content.content;
-          console.log("ㅠㅠㅠㅠㅠㅠㅠㅠㅠ", this.nodeLength, updateAfterNodes.length)
+          console.log(
+            "ㅠㅠㅠㅠㅠㅠㅠㅠㅠ",
+            this.nodeLength,
+            updateAfterNodes.length
+          );
           if (this.nodeLength > updateAfterNodes.length) {
             // 개수가 생성 때 보다 적어졌을 때
             const originAllFeIds = this.getAllBlockFeIds;
@@ -466,28 +474,33 @@ export default {
       return null; // 찾지 못했을 때
     },
     onContentChanged(newContent) {
-      console.log("부모 컴포넌트로부터 새로운 content를 받았습니다:");
-
-      let targetElement = document.querySelector(
-        `#editorArea [data-id="${newContent.feId}"]`
+      console.log(
+        "부모 컴포넌트로부터 새로운 content를 받았습니다:",
+        newContent
       );
 
-      if (newContent.method == "delete") {
+      let targetElement = document.querySelector(
+        `#editorArea [data-id="${newContent.blockFeId}"]`
+      );
+
+      if (newContent.method == "DELETE_BLOCK") {
         // 삭제한 경우
         if (targetElement) {
           // ⭐ 자식 생각 필요
           targetElement.remove();
         }
         // defaultFeId 중 해당 아이디 삭제
-        this.deleteBlockTargetFeIdActions(newContent.feId).then((isDeleteBlock) => {
-          console.log("isDeleteBlock newContent.feId :: ", isDeleteBlock);
-          this.nodeLength = this.nodeLength - 1;
-        });
-      } else if (newContent.method == "changeOrder") {
+        this.deleteBlockTargetFeIdActions(newContent.blockFeId).then(
+          (isDeleteBlock) => {
+            console.log("isDeleteBlock newContent.feId :: ", isDeleteBlock);
+            this.nodeLength = this.nodeLength - 1;
+          }
+        );
+      } else if (newContent.method == "CHANGE_ORDER_BLOCK") {
         // 순서변경의 경우
         console.log("부모로부터 순서변경 감지!!! ");
         const changeNode = document.querySelector(
-          `[data-id="${newContent.feId}"]`
+          `[data-id="${newContent.blockFeId}"]`
         );
         const targetDataId =
           newContent.prevBlockId == null
@@ -500,7 +513,12 @@ export default {
             ? "next"
             : null;
 
-        console.log("appendType >> ",appendType, newContent.prevBlockId, newContent.nextBlockId)
+        console.log(
+          "appendType >> ",
+          appendType,
+          newContent.prevBlockId,
+          newContent.nextBlockId
+        );
         const targetNode = document.querySelector(
           `[data-id="${targetDataId}"]`
         );
@@ -514,8 +532,8 @@ export default {
             // targetNode 앞에 changeNode 추가
             console.log(`${targetDataId} [앞에] 추가`);
             targetNode.insertAdjacentElement("beforebegin", changeNode);
-          }else{
-            console.error("prev, next 모두 null. 첫줄 drag 이동한 상황")
+          } else {
+            console.error("prev, next 모두 null. 첫줄 drag 이동한 상황");
           }
         }
       } else {
@@ -523,7 +541,7 @@ export default {
         if (targetElement) {
           // 이미 있는 내용 변경
           // 해당 요소의 텍스트를 변경
-          targetElement.textContent = newContent.contents;
+          targetElement.textContent = newContent.blockContents;
         } else {
           const typeEl = {
             heading: "h",
@@ -534,24 +552,27 @@ export default {
             image: "img",
           };
 
-          let elTagType = typeEl[newContent.type];
+          let elTagType = typeEl[newContent.blockType];
           if (elTagType === "h") {
             elTagType += "1";
           }
 
           let newElement = document.createElement(elTagType);
-          newElement.setAttribute("data-id", newContent.feId);
+          newElement.setAttribute("data-id", newContent.blockFeId);
           if (elTagType == "img") {
-            newElement.src = newContent.contents;
+            newElement.src = newContent.blockContents;
           } else {
-            newElement.textContent = newContent.contents;
+            newElement.textContent = newContent.blockContents;
           }
 
-          if(newContent.method == "create"){
+          if (newContent.method == "CREATE_BLOCK") {
             // 생성인 경우 store 개수 늘리기
-            this.appendBlockFeIdsAfterPrevActions(newContent.feId , newContent.prevBlockId);
+            this.appendBlockFeIdsAfterPrevActions(
+              newContent.blockFeId,
+              newContent.prevBlockId
+            );
             this.nodeLength = this.nodeLength + 1;
-            console.log("zzz>> ",newContent.method, this.nodeLength)
+            console.log("zzz>> ", newContent.method, this.nodeLength);
           }
 
           if (newContent.prevBlockId != null) {
