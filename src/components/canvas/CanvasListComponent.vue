@@ -52,7 +52,7 @@ export default {
           this.findAllRoom();
         } else if (newVal.method == "update") {
           console.log("update 예정");
-          this.findAllRoom();
+          this.sendMessageUpdate();
         } else if (newVal.method == "changeOrder") {
           console.log("순서변경 예정");
           this.findAllRoom();
@@ -73,17 +73,17 @@ export default {
       "getCanvasAllInfo",
     ]),
   },
-  created() {
+  async created() {
     this.channelId = this.$route.params.channelId;
     if (this.channelId == "" || this.channelId == undefined) {
       alert("잘못된 접근입니다.");
       return false;
     }
-    async () => {
-      this.beforeRouteLeave();
-    };
+    await this.beforeRouteLeave();
+    console.error("before 테스트 2")
     this.isFirst = true;
     this.findAllRoom();
+    this.connect();
   },
   data() {
     return {
@@ -92,6 +92,7 @@ export default {
       channelId: null,
       chatrooms: [],
       isFirst: true,
+      sender: null,
 
       // websocket용도
       ws: null,
@@ -121,7 +122,6 @@ export default {
             }
             this.isFirst = false;
           }
-          this.connect();
         });
     },
     async createCanvas() {
@@ -129,14 +129,14 @@ export default {
         alert("캔버스 제목을 입력해 주십시요.");
         return;
       } else {
-        let prevCanvasObj = null;
+        let prevCanvasId = null;
         if (this.chatrooms && this.chatrooms.length > 0) {
-          prevCanvasObj = this.chatrooms[this.chatrooms.length - 1];
+          prevCanvasId = this.chatrooms[this.chatrooms.length - 1].id;
         }
         const params = {
           title: this.canvasName,
           parentCanvasId: null,
-          prevCanvasId: prevCanvasObj.id,
+          prevCanvasId: prevCanvasId,
           channelId: this.$route.params.channelId,
         };
 
@@ -201,18 +201,17 @@ export default {
       }
     },
     connect() {
-      if (this.sock != null && this.ws != null) {
-        return false;
-      }
+
       this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
       this.ws = Stomp.over(this.sock);
       this.ws.connect(
         {},
         () => {
           this.ws.subscribe(
-            `/sub/canvas/room/${this.detailCanvasId}`,
+            `/sub/canvas/room/${this.$route.params.canvasId}`,
             (message) => {
               const recv = JSON.parse(message.body);
+              console.error("sub!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", recv);
               this.recvCanvasMessage(recv);
             }
           );
@@ -239,16 +238,26 @@ export default {
         }
       );
     },
+    sendMessageUpdate(obj) {
+      // 이름이 변경되었을 때
+      console.error("canvas update component >> ", obj, obj.canvasId);
+      this.canvasMessage = {
+        channelId: this.$route.params.channelId,
+        method: "update",
+        canvasId: this.$route.params.canvasId,
+        title: obj.title,
+      };
+      console.log(this.canvasMessage);
+    },
     sendMessageDelete(obj) {
       console.error("list component >> ", obj, obj.canvasId);
       this.canvasMessage = {
         channelId: this.$route.params.channelId,
         method: "delete",
         canvasId: this.$route.params.canvasId,
-        member: this.sender, // 현재 접속한 user ⭐ 추후 변경
       };
-      console.log(this.canvasMessage)
-      
+      console.log(this.canvasMessage);
+      this.sendMessageCanvas();
       // channelId;
       // parentCanvasId = null;
       // prevCanvasId = null;
@@ -278,9 +287,31 @@ export default {
       }
     },
     recvCanvasMessage(recv) {
-      console.error("recvCanvasMessage", recv);
+      console.error("recv >>> ", recv);
+      if (recv.type === "CANVAS") {
+        const canvasJson = JSON.parse(recv.message);
+        console.log("canvas Json >> ", canvasJson);
+        // if(recv.sender != this.sender && canvasJson.canvasId == this.$route.params.canvasId){
+        // 작성한 사람이 다르고, 현 canvasId랑 다르다면 >> 추후 멤버 추가 시 작업
+        // if (canvasJson.canvasId == this.$route.params.canvasId) {
+        //   console.log("변경해야함!");
+        // }else{
+
+        // }
+        if (canvasJson.method === "create") {
+          this.findAllRoom(); // 생성해서 list 재로딩
+          // }else if (canvasJson.method === "update") {
+        } else if (canvasJson.method === "delete") {
+          this.$store.dispatch("setCanvasAllInfoAction", {
+            method: "delete",
+            canvasId: this.canvasId,
+            member: this.sender,
+          });
+        }
+      }
     },
     beforeRouteLeave() {
+      console.error("before 테스트 1")
       if (this.sock) {
         this.sock.close(); // SockJS 연결을 닫음
         this.sock = null;
@@ -290,10 +321,16 @@ export default {
         this.ws.disconnect(() => {
           console.log("WebSocket ws connection closed.");
         });
+        this.ws = null;
       }
     },
   },
   beforeUnmount() {
+    if (this.ws) {
+      this.ws.disconnect(() => {
+        console.log("WebSocket ws connection closed.");
+      });
+    }
     this.beforeRouteLeave();
   },
 };

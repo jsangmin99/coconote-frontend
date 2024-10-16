@@ -304,7 +304,7 @@ export default {
             contents: "",
             type: "paragraph", //삭제여서 타입 관계 X
             feId: blockFeId,
-            member: this.sender, // 현재 접속한 user ⭐ 추후 변경
+            // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
           };
 
           console.log(this.message);
@@ -335,7 +335,7 @@ export default {
         // parentBlockId: parentId,
         contents: blockContent,
         type: blockElType,
-        member: this.sender, // 현재 접속한 user ⭐ 추후 변경
+        // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
       };
 
       this.sendMessage();
@@ -370,7 +370,7 @@ export default {
         canvasId: this.canvasId,
         method: "changeOrder",
         ...changeOrderObj,
-        member: this.sender, // 현재 접속한 user ⭐ 추후 변경
+        // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
       };
 
       this.sendMessage();
@@ -398,7 +398,7 @@ export default {
     },
     updateCanvasInfo() {
       this.$store.dispatch("setCanvasAllInfoAction", {
-        method: "nameChange",
+        method: "update",
         canvasId: this.canvasId,
         title: this.room.title,
       });
@@ -421,10 +421,6 @@ export default {
     async deleteCanvas() {
       console.log("canvas 삭제 예정");
       try {
-        const response = await axios.delete(
-          `${process.env.VUE_APP_API_BASE_URL}/canvas/${this.canvasId}`
-        );
-        console.log(response);
         this.deleteCanvasView();
       } catch (error) {
         console.log(error);
