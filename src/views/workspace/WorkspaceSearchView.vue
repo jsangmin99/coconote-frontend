@@ -98,6 +98,8 @@ export default {
             nickname: response.data.result.nickname,
             wsRole: response.data.result.wsRole,
           };
+          console.log("WorkspaceSerarchView wsRole", response.data.result.wsRole);
+
           this.setMemberInfoActions(memberInfo); // Vuex에 멤버 정보 저장
         }
       } catch (error) {

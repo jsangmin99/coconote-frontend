@@ -40,7 +40,7 @@
         <v-icon v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)">mdi-cog</v-icon>
         </v-card-title>
       <v-card-text>
-         <v-icon size="50">mdi-account-circle</v-icon>
+         <v-img height="200px"></v-img>
          <v-list>
           <v-list-item>이름    {{ workspaceMemberInfo.memberName }}</v-list-item>
           <v-list-item>닉네임    {{ workspaceMemberInfo.nickname }}</v-list-item>

@@ -4,7 +4,7 @@
 
       <!-- 현재 접속해 있는 워크스페이스 -->
       <v-list-item 
-        prepend-icon="mdi-alpha-w-circle-outline" 
+        prepend-icon="mdi-alpha-w-box" 
         title="workspace" 
         @click="toggleDropdown"
       ></v-list-item>
@@ -173,6 +173,7 @@ export default {
           profileImage: response.data.result.profileImage,
           wsRole: response.data.result.wsRole,
         };
+        console.log("InnerMenu wsRole", response.data.result.wsRole);
         this.setMemberInfoActions(myInfo);
 
         const chInfo = await axios.get(
