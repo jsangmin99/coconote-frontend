@@ -27,7 +27,6 @@ export default {
     return {
       workspaceId: null,
       dialog: false,
-      channelId: null,
     };
   },
   computed: {},
@@ -55,7 +54,6 @@ export default {
         this.setWorkspaceInfoActions(lsWsId);
         this.setWorkspaceNameInfoActions(lsWsName);
         this.getMyFirstChannelInWorkspace();
-        this.getChannelMemberInfo();
       } else {
         console.log("새로운 workspace~~")
         this.getMyFirstWorkspace();
@@ -100,7 +98,6 @@ export default {
             workspaceMemberId: response.data.result.workspaceMemberId,
             profileImage: response.data.result.profileImage,
             nickname: response.data.result.nickname,
-            name: response.data.result.name,
             wsRole: response.data.result.wsRole,
           };
           console.log("[WorkspaceSearchView] getMemberInfo() profileImage: ", response.data.result.profileImage);
@@ -125,8 +122,8 @@ export default {
       //   query: { t: response.data.result.channelId }, // 새로운 query 추가로 새로운 key처럼 작동
       // });
     },
-    async getChannelMemberInfo() {
-      const result = await fetchChannelMemberInfo(this.channelId); // 모듈로 함수 호출
+    async getChannelMemberInfo(channelId) {
+      const result = await fetchChannelMemberInfo(channelId); // 모듈로 함수 호출
       this.setChannelRoleInfoActions(result.channelRole);
     },
 

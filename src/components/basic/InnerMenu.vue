@@ -2,6 +2,12 @@
   <v-navigation-drawer class="innerMenu" theme="dark" permanent rail>
     <v-list density="compact" nav class="menu-container">
 
+      <!-- 현재 접속해 있는 워크스페이스 -->
+      <v-list-item 
+        prepend-icon="mdi-alpha-w-box" 
+        title="workspace" 
+        @click="toggleDropdown"
+      ></v-list-item>
       <!-- 홈 하위 메뉴 버튼 -->
       <v-list-item prepend-icon="mdi-home" title="home" @click="changeSelectedMenu('home')"
         :class="{ 'selected-item': selectedMenu === 'home' }"></v-list-item>
@@ -16,6 +22,16 @@
       <!-- Spacer로 나머지 공간 확보 -->
       <div style="flex-grow: 2;"></div>
 
+    <!-- 드롭다운 메뉴 -->
+    <div v-if="isDropdownOpen" class="workspace-dropdown-menu" @click.stop>
+      <ul v-for="workspace in workspaceList" :key="workspace.workspaceId">
+        <li @click="selectWorkspace(workspace.workspaceId)">{{ workspace.name }}</li>
+      </ul>
+      <ul>
+        <li @click="showWorkspaceModal">+</li>
+      </ul>
+    </div>
+
       <!-- 프로필 및 로그아웃 버튼을 하단에 배치 -->
       <div ref="profileButton" class="profile-logout-section" @click="toggleDialog($event)">
         <!-- <img :src="profileImageUrl" alt="Profile Image" class="avatar-image" /> -->
@@ -27,6 +43,8 @@
     <ModalProfileLogout :dialog="dialog" @update:dialog="dialog = $event" :modalPosition="modalPosition" />
 
   </v-navigation-drawer>
+    <CreateWorkspaceModal v-model="createWorkspace" @update:dialog="createWorkspace = $event">
+  </CreateWorkspaceModal>
 
   <!-- 하위 메뉴 컴포넌트 -->
   <InnerRelatedMenuHome v-if="selectedMenu === 'home'" :selectedValue="selectedValue" />
@@ -35,11 +53,14 @@
 
 <script>
 import axios from "axios";
-import { mapGetters } from "vuex";
-
+import { mapGetters, mapActions } from "vuex";
+  
 import InnerRelatedMenuHome from "@/components/basic/InnerRelatedMenuHome.vue";
 import InnerRelatedMenuMember from "@/components/basic/InnerRelatedMenuMember.vue";
 import ModalProfileLogout from "@/views/member/ModalProfileLogout.vue"; // 모달 컴포넌트 import
+import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
+import CreateWorkspaceModal from "@/components/basic/CreateWorkspaceModal.vue";
+
 
 export default {
   props: {
@@ -55,6 +76,7 @@ export default {
     InnerRelatedMenuHome,
     InnerRelatedMenuMember,
     ModalProfileLogout,
+    CreateWorkspaceModal,
   },
   data() {
     return {
@@ -63,19 +85,99 @@ export default {
       selectedMenu: "home",
       profileImageUrl: '', // 프로필 이미지 URL 저장
       modalPosition: { top: 0, left: 0 }, // 모달의 위치 저장
+      isDropdownOpen: false,
+      workspaceList: [],
+      channelId: null,
+      createWorkspace: false,
     };
   },
   mounted() {
+    const profileImage = this.$store.getters.getProfileImage;
+    const nickname = this.$store.getters.getNickname;
+
     // 프로필 이미지 설정 로직
-    // let profileImage = this.getProfileImage;
-    // console.log("[InnerMenu] mounted().profileImage = ", profileImage);
-    // if (profileImage == "null" || profileImage == null) {
-    //   console.log("[InnerMenu] mounted(). if (!profileImage) profileImage = ", profileImage);
-    //   profileImage = require('@/assets/profileImage.png');
-    // }
-    // this.profileImageUrl = profileImage;
+    if (profileImage !== 'null') {
+      this.profileImageUrl = profileImage;
+    } else {
+      this.generateAvatar(nickname);
+    }
+  },
+  created() {
+    this.fetchMyWorkspaceList();
+  },
+  created() {
+    this.fetchMyWorkspaceList();
   },
   methods: {
+        ...mapActions([
+      "setWorkspaceInfoActions",
+      "setWorkspaceNameInfoActions",
+      "setMemberInfoActions",
+      "setChannelInfoActions",
+      "setChannelNameInfoActions",
+      "setChannelDescInfoActions",
+      "setChannelRoleInfoActions",
+    ]),
+     toggleDropdown() {
+      // 드롭다운이 열리고 닫히는지 로그 확인
+      console.log("Dropdown toggle");
+      this.isDropdownOpen = !this.isDropdownOpen;
+    },
+     async fetchMyWorkspaceList() {
+      try {
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/workspace/list`
+        );
+        this.workspaceList = response.data.result; // 내 워크스페이스 목록 가져오기
+        } catch (e) {
+        console.log(e);
+      }
+    },
+    async selectWorkspace(workspaceId) {
+         try {
+        const wsInfo = await axios.get(
+          // 워크스페이스 정보
+          `${process.env.VUE_APP_API_BASE_URL}/workspace/info/${workspaceId}`
+        );
+        this.setWorkspaceInfoActions(wsInfo.data.result.workspaceId);
+        this.setWorkspaceNameInfoActions(wsInfo.data.result.name);
+
+        const response = await axios.get(
+          // 내 워크스페이스 회원 정보
+          `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${workspaceId}`
+        );
+        const myInfo = {
+          nickname: response.data.result.nickname,
+          workspaceMemberId: response.data.result.workspaceMemberId,
+          profileImage: response.data.result.profileImage,
+          wsRole: response.data.result.wsRole,
+        };
+        console.log("InnerMenu wsRole", response.data.result.wsRole);
+        this.setMemberInfoActions(myInfo);
+
+        const chInfo = await axios.get(
+          // 채널 정보
+          `${process.env.VUE_APP_API_BASE_URL}/${workspaceId}/channel/first`
+        );
+        this.channelId = chInfo.data.result.channelId;
+        this.setChannelInfoActions(chInfo.data.result.channelId);
+        this.setChannelNameInfoActions(chInfo.data.result.channelName);
+        this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
+
+        const result = await fetchChannelMemberInfo(this.channelId); // 모듈로 함수 호출
+        if (result) {//  채널에 가입되어 있다면
+          this.setChannelRoleInfoActions(result.channelRole);// 로컬스토리지에 channelRole update
+        }
+          this.$router.push("/workspace").then(() => {
+            location.reload(); // URL 변경 후 페이지 새로고침
+          });
+        this.isLoading = true;
+
+      } catch (e) {
+        console.log(e);
+      }
+
+    },
     changeSelectedMenu(name) {
       this.selectedMenu = name;
       switch (this.selectedMenu) {
@@ -128,7 +230,12 @@ export default {
         document.removeEventListener('click', this.handleOutsideClick);
         document.removeEventListener('keydown', this.handleEscKey);
       }
-    }
+    },
+    showWorkspaceModal() {
+      this.isDropdownOpen = false,
+      this.createWorkspace = true;
+      console.log(this.createWorkspace);
+    },
   },
   beforeUnmount() {
     if (this.dialog) {
@@ -183,5 +290,32 @@ export default {
   /* 손 모양 커서 설정 */
   transition: bottom 0.3s ease-in-out;
   /* 부드럽고 매끄러운 이동 */
+}
+
+.workspace-dropdown-menu {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  z-index: 1005;
+  top: 75px;
+}
+
+.workspace-dropdown-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.workspace-dropdown-menu ul li {
+    padding: 8px 12px;
+    color: black;
+    cursor: pointer;
+}
+
+.workspace-dropdown-menu ul li:hover {
+    background-color: #f3f3f3;
 }
 </style>

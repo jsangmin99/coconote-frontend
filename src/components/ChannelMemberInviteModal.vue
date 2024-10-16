@@ -22,8 +22,9 @@
               <v-list-item-title>역할: {{ member.channelRole }}</v-list-item-title>
             </div>
             <div v-if="getChannelRole === 'MANAGER'">
-              <v-btn color="blue" @click="changeRole(member.id)">권한</v-btn>
-              <v-btn color="red" @click="removeMember(member.id)">강퇴</v-btn>
+        <v-icon v-if="member.channelRole === 'USER'" @click="changeRole(member.id)">mdi-account-arrow-up</v-icon>
+        <v-icon v-if="member.channelRole === 'MANAGER'" @click="changeRole(member.id)">mdi-account-arrow-down</v-icon>
+        <v-icon @click="removeMember(member.id)">mdi-account-remove</v-icon>
             </div>
           </div>
         </div>    

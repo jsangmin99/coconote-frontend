@@ -1,6 +1,6 @@
 <template>
   <v-navigation-drawer permanent class="innerSubMenu" :absolute="false">
-    <div class="header-container">
+    <div class="header-container" @contextmenu.prevent="showContextMenu($event, 'workspace', workpsace)">
       <h1>{{ this.getWorkspaceName }}</h1>
       <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn">
         <v-icon class="icon-cog">mdi-cog</v-icon>
@@ -30,11 +30,14 @@
               channel.channelName,
               channel.channelInfo
             )
-            ">
-        <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
-          <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
-          <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
-        </template>
+          "
+          @contextmenu.prevent="showContextMenu($event, 'channel', channel)"
+        >
+          <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
+            <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
+            <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
+          </template>
+
 
         <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)"> {{ channel.channelName
           }}</v-list-item-title>
@@ -83,8 +86,8 @@
               channel.channelId,
               channel.channelName,
               channel.channelInfo
-            )
-            ">
+            )"
+            @contextmenu.prevent="showContextMenu($event, 'channel', channel)">
             <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
               <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
               <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
@@ -159,6 +162,15 @@
       <v-btn text="수정" color="blue" @click="saveEditing(this.getWorkspaceId)"></v-btn>
     </v-card>
   </v-dialog>
+
+  <div v-if="contextMenuVisible" class="context-menu-leave"
+      :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }">
+      <ul>
+        <li v-if="selectedItemType === 'workspace'" @click="leaveWorkspace(this.getWorkspaceId)">워크스페이스 나가기</li>
+        <li v-if="selectedItemType === 'channel'" @click="leaveChannel(selectedItem.channelId)">채널 나가기</li>
+      </ul>
+  </div>
+
 </template>
 
 <script>
@@ -206,6 +218,11 @@ export default {
     this.getSectionData();
     this.getMyBookmarks();
     this.selectedChannelMenuId = this.$route.params.channelId; //이 변수에서 routerId값이 변경된 것을 감지해서 항상 바뀌었으면 좋겠어
+    window.addEventListener('click', this.hideContextMenu);
+  },
+  beforeUnmount() {
+    // 컴포넌트가 파괴되기 전 window 클릭 이벤트 제거
+    window.removeEventListener('click', this.hideContextMenu);
   },
   data() {
     return {
@@ -234,6 +251,12 @@ export default {
 
       channelId: null,
       myBookmarks: [],
+
+      contextMenuVisible: false, // 우클릭 메뉴 표시 여부
+      contextMenuPosition: { x: 0, y: 0 }, // 우클릭 메뉴 위치
+      selectedItem: null, // 선택한 항목 (워크스페이스 또는 채널)
+      selectedItemType: null, // 선택한 항목의 타입 ('workspace' 또는 'channel')
+      clickedChannelId: null, // 클릭한 채널의 ID를 저장
     };
   },
   methods: {
@@ -247,7 +270,7 @@ export default {
     async getSectionData() {
       try {
         const response = await axios.get(
-          `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.selectedValue}`
+          `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
         );
         this.sections = response.data.result;
 
@@ -453,6 +476,54 @@ export default {
       } catch (error) {
         console.log(error);
       }
+    },
+      // 우클릭 메뉴 보이기
+    showContextMenu(event, type, item) {
+      event.preventDefault(); // 기본 우클릭 메뉴를 방지
+      this.contextMenuVisible = false; // 기존 메뉴 숨기기
+      this.contextMenuPosition = { x: event.clientX, y: event.clientY };
+      this.selectedItem = item;
+      this.selectedItemType = type;
+
+      // DOM 업데이트 후 메뉴가 보이도록 $nextTick 사용
+      this.$nextTick(() => {
+        this.contextMenuVisible = true;
+      });
+    },
+
+    // 우클릭 메뉴 숨기기
+    hideContextMenu() {
+      this.contextMenuVisible = false;
+      this.selectedItem = null;
+      this.selectedItemType = null;
+    },
+    async leaveWorkspace(workspaceId) {
+      try {
+        await axios.delete(
+          `${process.env.VUE_APP_API_BASE_URL}/workspace/${workspaceId}/member/leave`
+        );
+        alert("워크스페이스에서 나갔습니다.");
+                this.$router.push("/workspace").then(() => {
+            location.reload(); // URL 변경 후 페이지 새로고침
+          });
+      } catch (error) {
+        console.log(error);
+      }
+
+    },
+    async leaveChannel(channelId) {
+      try {
+        await axios.delete(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/${channelId}/member/leave`
+        );
+        alert("채널에서 나갔습니다.");
+                this.$router.push("/workspace").then(() => {
+            location.reload(); // URL 변경 후 페이지 새로고침
+          });
+      } catch (error) {
+        console.log(error);
+      }
+
     }
   },
 };
@@ -513,5 +584,28 @@ h1 {
 .channelCreate {
   font-size: 0.9rem;
   background-color: #3c4670;
+}
+
+.context-menu-leave {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
+}
+
+.context-menu-leave ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.context-menu-leave li {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.context-menu-leave li:hover {
+  background-color: #eee;
 }
 </style>
