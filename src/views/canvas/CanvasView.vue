@@ -133,6 +133,9 @@ export default {
             console.error("잘못된 canvas method 입니다.", newVal);
           }
         } else if (newVal.postMessageType == "BLOCK") {
+          if (newVal.canvasId != this.canvasId) {
+            return false;
+          }
           if (newVal.method == "CREATE_BLOCK") {
             console.log("CREATE_BLOCK 예정");
             this.sendMessageCanvas();
@@ -251,7 +254,6 @@ export default {
       await this.$store.dispatch("setInfoMultiTargetAction", pageReset); // 값을 보내기 위해 page null로 초기화
 
       if (recv.method == "CREATE_CANVAS") {
-
         setInfoObj = {
           postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
           page: "LIST", // 이 이벤트를 받아야하는 타겟 페이지
@@ -266,7 +268,6 @@ export default {
           nextCanvasId: recv.nextCanvasId,
         };
       } else if (recv.method == "UPDATE_CANVAS") {
-
         setInfoObj = {
           postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
           page: "LIST&DETAIL", // 이 이벤트를 받아야하는 타겟 페이지
@@ -302,6 +303,9 @@ export default {
         recv.method == "DELETE_BLOCK"
       ) {
         console.error("recv", "block~!");
+        if (recv.canvasId != this.canvasId) {
+          return false;
+        }
         setInfoObj = {
           postMessageType: "BLOCK",
           page: "DETAIL",
@@ -319,12 +323,12 @@ export default {
           blockContents: recv.blockContents,
           blockType: recv.blockType,
         };
-      // } else if (recv.method == "UPDATE_BLOCK") {
-      //   console.error("recv", "UPDATE_BLOCK");
-      // } else if (recv.method == "CHANGE_ORDER_BLOCK") {
-      //   console.error("recv", "CHANGE_ORDER_BLOCK");
-      // } else if (recv.method == "DELETE_BLOCK") {
-      //   console.error("recv", "DELETE_BLOCK");
+        // } else if (recv.method == "UPDATE_BLOCK") {
+        //   console.error("recv", "UPDATE_BLOCK");
+        // } else if (recv.method == "CHANGE_ORDER_BLOCK") {
+        //   console.error("recv", "CHANGE_ORDER_BLOCK");
+        // } else if (recv.method == "DELETE_BLOCK") {
+        //   console.error("recv", "DELETE_BLOCK");
       } else {
         console.error("잘못된 method...");
         return false;
