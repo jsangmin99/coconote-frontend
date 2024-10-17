@@ -242,9 +242,12 @@ export default {
         const threadElement = document.getElementById(`thread-${threadId}`);
         if (threadElement) {
           console.log("threadElement 찾음");
-          
+          threadElement.setAttribute("tabindex", -1);
+          threadElement.focus();
+          threadElement.removeAttribute("tabindex");
+
           // 해당 요소로 스크롤
-          threadElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+          // threadElement.scrollIntoView({ behavior: 'auto', block: 'center' });
 
            // 강조 클래스 추가
           threadElement.classList.add('highlight');
@@ -799,7 +802,7 @@ export default {
   padding: 3px 0;
 }
 .input-group {
-  position: fixed;
+  position: sticky;
   bottom: 0; /* 하단에 고정 */
   background-color: white; /* 배경색 설정 */
   border: 1px solid;
