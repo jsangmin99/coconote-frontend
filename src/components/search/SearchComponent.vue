@@ -3,15 +3,18 @@
     <div class="search-page">
       <!-- 검색 창 -->
       <div class="search-bar">
-        <input ref="searchInput" v-model="keyword" @input="fetchAutocomplete" @keyup.enter="search"
+        <input ref="searchInput" v-model="keyword" @input="fetchAutocomplete" @keydown.down.prevent="moveDown"
+          @keydown.up.prevent="moveUp" @keydown.enter.prevent="handleEnter" @keydown.esc="closeAutocomplete"
           placeholder="검색어를 입력하세요" class="search-input" />
+
         <button @click="search" class="search-button">검색</button>
       </div>
 
       <!-- 자동완성 리스트 -->
       <div v-if="autocompleteSuggestions.length > 0" class="autocomplete-suggestions" ref="autocomplete">
         <ul>
-          <li v-for="suggestion in autocompleteSuggestions" :key="suggestion" @click="selectSuggestion(suggestion)">
+          <li v-for="(suggestion, index) in autocompleteSuggestions" :key="suggestion"
+            @click="selectSuggestion(suggestion)" :class="{ active: index === suggestionIndex }">
             {{ suggestion }}
           </li>
         </ul>
@@ -122,7 +125,6 @@
 
       <div v-if="!loading && results.length === 0" class="no-results-message">No results found.</div>
     </div>
-    <div class="dummy-container"></div>
   </div>
 </template>
 
@@ -143,6 +145,7 @@ export default {
         canvasBlocks: [],
       },
       autocompleteSuggestions: [],
+      suggestionIndex: -1, // 선택된 제안의 인덱스
       loading: false,
       currentPage: 1,
       totalPages: 1,
@@ -170,7 +173,11 @@ export default {
   },
   methods: {
     async search() {
+      if (this.keyword.length < 2) {
+        return; // 검색어가 2글자 미만일 경우 검색하지 않음
+      }
       this.loading = true;
+      this.autocompleteSuggestions = []; // 검색 시 자동완성 리스트 닫기
       this.resetResults();
 
       let url = `${process.env.VUE_APP_API_BASE_URL}/search`;
@@ -216,6 +223,16 @@ export default {
       }
     },
 
+    handleEnter() {
+      // 자동완성 리스트에서 선택된 항목이 있을 때
+      if (this.suggestionIndex !== -1 && this.autocompleteSuggestions[this.suggestionIndex]) {
+        this.selectSuggestion(this.autocompleteSuggestions[this.suggestionIndex]);
+      } else {
+        // 선택된 항목이 없으면 그냥 검색
+        this.search();
+      }
+    },
+
     // 자동완성 데이터 가져오기
     async fetchAutocomplete() {
       if (this.keyword.length < 2) {
@@ -233,11 +250,26 @@ export default {
         });
 
         this.autocompleteSuggestions = response.data?.result || [];
+        this.suggestionIndex = -1; // 자동완성 결과를 가져오면 인덱스를 초기화
+
       } catch (error) {
         console.error('Autocomplete failed:', error);
         this.autocompleteSuggestions = [];
       }
     },
+
+    moveDown() {
+      if (this.autocompleteSuggestions.length > 0 && this.suggestionIndex < this.autocompleteSuggestions.length - 1) {
+        this.suggestionIndex++;
+      }
+    },
+
+    moveUp() {
+      if (this.autocompleteSuggestions.length > 0 && this.suggestionIndex > 0) {
+        this.suggestionIndex--;
+      }
+    },
+
 
     handleClickOutside(event) {
       const autocomplete = this.$refs.autocomplete;
@@ -253,9 +285,16 @@ export default {
     },
 
     selectSuggestion(suggestion) {
-      this.keyword = suggestion;
+      if (suggestion) {
+        this.keyword = suggestion;
+        this.closeAutocomplete();
+        this.search();
+      }
+    },
+
+    closeAutocomplete() {
       this.autocompleteSuggestions = [];
-      this.search();
+      this.suggestionIndex = -1;
     },
 
     setTab(tab) {
@@ -335,15 +374,19 @@ export default {
   background-color: #f1f1f1;
 }
 
+.autocomplete-suggestions li.active {
+  background-color: #e0e0e0;
+}
+
 .search-page-container {
   display: flex;
   justify-content: space-between;
 }
 
-.dummy-container {
+/* .dummy-container {
   width: 15%;
-  /* 오른쪽 여백을 15%로 설정 */
-}
+ } 
+*/
 
 .search-page {
   flex: 1;
@@ -361,41 +404,49 @@ export default {
 .search-bar {
   display: flex;
   justify-content: flex-start;
-  /* 왼쪽 정렬 */
+  align-items: center;
   margin-bottom: 20px;
   position: relative;
-  /* 부모 요소를 기준으로 자동완성 리스트 위치를 설정 */
 }
 
 .search-input {
   width: 80%;
-  padding: 12px;
-  border: 2px solid #ccc;
-  border-radius: 4px;
+  padding: 12px 15px;
+  border: 2px solid #ddd;
+  border-radius: 50px;
   font-size: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #555;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  border-color: #3a8bcd;
+  box-shadow: 0 4px 8px rgba(58, 139, 205, 0.3);
 }
 
 .search-button {
   padding: 12px 20px;
-  margin-left: 10px;
-  /* 버튼을 왼쪽으로 살짝 이동 */
+  margin-left: -50px;
+  /* 버튼을 검색 바 안으로 겹치게 하기 위해 왼쪽 마진을 설정 */
   background-color: #3a8bcd;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 50px;
   cursor: pointer;
   font-size: 16px;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-button:hover {
   background-color: #337ab7;
+  transform: scale(1.05);
+}
+
+.search-button:active {
+  background-color: #2a5f8f;
+  transform: scale(0.98);
 }
 
 .result-card {
