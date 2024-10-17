@@ -342,10 +342,14 @@ export default {
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
       "setChannelRoleInfoActions",
+      "setWorkspaceInfoActions",
       "setWorkspaceNameInfoActions",
     ]),
     async getSectionData() {
       try {
+        if(!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == ""){
+          return false;
+        }
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
         );
@@ -523,6 +527,9 @@ export default {
           "[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ",
           this.getWorkspaceId
         );
+        if(!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == ""){
+          return false;
+        }
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.getWorkspaceId}`
         );

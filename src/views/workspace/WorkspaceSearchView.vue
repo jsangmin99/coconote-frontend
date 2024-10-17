@@ -92,6 +92,9 @@ export default {
         console.log(
           "[WorkspaceSearchView] getWorkspaceMemberInfo()./member/me/workspace/workspaceId : "
         );
+        if(!workspaceId || workspaceId == undefined || workspaceId == ""){
+          return false;
+        }
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${workspaceId}`
         );

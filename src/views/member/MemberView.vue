@@ -109,6 +109,9 @@ export default {
     ]),
     async fetchMyInfo() {
       try {
+        if(!this.workspaceId || this.workspaceId == undefined || this.workspaceId == ""){
+          return false;
+        }
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.workspaceId}`
         );

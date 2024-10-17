@@ -109,7 +109,7 @@
 
 <script>
 import ChannelMemberModal from "@/components/ChannelMemberInviteModal.vue";
-import { mapGetters } from "vuex";
+import { mapGetters , mapActions } from "vuex";
 import axios from "axios";
 import { fetchChannelMemberInfo } from '@/services/channelService'; // 모듈 import
 
@@ -157,7 +157,9 @@ export default {
     this.fetchChannelInfo(this.getChannelId);
   },
   methods: {
-
+    ...mapActions([
+      "setWorkspaceInfoActions"
+    ]),
     handleClickOutside(event) {
       // 드롭다운 버튼을 클릭한 경우는 무시
       const dropdownToggle = this.$el.querySelector('.mdi-dots-vertical');
@@ -201,6 +203,9 @@ export default {
     },
     async deleteChannel() {
       try {
+        if(!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == ""){
+          return false;
+        }
         // 섹션 리스트에서 전체 채널 목록을 가져오기
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
@@ -271,6 +276,10 @@ export default {
         } else {
           this.isBookmarked = false;
         }
+        const tempWsId = this.getWorkspaceId;
+        this.setWorkspaceInfoActions(null).then(()=>{
+          this.setWorkspaceInfoActions(tempWsId); // workspaceId 재할당을 통한 좌측 영역만 리로드
+        });
       } catch (error) {
         console.error("bookmark 토글 중 오류 발생", error);
       } finally {
