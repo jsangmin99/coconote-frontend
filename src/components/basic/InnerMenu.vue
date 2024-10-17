@@ -82,10 +82,10 @@
     v-if="selectedMenu === 'home'"
     :selectedValue="selectedValue"
   />
-  <InnerRelatedMenuMember
+  <!-- <InnerRelatedMenuMember
     v-if="selectedMenu === 'member'"
     :selectedValue="selectedValue"
-  />
+  /> -->
 </template>
 
 <script>
@@ -93,7 +93,7 @@ import axios from "axios";
 import { mapGetters, mapActions } from "vuex";
 
 import InnerRelatedMenuHome from "@/components/basic/InnerRelatedMenuHome.vue";
-import InnerRelatedMenuMember from "@/components/basic/InnerRelatedMenuMember.vue";
+// import InnerRelatedMenuMember from "@/components/basic/InnerRelatedMenuMember.vue";
 import ModalProfileLogout from "@/views/member/ModalProfileLogout.vue"; // 모달 컴포넌트 import
 import CreateWorkspaceModal from "@/components/basic/CreateWorkspaceModal.vue";
 
@@ -114,7 +114,7 @@ export default {
   name: "InnerMenu",
   components: {
     InnerRelatedMenuHome,
-    InnerRelatedMenuMember,
+    // InnerRelatedMenuMember,
     ModalProfileLogout,
     CreateWorkspaceModal,
   },
