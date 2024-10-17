@@ -802,7 +802,7 @@ export default {
   padding: 3px 0;
 }
 .input-group {
-  position: sticky;
+  position: fixed;
   bottom: 0; /* 하단에 고정 */
   background-color: white; /* 배경색 설정 */
   border: 1px solid;
