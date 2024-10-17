@@ -138,12 +138,12 @@
     <div id="editorArea">
       <editor-content :editor="editor" />
     </div>
-    <div style="width: 100%; margin-top: 30px">
+    <!-- <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -776,7 +776,20 @@ export default {
 
 <style lang="scss">
 /* Basic editor styles */
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  #editorArea {
+    height: 100%;
+    > div {
+      height: 100%;
+    }
+  }
+}
 .tiptap {
+  height: 100%;
+  min-height: 40vh;
   :first-child {
     margin-top: 0;
   }
@@ -885,7 +898,9 @@ export default {
 
 .ProseMirror {
   padding: 1rem 3rem 1rem 3rem;
-
+  &:focus {
+    outline: none;
+  }
   * {
     margin-top: 0.75em;
   }

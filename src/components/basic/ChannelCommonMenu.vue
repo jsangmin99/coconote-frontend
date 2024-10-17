@@ -271,8 +271,6 @@ export default {
         } else {
           this.isBookmarked = false;
         }
-        console.log("toggleBookmark", response.data.result);
-        window.location.reload();
       } catch (error) {
         console.error("bookmark 토글 중 오류 발생", error);
       } finally {
@@ -330,6 +328,7 @@ export default {
       h1 {
         font-size: 24px;
         padding: 0 10px;
+        color: #000000;
       }
 
       .pencil {

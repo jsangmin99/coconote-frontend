@@ -17,7 +17,7 @@
       </v-col>
     </v-row>
     <hr />
-    <div>
+    <div class="tiptapEditorContainer">
       <TipTabEditor
         v-if="this.editorContent != null"
         :initialContent="editorContent"
@@ -133,7 +133,7 @@ export default {
       editorContent: null,
       parentUpdateEditorContent: "초기 값",
 
-      debounceMap: {} // 각 blockFeId별 debounce 함수를 저장할 객체
+      debounceMap: {}, // 각 blockFeId별 debounce 함수를 저장할 객체
     };
   },
   mounted() {
@@ -152,6 +152,7 @@ export default {
 
       // canvas용 vuex
       "setCanvasAllInfoAction",
+      "setInfoMultiTargetAction"
     ]),
     handleCanvasIdChange(newCanvasId) {
       this.detailCanvasId = newCanvasId;
@@ -217,28 +218,53 @@ export default {
     },
     sendMessage() {
       const blockFeId = this.message.blockFeId;
+      const method = this.message.method;
 
-      // 이전 debounce된 함수가 있다면, 그것을 취소하지 않고 마지막 내용만 남김
-      if (!this.debounceMap[blockFeId]) {
-        // blockFeId에 해당하는 debounce 함수가 없을 때 새로 만듦
-        this.debounceMap[blockFeId] = debounce(() => {
-          const pageSetObj = {
-            postMessageType: "BLOCK",
-            page: "VIEW",
-            postEventPage: "DETAIL",
-            ...this.message,
-          };
-          
-          // Vuex action 호출
-          this.$store.dispatch("setInfoMultiTargetAction", pageSetObj).then(() => {
+      // 이전에 저장된 정보가 있는지 확인
+      const existingEntry = this.debounceMap[blockFeId];
+
+      if (existingEntry) {
+        // 만약 기존에 저장된 method와 현재 method가 다르면 기존 이벤트를 보냄
+        if (existingEntry.method !== method) {
+          // 기존에 있는 이벤트를 즉시 호출
+          existingEntry.debounceFunction.flush();
+
+          // 기존 내용을 보내고, 새로운 debounce를 설정
+          this.setupDebounce(blockFeId, method);
+        }
+      } else {
+        // blockFeId에 해당하는 debounce가 없을 때 새로 설정
+        this.setupDebounce(blockFeId, method);
+      }
+
+      // debounce 함수를 호출
+      this.debounceMap[blockFeId].debounceFunction();
+    },
+
+    setupDebounce(blockFeId, method) {
+      // debounce 함수 생성 및 저장
+      const debounceFunction = debounce(() => {
+        const pageSetObj = {
+          postMessageType: "BLOCK",
+          page: "VIEW",
+          postEventPage: "DETAIL",
+          ...this.message,
+        };
+
+        // Vuex action 호출
+        this.$store
+          .dispatch("setInfoMultiTargetAction", pageSetObj)
+          .then(() => {
             // 메시지를 보낸 후 debounceMap에서 해당 blockFeId를 삭제
             delete this.debounceMap[blockFeId];
           });
-        }, 500);
-      }
+      }, 500);
 
-      // debounce 함수를 호출함
-      this.debounceMap[blockFeId]();
+      // debounceMap에 blockFeId, method, debounceFunction 저장
+      this.debounceMap[blockFeId] = {
+        method, // 현재 method 저장
+        debounceFunction, // debounce 함수 저장
+      };
     },
 
     clearDebounceForBlockFeId(newBlockFeId) {
@@ -332,7 +358,7 @@ export default {
     },
     checkBlockMethod(targetBlockFeId) {
       const found = this.getBlockFeId(targetBlockFeId);
-
+      console.error("found >> ", found)
       if (found) {
         // block의 생성, 수정, 삭제 (create, update, delete)
         // console.error("찾은거 하기...", this.recentKeyboardKey);
@@ -406,15 +432,20 @@ export default {
   beforeUnmount() {},
 };
 </script>
-
+zz
 <style lang="scss">
 .canvasDetailComponentContainer {
   display: flex;
   flex-direction: column;
   padding: 24px;
   position: relative;
+  height: 100%;
   .canvasTitleContainer {
     align-items: center;
+    flex: 0;
+  }
+  .tiptapEditorContainer {
+    height: 100%;
   }
   .canvasTitle {
     input {
