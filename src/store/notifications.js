@@ -133,6 +133,7 @@ const state = {
     eventSource: null,
     notifications: [],
     notificationCounts: {}, // 각 채널의 알림 수를 저장하는 객체
+    currentChannelId: null, // 현재 접속 중인 채널 ID
 };
 
 const getters = {
@@ -160,10 +161,13 @@ const mutations = {
         state.notifications = [];
         state.notificationCounts = {};
     },
+    SET_CURRENT_CHANNEL(state, channelId) {
+        state.currentChannelId = channelId;
+    },
 };
 
 const actions = {
-    subscribeToNotifications({ commit }, workspaceId) {
+    subscribeToNotifications({ commit, state }, workspaceId) {
         if (state.eventSource) {
             state.eventSource.close();
             commit('SET_EVENT_SOURCE', null);
@@ -184,7 +188,10 @@ const actions = {
             try {
                 const data = JSON.parse(event.data);
                 console.log('새로운 알림:', data);
-                commit('ADD_NOTIFICATION', data);
+
+                if (data.channelId !== state.currentChannelId) {
+                    commit('ADD_NOTIFICATION', data);
+                }
 
                 // 전역 $toast를 사용하여 토스트 알림 표시
                 const toast = window.app.config.globalProperties.$toast;
@@ -224,6 +231,10 @@ const actions = {
             state.eventSource.close();
             commit('SET_EVENT_SOURCE', null);
         }
+    },
+    changeChannel({ commit }, channelId) {
+        commit('SET_CURRENT_CHANNEL', channelId);
+        commit('CLEAR_NOTIFICATIONS');
     },
 };
 

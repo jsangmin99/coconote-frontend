@@ -78,12 +78,9 @@
         <v-list v-show="visibleSections.includes(section.sectionId)">
           <v-list-item v-for="channel in section.channelList" :key="channel.channelId" :class="{
             'selected-item': selectedChannelMenuId == channel.channelId,
-          }" class="channel-item" @click="
-            changeChannel(
-              channel.channelId,
-              channel.channelName,
-              channel.channelInfo
-            )" @contextmenu.prevent="showContextMenu($event, 'channel', channel)">
+          }" class="channel-item"
+            @click="handleChannelClick(channel.channelId, channel.channelName, channel.channelInfo)"
+            @contextmenu.prevent="showContextMenu($event, 'channel', channel)">
             <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
               <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
               <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
@@ -97,10 +94,6 @@
               <v-badge v-if="notificationCounts[channel.channelId]" :content="notificationCounts[channel.channelId]"
                 color="red" overlap>
               </v-badge>
-              <!-- 알림 삭제 버튼 -->
-              <v-btn small icon @click.stop="clearNotifications(channel.channelId)">
-                <v-icon>mdi-bell-off-outline</v-icon>
-              </v-btn>
             </div>
 
           </v-list-item>
@@ -172,11 +165,11 @@
   </v-dialog>
 
   <div v-if="contextMenuVisible" class="context-menu-leave"
-      :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }">
-      <ul>
-        <li v-if="selectedItemType === 'workspace'" @click="leaveWorkspace(this.getWorkspaceId)">워크스페이스 나가기</li>
-        <li v-if="selectedItemType === 'channel'" @click="leaveChannel(selectedItem.channelId)">채널 나가기</li>
-      </ul>
+    :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }">
+    <ul>
+      <li v-if="selectedItemType === 'workspace'" @click="leaveWorkspace(this.getWorkspaceId)">워크스페이스 나가기</li>
+      <li v-if="selectedItemType === 'channel'" @click="leaveChannel(selectedItem.channelId)">채널 나가기</li>
+    </ul>
   </div>
 
 </template>
@@ -248,14 +241,14 @@ export default {
     window.addEventListener('click', this.hideContextMenu);
     this.$store.dispatch('notifications/subscribeToNotifications');
     if (this.getWorkspaceId) {
-        this.$store.dispatch('notifications/subscribeToNotifications', this.getWorkspaceId);
+      this.$store.dispatch('notifications/subscribeToNotifications', this.getWorkspaceId);
     }
     this.fetchNotificationCounts();
   },
   beforeUnmount() {
     window.removeEventListener('click', this.hideContextMenu);
     this.$store.dispatch('notifications/closeEventSource');
-},
+  },
   data() {
     return {
       sections: [],
@@ -349,6 +342,34 @@ export default {
     //   this.changeChannelMemberInfo(chMember.data.result.channelRole);
 
     // },
+
+    async handleChannelClick(id, name, desc) {
+        this.selectedChannelMenuId = id;
+        this.setChannelInfoActions(id);
+        this.setChannelNameInfoActions(name);
+        this.setChannelDescInfoActions(desc);
+
+        // Vuex에 현재 채널 설정
+        this.$store.dispatch('notifications/changeChannel', id);
+
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
+        );
+
+        const isJoin = response.data.result;
+
+        if (isJoin) {
+          const result = await fetchChannelMemberInfo(id);
+          if (result) {
+            this.setChannelRoleInfoActions(result.channelRole);
+          }
+          this.$router.push(`/channel/${id}/thread/view`);
+        } else {
+          this.setChannelRoleInfoActions(null);
+          this.$router.push(`/channel/${id}`);
+        }
+    },
+
     async changeChannel(id, name, desc) {
       this.selectedChannelMenuId = id;
       this.setChannelInfoActions(id);
@@ -664,6 +685,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 8px; // 요소 간격 조정
-  margin-left: 30px; // 오른쪽으로 정렬
+  margin-left: 50px; // 오른쪽으로 정렬
+  margin-top: -5px; // 위로 살짝 올림
 }
 </style>
