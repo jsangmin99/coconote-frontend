@@ -169,14 +169,14 @@ import axios from '@/services/axios';
     methods: {
       addRemoveTagFilter(tag) {
         // tagFilter가 정의되어 있는지 확인
-        const tagExists = this.tagFilter && this.tagFilter.some(t => t.id === tag.id);
+        const tagExists = this.tagFilter && this.tagFilter.some(t => t.tag.id === tag.id);
         
         if (tagExists) {
           // tag가 tagFilter에 있으면 removeTagFilter 호출
-          this.removeTagFilter(tag);
+          this.removeTagFilter(tag, this.thread.id);
         } else {
           // tag가 tagFilter에 없으면 addTagFilter 호출
-          this.addTagFilter(tag);
+          this.addTagFilter(tag, this.thread.id);
         }
       },
       adjustWidth({target:{value}}) {

@@ -3,7 +3,7 @@
     <!-- 필터 태그 -->
     <div class="tag-filter-container">
       <div v-for="(tag,index) in tagFilter" :key="index" >
-        <button @click="removeTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+        <button @click="removeTagFilter(tag.tag, tag.threadId)"><strong class="tag" :style="{ backgroundColor: tag.tag.color }">{{tag.tag.name}}</strong></button>
       </div>
     </div>
     <!-- 스레드 그룹 -->
@@ -227,7 +227,7 @@ export default {
 
         // 메시지의 태그가 tagFilter의 모든 태그를 포함하는지 확인
         return this.tagFilter.every(filter => 
-          message.tags.some(tag => filter.id === tag.id)
+          message.tags.some(tag => filter.tag.id === tag.id)
         );
       });
     },
@@ -271,16 +271,17 @@ export default {
       });
       
     },
-    addTagFilter(tag){
-      this.tagFilter.push(tag)
+    addTagFilter(tag, threadId){
+      this.tagFilter.push({tag, threadId})
     },
-    removeTagFilter(tag){
-      if(this.tagFilter.length === 1) this.tagFilterOneToZero = true
-      this.tagFilter = this.tagFilter.filter(tagFilter => tagFilter.id !== tag.id);
-      if(this.tagFilterOneToZero) {
-        this.scrollToBottom();
-        this.tagFilterOneToZero = false
-      }
+    removeTagFilter(tag, threadId){
+      // if(this.tagFilter.length === 1) this.tagFilterOneToZero = true
+      this.tagFilter = this.tagFilter.filter(tagFilter => tagFilter.tag.id !== tag.id);
+      this.moveToThread(threadId);
+      // if(this.tagFilterOneToZero) {
+      //   this.scrollToBottom();
+      //   this.tagFilterOneToZero = false
+      // }
     },
     async getTagList(){
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/tag/list/${this.id}`);
