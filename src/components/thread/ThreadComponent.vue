@@ -263,9 +263,13 @@ export default {
       this.parentThread = thread
     },
     commentOut(){
+      console.log("(this.parentThread.id: ", this.parentThread.id);
       this.isComment = !this.isComment
-      this.parentThread = null
-      this.scrollToBottom();
+      this.$nextTick(() => {
+        this.moveToThread(this.parentThread.id);
+        this.parentThread = null
+      });
+      
     },
     addTagFilter(tag){
       this.tagFilter.push(tag)
