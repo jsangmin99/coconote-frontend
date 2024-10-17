@@ -15,9 +15,7 @@
         <v-icon class="icon-cog">mdi-cog</v-icon>
         <v-menu activator="parent">
           <v-list>
-            <v-list-item @click="startEditing(this.getWorkspaceId)">
-              수정
-            </v-list-item>
+            <v-list-item @click="startEditing(this.getWorkspaceId)"> 수정 </v-list-item>
             <v-list-item @click="deleteWorkspace(this.getWorkspaceId)">
               삭제
             </v-list-item>
@@ -313,7 +311,7 @@ export default {
     ...mapGetters("notifications", {
       notifications: "notifications", // 'notifications' 모듈의 'notifications' getter 참조
     }),
-    ...mapGetters(["getWorkspaceId", "getWorkspaceName", "getWsRole"]), // 글로벌 getter 사용
+    ...mapGetters(["getWorkspaceId", "getWorkspaceName", "getWsRole", "getChannelId"]), // 글로벌 getter 사용
     notificationCounts() {
       const counts = {};
       if (this.notifications) {
@@ -332,11 +330,9 @@ export default {
   },
   watch: {
     // 라우터 파라미터 channelId의 변화를 감지
-    "$route.params.channelId": {
+    getChannelId: {
       // immediate: true, // 처음 로딩 시에도 호출
-
       handler(newChannelId) {
-        console.error(newChannelId);
         if (newChannelId != this.selectedChannelMenuId) {
           this.selectedChannelMenuId = newChannelId;
           this.changeChannel(newChannelId);
@@ -348,12 +344,21 @@ export default {
         this.getSectionData(); // 섹션과 채널 데이터를 가져오는 메서드
       }
     },
+    getWorkspaceId: {
+      handler() {
+        this.getSectionData();
+        this.getMyBookmarks();
+      },
+      deep: true,
+    },
   },
   created() {
     // this.selectedChannelMenuId = this.$route.params.channelId;
     this.fetchMyChannels();
   },
   mounted() {
+    this.selectedChannelMenuId = this.$route.params.channelId; //이 변수에서 routerId값이 변경된 것을 감지해서 항상 바뀌었으면 좋겠어
+    this.channelId = this.$route.params.channelId;
     this.getSectionData();
     this.getMyBookmarks();
     this.selectedChannelMenuId = this.$route.params.channelId; //이 변수에서 routerId값이 변경된 것을 감지해서 항상 바뀌었으면 좋겠어
@@ -416,6 +421,7 @@ export default {
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
       "setChannelRoleInfoActions",
+      "setWorkspaceInfoActions",
       "setWorkspaceNameInfoActions",
     ]),
     async fetchNotificationCounts() {
@@ -441,16 +447,16 @@ export default {
     },
     async getSectionData() {
       try {
+        if(!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == ""){
+          return false;
+        }
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
         );
         this.sections = response.data.result;
 
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
-        if (
-          this.sections.length > 0 &&
-          this.sections[0].channelList.length > 0
-        ) {
+        if (this.sections.length > 0 && this.sections[0].channelList.length > 0) {
           const firstChannel = this.sections[0].channelList[0];
           this.channelId = firstChannel;
           this.changeChannel(
@@ -500,6 +506,9 @@ export default {
     },
 
     async changeChannel(id, name, desc) {
+      if (id == this.selectedChannelMenuId) {
+        return false;
+      }
       if (id) {
         this.selectedChannelMenuId = id;
         this.setChannelInfoActions(id);
@@ -511,14 +520,16 @@ export default {
         );
 
         const isJoin = response.data.result;
-
+        console.error("is Join 작동 >> ", isJoin);
         if (isJoin) {
+          console.error("is Join 작동 2222 >> ");
           const result = await fetchChannelMemberInfo(id);
           if (result) {
             this.setChannelRoleInfoActions(result.channelRole);
           }
           this.$router.push(`/channel/${id}/thread/view`);
         } else {
+          console.error("is Join 작동 33333 >> ");
           this.setChannelRoleInfoActions(null);
           this.$router.push(`/channel/${id}`);
         }
@@ -533,10 +544,7 @@ export default {
           workspaceId: this.getWorkspaceId,
           sectionName: this.createSectionName,
         };
-        await axios.post(
-          `${process.env.VUE_APP_API_BASE_URL} / section / create`,
-          data
-        );
+        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/section/create`, data);
         this.sectionDialog = false;
         this.getSectionData();
       } catch (error) {
@@ -556,10 +564,7 @@ export default {
         return false;
       }
       try {
-        await axios.post(
-          `${process.env.VUE_APP_API_BASE_URL}/channel/create`,
-          data
-        );
+        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/channel/create`, data);
         this.channelDialog = false;
         this.getSectionData();
       } catch (error) {
@@ -600,7 +605,7 @@ export default {
         if (window.confirm("워크스페이스를 삭제하시겠습니까?")) {
           // "예" 선택
           await axios.delete(
-            `${process.env.VUE_APP_API_BASE_URL} / workspace / delete/${workspaceId}`
+            `${process.env.VUE_APP_API_BASE_URL}/workspace/delete/${workspaceId}`
           );
           alert("워크스페이스가 삭제되었습니다.");
           const noDeleteLsKey = ["accessToken", "refreshToken"]; //삭제하면 안되는 localStorage 값
@@ -646,7 +651,13 @@ export default {
     },
     async fetchMyChannels() {
       try {
-        console.log("[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ", this.getWorkspaceId);
+        console.log(
+          "[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ",
+          this.getWorkspaceId
+        );
+        if(!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == ""){
+          return false;
+        }
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.getWorkspaceId}`
         );

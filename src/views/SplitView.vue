@@ -3,24 +3,70 @@
     <ChannelCommonMenu :menu="'split'" :channelId="channelId" />
     <div class="splitTabs">
       <div class="leftTabs">
-        <p>왼쪽 탭</p>
-        <button :class="{ active: leftTab === 'thread' }" @click="leftTab = 'thread'">쓰레드</button>
-        <button :class="{ active: leftTab === 'canvas' }" @click="leftTab = 'canvas'">캔버스</button>
-        <button :class="{ active: leftTab === 'drive' }" @click="leftTab = 'drive'">드라이브</button>
+        <div class="menuBtns" v-if="menu !== 'split'">
+          <button
+            :class="{ active: leftTab === 'thread' }"
+            @click="changeTab('leftTab', 'thread')"
+            v-if="activeTabs.rightTab != 'thread'"
+          >
+            쓰레드
+          </button>
+          <button
+            :class="{ active: leftTab === 'canvas' }"
+            @click="changeTab('leftTab', 'canvas')"
+            v-if="activeTabs.rightTab != 'canvas'"
+          >
+            캔버스
+          </button>
+          <button
+            :class="{ active: leftTab === 'drive' }"
+            @click="changeTab('leftTab', 'drive')"
+            v-if="activeTabs.rightTab != 'drive'"
+          >
+            드라이브
+          </button>
+        </div>
       </div>
       <div class="rightTabs">
-        <p>오른쪽 탭</p>
-        <button :class="{ active: rightTab === 'thread' }" @click="rightTab = 'thread'">쓰레드</button>
-        <button :class="{ active: rightTab === 'canvas' }" @click="rightTab = 'canvas'">캔버스</button>
-        <button :class="{ active: rightTab === 'drive' }" @click="rightTab = 'drive'">드라이브</button>
+        <div class="menuBtns" v-if="menu !== 'split'">
+          <button
+            :class="{ active: rightTab === 'thread' }"
+            @click="changeTab('rightTab', 'thread')"
+            v-if="activeTabs.leftTab != 'thread'"
+          >
+            쓰레드
+          </button>
+          <button
+            :class="{ active: rightTab === 'canvas' }"
+            @click="changeTab('rightTab', 'canvas')"
+            v-if="activeTabs.leftTab != 'canvas'"
+          >
+            캔버스
+          </button>
+          <button
+            :class="{ active: rightTab === 'drive' }"
+            @click="changeTab('rightTab', 'drive')"
+            v-if="activeTabs.leftTab != 'drive'"
+          >
+            드라이브
+          </button>
+        </div>
       </div>
     </div>
     <div class="splitContent">
       <div class="leftPane">
-        <component :is="getComponentForTab(leftTab)" :id="channelId" :splitCanvasId="canvasId" />
+        <component
+          :is="getComponentForTab(leftTab)"
+          :id="channelId"
+          :splitCanvasId="canvasId"
+        />
       </div>
       <div class="rightPane">
-        <component :is="getComponentForTab(rightTab)" :id="channelId" :splitCanvasId="canvasId" />
+        <component
+          :is="getComponentForTab(rightTab)"
+          :id="channelId"
+          :splitCanvasId="canvasId"
+        />
       </div>
     </div>
   </div>
@@ -47,20 +93,37 @@ export default {
   },
   data() {
     return {
-      leftTab: 'thread', // 기본 왼쪽 탭
-      rightTab: 'drive', // 기본 오른쪽 탭
+      leftTab: "thread", // 기본 왼쪽 탭
+      rightTab: "drive", // 기본 오른쪽 탭
       canvasId: null, // 초기 Canvas ID
+      activeTabs: {
+        // active tab 확인용
+        leftTab: "thread",
+        rightTab: "drive",
+      },
     };
   },
   methods: {
+    changeTab(type, tabName){
+      if(type === "leftTab"){
+        this.activeTabs.leftTab = tabName;
+        this.leftTab = tabName;
+      }else if(type === "rightTab"){
+        this.activeTabs.rightTab = tabName
+        this.rightTab = tabName;
+      }else{
+        console.error("잘못된 type")
+        return false;
+      }
+    },
     getComponentForTab(tab) {
       switch (tab) {
-        case 'thread':
-          return 'ThreadComponent';
-        case 'canvas':
-          return 'CanvasView';
-        case 'drive':
-          return 'FolderComponent';
+        case "thread":
+          return "ThreadComponent";
+        case "canvas":
+          return "CanvasView";
+        case "drive":
+          return "FolderComponent";
         default:
           return null;
       }
@@ -72,7 +135,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss">
 .splitViewContainer {
   display: flex;
   flex-direction: column;
@@ -82,8 +145,22 @@ export default {
 .splitTabs {
   display: flex;
   justify-content: space-between;
-  padding: 10px;
   border-bottom: 1px solid #e6e6e6;
+
+  .menuBtns {
+    padding: 24px 24px 0 24px;
+  }
+  button {
+    padding: 5px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: 14px;
+    &.active {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+  }
 }
 
 .leftTabs,
@@ -117,18 +194,19 @@ export default {
   flex: 1;
   overflow: auto;
   padding: 10px;
-  border: 1px solid #e6e6e6;
 }
 
 .leftPane {
-  border-right: none;
+  border-right: 1px solid #e6e6e6;
 }
+</style>
 
+<style scoped>
 /* ::v-deep를 사용하여 .input-group 스타일 덮어씌우기 */
 ::v-deep .input-group {
   width: 35% !important;
 }
-::v-deep .list-group{
+::v-deep .list-group {
   max-height: calc(100vh - 330px);
 }
 </style>

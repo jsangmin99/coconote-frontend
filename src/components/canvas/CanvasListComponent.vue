@@ -6,6 +6,7 @@
       :key="item.id"
       :data-id="item.id"
       @click="changeCanvasId(item.id)"
+      :class="{ active: this.canvasIdInList === item.id }"
     >
       {{ item.title }}
     </v-list-item>
@@ -173,7 +174,7 @@ export default {
       if (sender) {
         this.canvasIdInList = canvasId;
         this.$emit("updateCanvasId", canvasId);
-        if(this.$route.params.name == "CanvasView"){
+        if(this.$route.name == "CanvasView" || this.$route.name == "CanvasEmptyView"){
           this.$router.push(`/channel/${this.getChannelId}/canvas/view/${canvasId}`);
         }
       }
@@ -198,17 +199,19 @@ export default {
       if (targetIndex !== -1) {
         // 해당 인덱스의 항목을 배열에서 삭제
         this.chatrooms.splice(targetIndex, 1);
-        console.log(
-          `Canvas ID ${this.getCanvasAllInfo_inList.canvasIdd}가 목록에서 삭제되었습니다.`
-        );
       }
     },
   },
 };
 </script>
 
-<style scoped>
+<style lang="scss">
 [v-cloak] {
   display: none;
+}
+.canvasListContainer{
+  .active{
+    background-color: #e3e3e3;
+  }
 }
 </style>

@@ -23,3 +23,45 @@ body {
     height: 100%;
   }
 }
+
+
+// 채널 상단 메뉴 및 split view 상단 메뉴
+.menuBtns {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  border-bottom: 1px solid #e6e6e6;
+  padding: 0 24px;
+
+  button {
+    padding: 8px 16px;
+    border-bottom: 1px solid #8b8b8b;
+    background: none;
+    margin-bottom: -1px;
+    &:hover {
+      font-weight: bold;
+    }
+
+    &.active {
+      border-bottom: 3px solid #69a0f2;
+    }
+
+    &.badge {
+      margin-left: 8px;
+      border-bottom: none;
+      font-size: 10px;
+      background: #f3f3f3;
+      border-radius: 30px;
+      border: 1px solid #cecece;
+      padding: 4px 8px;
+
+      .eye {
+        color: #919191;
+      }
+    }
+    .icon-color {
+      color: #919191;
+    }
+  }
+}
