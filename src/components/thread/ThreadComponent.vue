@@ -245,6 +245,14 @@ export default {
           
           // 해당 요소로 스크롤
           threadElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+
+           // 강조 클래스 추가
+          threadElement.classList.add('highlight');
+
+          // 일정 시간 후 강조 제거
+          setTimeout(() => {
+            threadElement.classList.remove('highlight');
+          }, 2000); // 2000ms 후에 제거 (2초)
         } else {
           console.error('스레드 요소를 찾을 수 없습니다:', threadId);
         }
@@ -838,5 +846,9 @@ input:focus {
 }
 textarea:focus {
   outline: none;
+}
+.highlight {
+  background-color: #e8e8e8; /* 강조할 배경 색 */
+  transition: background-color 0.5s ease; /* 부드러운 전환 효과 */
 }
 </style>
