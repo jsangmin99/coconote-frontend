@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
 import HomePage from '@/views/HomePage.vue';
-import LoginPage from '@/views/LoginPage.vue';
 import OAuth2Success from '@/views/OAuth2Success.vue'; // OAuth2 성공 페이지 컴포넌트
 import MemberView from '@/views/member/MemberView.vue';
 
@@ -24,16 +23,16 @@ const routes = [
         meta: { showHeaderAndSidebar: false },
         component: HomePage
     },
-    {
-        path: '/login',
-        name: 'LOGIN',
-        meta: { showHeaderAndSidebar: false },
-        component: LoginPage,
-        beforeEnter(to, from, next) {
-            console.log("Entering LOGIN route with meta:", to.meta.showHeaderAndSidebar);
-            next(); // 이동할지 여부를 결정
-        },
-    },
+    // {
+    //     path: '/login',
+    //     name: 'LOGIN',
+    //     meta: { showHeaderAndSidebar: false },
+    //     component: LoginPage,
+    //     beforeEnter(to, from, next) {
+    //         console.log("Entering LOGIN route with meta:", to.meta.showHeaderAndSidebar);
+    //         next(); // 이동할지 여부를 결정
+    //     },
+    // },
     {
         path: '/oauth2/success',
         name: 'OAuth2Success',

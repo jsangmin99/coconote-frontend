@@ -35,7 +35,7 @@ export default {
     if (!wsRole || wsRole === 'null') {
       const currentUrl = this.$route.fullPath; // 현재 URL 저장
       localStorage.setItem('redirectUrl', currentUrl); // 리다이렉트 URL 저장
-      this.$router.push({ path: '/login' }); // 로그인 페이지로 이동하며 현재 URL 전달
+      this.$router.push({ path: '/' }); // 메인 페이지로 이동하며 현재 URL 전달
     }
   },
 
