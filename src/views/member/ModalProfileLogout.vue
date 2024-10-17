@@ -47,7 +47,7 @@ export default {
       try {
         this.$emit("update:dialog", false);
         localStorage.clear();
-        window.location.href = "/login";
+        window.location.href = "/";
       } catch (error) {
         console.error("Error during logout:", error);
       }
