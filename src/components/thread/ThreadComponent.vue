@@ -62,7 +62,7 @@
           @keydown="handleKeydown"
         />
         <div class="input-group-append">
-          <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList.length === 0">보내기</button>
+          <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList && fileList.length === 0">보내기</button>
         </div>
       </div>
     </div>
@@ -126,7 +126,7 @@
       </div>
         <!-- 내용 작성란 -->
       <div class="text-group">
-        <v-file-input v-if="files.length > 0" v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
+        <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
         <textarea
           type="text"
           class="form-control"
