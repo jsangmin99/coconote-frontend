@@ -8,7 +8,10 @@
         </v-col>
       </v-row>
       <v-row no-gutters style="height: 100%">
-        <v-col cols="2" v-if="!isHiddenPage">
+        <v-col
+          :cols="!isInnerMenuOnlyOutsidePage ? 2 : 'auto'"
+          v-if="!isHiddenPage"
+        >
           <div class="d-flex innerMenuContainer">
             <InnerMenu v-if="!isHiddenPage" />
           </div>
@@ -36,9 +39,15 @@ export default {
     },
     isHiddenPage() {
       // 보이지 않아야 할 페이지 목록
-      const hiddenPages = ["/login", "/","/invite"];
+      const hiddenPages = ["/login", "/", "/invite"];
       // 현재 경로가 목록에 포함되어 있는지 확인
       return hiddenPages.includes(this.$route.path);
+    },
+    isInnerMenuOnlyOutsidePage() {
+      // 좌측 메뉴 중 1번째 메뉴만 보이는 화면인지 확인 (좌측메뉴 사이즈 조정용)
+      // router 이름으로 검색
+      const routePageNames = ["SEARCH", "MemberView"];
+      return routePageNames.includes(this.$route.name);
     },
   },
   name: "App",
@@ -51,8 +60,7 @@ export default {
       workspaceInfo: [],
     };
   },
-  methods: {
-  },
+  methods: {},
 };
 </script>
 
