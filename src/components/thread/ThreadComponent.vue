@@ -603,6 +603,9 @@ export default {
     },
     debouncedScrollPagination: debounce(async function () {
       const list = document.getElementById("list-group");
+      if(!list){ // debounce로 인해 다른 컴포넌트에서 늦게 실행되는 오류
+        return false;
+      }
       const isTop = list.scrollTop <= 800;
 
       if (isTop && !this.isLastPage && !this.isLoading) {
