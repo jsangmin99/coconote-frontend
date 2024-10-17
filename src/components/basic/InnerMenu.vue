@@ -95,7 +95,6 @@ import { mapGetters, mapActions } from "vuex";
 import InnerRelatedMenuHome from "@/components/basic/InnerRelatedMenuHome.vue";
 import InnerRelatedMenuMember from "@/components/basic/InnerRelatedMenuMember.vue";
 import ModalProfileLogout from "@/views/member/ModalProfileLogout.vue"; // 모달 컴포넌트 import
-import { fetchChannelMemberInfo } from "@/services/channelService"; // 모듈 import
 import CreateWorkspaceModal from "@/components/basic/CreateWorkspaceModal.vue";
 
 export default {
@@ -179,38 +178,7 @@ export default {
         );
         await this.setWorkspaceInfoActions(wsInfo.data.result.workspaceId);
         await this.setWorkspaceNameInfoActions(wsInfo.data.result.name);
-
-        const response = await axios.get(
-          // 내 워크스페이스 회원 정보
-          `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${workspaceId}`
-        );
-        const myInfo = {
-          nickname: response.data.result.nickname,
-          workspaceMemberId: response.data.result.workspaceMemberId,
-          profileImage: response.data.result.profileImage,
-          wsRole: response.data.result.wsRole,
-        };
-        console.log("InnerMenu wsRole", response.data.result.wsRole);
-        this.setMemberInfoActions(myInfo);
-
-        const chInfo = await axios.get(
-          // 채널 정보
-          `${process.env.VUE_APP_API_BASE_URL}/${workspaceId}/channel/first`
-        );
-        this.channelId = chInfo.data.result.channelId;
-        this.setChannelInfoActions(chInfo.data.result.channelId);
-        this.setChannelNameInfoActions(chInfo.data.result.channelName);
-        this.setChannelDescInfoActions(chInfo.data.result.channelInfo);
-
-        const result = await fetchChannelMemberInfo(this.channelId); // 모듈로 함수 호출
-        if (result) {
-          //  채널에 가입되어 있다면
-          this.setChannelRoleInfoActions(result.channelRole); // 로컬스토리지에 channelRole update
-        }
-        this.$router.push("/workspace").then(() => {
-          location.reload(); // URL 변경 후 페이지 새로고침
-        });
-        this.isLoading = true;
+        this.$router.push("/workspace");
       } catch (e) {
         console.log(e);
       }

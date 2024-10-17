@@ -1,13 +1,5 @@
 function initState() {
     return {
-        // method: null, // create, update, delete, changeOrder 있을 예정
-        // title: null,
-        // canvasId: null,
-        // parentCanvasId: null,
-        // prevCanvasId: null,
-        // nextCanvasId: null,
-        // member: null,
-
         // 페이지별로 값을 불러올 때 확인하기 위함
         page: null, // VIEW, LIST, DETAIL, LIST&DETAIL, ALL 들어갈 예정 > 각각 값이 해당되는 페이지에서 이벤트 실행해야함
         postEventPage: null, // VIEW, LIST, DETAIL 들어갈 예정 > 어떤 페이지에서 이벤트가 실행되었나 보는 용도
@@ -59,7 +51,6 @@ const canvas = {
             state[item_key] = item_value;
         },
         setInfoMultiTarget(state, items) {
-            console.log("")
             Object.keys(items).forEach(key => {
                 state[key] = items[key];
             });

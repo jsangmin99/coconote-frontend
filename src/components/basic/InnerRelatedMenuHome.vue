@@ -15,9 +15,7 @@
         <v-icon class="icon-cog">mdi-cog</v-icon>
         <v-menu activator="parent">
           <v-list>
-            <v-list-item @click="startEditing(this.getWorkspaceId)">
-              수정
-            </v-list-item>
+            <v-list-item @click="startEditing(this.getWorkspaceId)"> 수정 </v-list-item>
             <v-list-item @click="deleteWorkspace(this.getWorkspaceId)">
               삭제
             </v-list-item>
@@ -39,25 +37,16 @@
         }"
         class="channel-item"
         @click="
-          changeChannel(
-            channel.channelId,
-            channel.channelName,
-            channel.channelInfo
-          )
+          changeChannel(channel.channelId, channel.channelName, channel.channelInfo)
         "
         @contextmenu.prevent="showContextMenu($event, 'channel', channel)"
       >
-        <template
-          v-if="channel.isPublic || isMember(channel.channelId)"
-          v-slot:prepend
-        >
+        <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
           <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
           <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
         </template>
 
-        <v-list-item-title
-          v-if="channel.isPublic || isMember(channel.channelId)"
-        >
+        <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)">
           {{ channel.channelName }}</v-list-item-title
         >
       </v-list-item>
@@ -83,8 +72,7 @@
               <v-icon class="icon-cog">mdi-cog</v-icon>
               <v-menu activator="parent">
                 <v-list>
-                  <v-list-item @click="openEditDialog(section)"
-                    >수정</v-list-item
+                  <v-list-item @click="openEditDialog(section)">수정</v-list-item
                   ><!-- 수정 버튼 클릭 시 모달 열기 -->
                   <v-list-item @click="deleteSection(section.sectionId)"
                     >삭제</v-list-item
@@ -126,11 +114,7 @@
             }"
             class="channel-item"
             @click="
-              changeChannel(
-                channel.channelId,
-                channel.channelName,
-                channel.channelInfo
-              )
+              changeChannel(channel.channelId, channel.channelName, channel.channelInfo)
             "
             @contextmenu.prevent="showContextMenu($event, 'channel', channel)"
           >
@@ -142,9 +126,7 @@
               <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
             </template>
 
-            <v-list-item-title
-              v-if="channel.isPublic || isMember(channel.channelId)"
-            >
+            <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)">
               {{ channel.channelName }}</v-list-item-title
             >
           </v-list-item>
@@ -152,8 +134,7 @@
           <v-list-item
             class="channelCreate"
             @click="
-              (channelDialog = true),
-                (createChannelInfo.sectionId = section.sectionId)
+              (channelDialog = true), (createChannelInfo.sectionId = section.sectionId)
             "
           >
             <v-icon class="icon-plus" icon="mdi-plus" />
@@ -162,10 +143,7 @@
         </v-list>
       </template>
 
-      <v-list-subheader
-        class="section-title sectionCreate"
-        @click="sectionDialog = true"
-      >
+      <v-list-subheader class="section-title sectionCreate" @click="sectionDialog = true">
         <v-icon class="icon-plus" icon="mdi-plus" /> 섹션 생성
       </v-list-subheader>
     </v-list>
@@ -194,11 +172,7 @@
           @keyup.enter="createChannel"
           placeholder="이름"
         ></v-text-field>
-        <v-radio-group
-          inline
-          label="채널종류"
-          v-model="createChannelInfo.isPublic"
-        >
+        <v-radio-group inline label="채널종류" v-model="createChannelInfo.isPublic">
           <v-radio label="공개채널" value="1"></v-radio>
           <v-radio label="비공개 채널" value="0"></v-radio>
         </v-radio-group>
@@ -232,29 +206,16 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog
-    v-model="workspaceEditModal"
-    max-width="500px"
-    class="workspaceEditModal"
-  >
+  <v-dialog v-model="workspaceEditModal" max-width="500px" class="workspaceEditModal">
     <v-card>
-      <v-card-title class="text-h5 text-center"
-        >워크스페이스 정보 수정</v-card-title
-      >
+      <v-card-title class="text-h5 text-center">워크스페이스 정보 수정</v-card-title>
       <v-card-text>
         <v-list>
           <v-text-field v-model="editedName" placeholder="이름"></v-text-field>
-          <v-text-field
-            v-model="editedWsInfo"
-            placeholder="설명"
-          ></v-text-field>
+          <v-text-field v-model="editedWsInfo" placeholder="설명"></v-text-field>
         </v-list>
       </v-card-text>
-      <v-btn
-        text="수정"
-        color="blue"
-        @click="saveEditing(this.getWorkspaceId)"
-      ></v-btn>
+      <v-btn text="수정" color="blue" @click="saveEditing(this.getWorkspaceId)"></v-btn>
     </v-card>
   </v-dialog>
 
@@ -299,12 +260,7 @@ export default {
   name: "InnerRelatedMenuHome",
   components: {},
   computed: {
-    ...mapGetters([
-      "getWorkspaceId",
-      "getWorkspaceName",
-      "getWsRole",
-      "getChannelId",
-    ]), // Vuex getter 매핑
+    ...mapGetters(["getWorkspaceId", "getWorkspaceName", "getWsRole", "getChannelId"]), // Vuex getter 매핑
   },
   watch: {
     // 라우터 파라미터 channelId의 변화를 감지
@@ -396,10 +352,7 @@ export default {
         this.sections = response.data.result;
 
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
-        if (
-          this.sections.length > 0 &&
-          this.sections[0].channelList.length > 0
-        ) {
+        if (this.sections.length > 0 && this.sections[0].channelList.length > 0) {
           const firstChannel = this.sections[0].channelList[0];
           this.channelId = firstChannel;
           this.changeChannel(
@@ -459,10 +412,7 @@ export default {
           workspaceId: this.getWorkspaceId,
           sectionName: this.createSectionName,
         };
-        await axios.post(
-          `${process.env.VUE_APP_API_BASE_URL}/section/create`,
-          data
-        );
+        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/section/create`, data);
         this.sectionDialog = false;
         this.getSectionData();
       } catch (error) {
@@ -482,10 +432,7 @@ export default {
         return false;
       }
       try {
-        await axios.post(
-          `${process.env.VUE_APP_API_BASE_URL}/channel/create`,
-          data
-        );
+        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/channel/create`, data);
         this.channelDialog = false;
         this.getSectionData();
       } catch (error) {
@@ -597,9 +544,7 @@ export default {
     // 섹션의 하위 채널을 토글
     toggleSection(sectionId) {
       if (this.visibleSections.includes(sectionId)) {
-        this.visibleSections = this.visibleSections.filter(
-          (id) => id !== sectionId
-        ); // 이미 보이는 섹션을 클릭하면 숨기기
+        this.visibleSections = this.visibleSections.filter((id) => id !== sectionId); // 이미 보이는 섹션을 클릭하면 숨기기
       } else {
         this.visibleSections.push(sectionId); // 안 보이는 섹션을 클릭하면 보이기
       }

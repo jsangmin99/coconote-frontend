@@ -1,7 +1,10 @@
 <template>
   <div class="channelInsideContainer">
     <ChannelCommonMenu
-      v-if="this.$route.name == 'CanvasView' || this.$route.name == 'CanvasEmptyView'"
+      v-if="
+        this.$route.name == 'CanvasView' ||
+        this.$route.name == 'CanvasEmptyView'
+      "
       :menu="'canvas'"
       :channelId="channelId"
     />
@@ -119,7 +122,8 @@ export default {
       // props로 전달된 splitCanvasId 사용
       this.canvasId = this.splitCanvasId;
     }
-    console.log("canvasID >> ", this.canvasId)
+    console.log("canvasID >> ", this.canvasId);
+    console.log("channelId >> ", this.channelId);
 
     this.connect();
   },
@@ -148,6 +152,25 @@ export default {
           if (newVal.canvasId != this.canvasId) {
             return false;
           }
+
+          let isReturn = true; // 같은 event 실행 안하기 위한 조건문 추가
+
+          if (
+            this.latestWatchBlockMsg.blockFeId == newVal.blockFeId &&
+            this.latestWatchBlockMsg.method == newVal.method &&
+            this.latestWatchBlockMsg.blockContents == newVal.blockContents
+          ) {
+            isReturn = false;
+          }
+
+          this.latestWatchBlockMsg.blockFeId = newVal.blockFeId;
+          this.latestWatchBlockMsg.method = newVal.method;
+          this.latestWatchBlockMsg.blockContents = newVal.blockContents;
+
+          if (!isReturn) {
+            return false;
+          }
+
           if (newVal.method == "CREATE_BLOCK") {
             console.log("CREATE_BLOCK 예정");
             this.sendMessageCanvas();
@@ -167,21 +190,8 @@ export default {
         } else {
           console.log("잘못된 postMessageType 입니다.", newVal);
         }
-
-        // canvasInfo 변경 시 동작할 코드 작성
-        // if (newVal.method == "update") {
-        //   this.updateCanvasInfo(newVal);
-        // }else if(newVal.method == "delete"){
-        //   this.updateCanvasInfo(newVal);
-        // }
       },
       deep: true, // 깊은 상태 변화를 감지
-    },
-    getPageInfoForComponent: {
-      handler(newVal) {
-        console.error("view.vue 에서 page 변경 감지", newVal);
-      },
-      deep: true,
     },
   },
   data() {
@@ -191,6 +201,11 @@ export default {
       channelId: null,
       canvasId: null, // 초기 canvasId 값
       canvasUpdateObj: null,
+      latestWatchBlockMsg: {
+        blockFeId: "",
+        method: "",
+        blockContents: "",
+      }, // 중복 보냄을 방지하기 위해 마지막으로 보낸 block id와 block method 저장
 
       // websocket용도
       ws: null,
@@ -203,15 +218,8 @@ export default {
     // 자식요소에게 전달해주는 메소드 -------- 시작
     updateCanvasId(newCanvasId) {
       this.isLoading = true;
-      let isReconnect = false;
-      if(this.canvasId == null){
-        isReconnect = true;
-      }
       this.canvasId = newCanvasId;
       this.isCanvasDelete = false;
-      if(isReconnect){
-        this.connect();
-      }
     },
     updateCanvasInfo(obj) {
       this.canvasUpdateObj = obj; // CanvasDetail에서 전달된 이름으로 업데이트
@@ -221,8 +229,8 @@ export default {
     },
     // 자식요소에게 전달해주는 메소드 -------- 종료
     connect() {
-      console.error("connect canvasID >> ", this.canvasId)
-      if (!this.canvasId) {
+      console.error("connect channelId >> ", this.channelId);
+      if (!this.channelId) {
         return false;
       }
       this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
@@ -248,13 +256,13 @@ export default {
         }
       );
     },
-    sendMessageCanvasCreate() {},
     // 실제 socket에 message를 전송하는 영역
-    sendMessageCanvas() {
+    async sendMessageCanvas() {
+      console.error("😭😭😭😭😭😭😭😭😭😭 sendMessageCanvas 요청 >> ");
       if (this.ws && this.ws.connected) {
         const postMessage = this.getCanvasAllInfo;
         postMessage.channelId = this.channelId;
-        this.ws.send(
+        await this.ws.send(
           `/pub/canvas/message`,
           { Authorization: this.authToken },
           JSON.stringify(postMessage)
