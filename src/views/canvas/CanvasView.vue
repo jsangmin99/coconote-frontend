@@ -122,8 +122,6 @@ export default {
       // props로 전달된 splitCanvasId 사용
       this.canvasId = this.splitCanvasId;
     }
-    console.log("canvasID >> ", this.canvasId);
-    console.log("channelId >> ", this.channelId);
 
     this.connect();
   },
@@ -172,17 +170,14 @@ export default {
           }
 
           if (newVal.method == "CREATE_BLOCK") {
-            console.log("CREATE_BLOCK 예정");
             this.sendMessageCanvas();
           } else if (newVal.method == "UPDATE_BLOCK") {
-            console.log("UPDATE_BLOCK 예정");
             this.sendMessageCanvas();
           } else if (newVal.method == "CHANGE_ORDER_BLOCK") {
             console.log("CHANGE_ORDER_BLOCK 예정");
             this.sendMessageCanvas();
           } else if (newVal.method == "DELETE_BLOCK") {
             //삭제 캔버스
-            console.log("DELETE_BLOCK 예정");
             this.sendMessageCanvas();
           } else {
             console.error("잘못된 block method 입니다.", newVal);
@@ -229,7 +224,6 @@ export default {
     },
     // 자식요소에게 전달해주는 메소드 -------- 종료
     connect() {
-      console.error("connect channelId >> ", this.channelId);
       if (!this.channelId) {
         return false;
       }
@@ -258,7 +252,6 @@ export default {
     },
     // 실제 socket에 message를 전송하는 영역
     async sendMessageCanvas() {
-      console.error("😭😭😭😭😭😭😭😭😭😭 sendMessageCanvas 요청 >> ");
       if (this.ws && this.ws.connected) {
         const postMessage = this.getCanvasAllInfo;
         postMessage.channelId = this.channelId;
@@ -268,8 +261,6 @@ export default {
           JSON.stringify(postMessage)
         );
         this.canvasMessage = "";
-      } else {
-        // console.log("WebSocket is not connected.");
       }
     },
 
@@ -330,7 +321,6 @@ export default {
         recv.method == "CHANGE_ORDER_BLOCK" ||
         recv.method == "DELETE_BLOCK"
       ) {
-        console.error("recv", "block~!");
         if (recv.canvasId != this.canvasId) {
           return false;
         }
@@ -351,14 +341,7 @@ export default {
           blockContents: recv.blockContents,
           blockType: recv.blockType,
         };
-        // } else if (recv.method == "UPDATE_BLOCK") {
-        //   console.error("recv", "UPDATE_BLOCK");
-        // } else if (recv.method == "CHANGE_ORDER_BLOCK") {
-        //   console.error("recv", "CHANGE_ORDER_BLOCK");
-        // } else if (recv.method == "DELETE_BLOCK") {
-        //   console.error("recv", "DELETE_BLOCK");
       } else {
-        console.error("잘못된 method...");
         return false;
       }
 
@@ -386,11 +369,9 @@ export default {
       if (this.sock) {
         this.sock.close(); // SockJS 연결을 닫음
         this.sock = null;
-        console.log("WebSocket subscription unsubscribed.");
       }
       if (this.ws) {
         this.ws.disconnect(() => {
-          console.log("WebSocket ws connection closed.");
         });
         this.ws = null;
       }

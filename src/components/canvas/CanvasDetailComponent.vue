@@ -52,21 +52,14 @@ export default {
     },
     getPageInfoForComponent: {
       handler(newVal) {
-        console.error("캔버스 페이지 변경 감지 @@@@@@@@@@@@@@ :", newVal);
         // canvasInfo 변경 시 동작할 코드 작성
         if (newVal == "LIST&DETAIL" || newVal == "DETAIL") {
-          console.log(newVal, " type 추가가@@@ 예정");
           this.getCanvasAllInfo_inDetail = this.getCanvasAllInfo;
 
           if (this.getCanvasAllInfo_inDetail.method == "UPDATE_CANVAS") {
             this.onCanvasInfoChanged();
           } else if (this.getCanvasAllInfo_inDetail.method == "DELETE_CANVAS") {
             if (this.getCanvasAllInfo_inDetail.canvasId == this.canvasId) {
-              console.log(
-                "detail canvas id >> ",
-                this.getCanvasAllInfo_inDetail.canvasId,
-                this.canvasId
-              );
               this.deleteCanvasView();
             }
           } else if (
@@ -81,19 +74,6 @@ export default {
             console.error("detail 에서는 사용 X 혹은 잘못된 method");
           }
         }
-        // if (newVal.method == "update") {
-        //   if (newVal.title && newVal.title != this.room.title) {
-        //     // 이름변경
-        //     this.room.title = newVal.title;
-        //   }
-        // } else if (newVal.method == "delete") {
-        //   console.error("삭제된 캔버스#####", newVal.canvasId, this.canvasId);
-        //   if (newVal.canvasId && newVal.canvasId == this.canvasId) {
-        //     // 캔버스 삭제
-        //     console.error("삭제된 캔버스!!");
-        //     this.isReadonly = true;
-        //   }
-        // }
       },
       deep: true, // 깊은 상태 변화를 감지
     },
@@ -152,7 +132,7 @@ export default {
 
       // canvas용 vuex
       "setCanvasAllInfoAction",
-      "setInfoMultiTargetAction"
+      "setInfoMultiTargetAction",
     ]),
     handleCanvasIdChange(newCanvasId) {
       this.detailCanvasId = newCanvasId;
@@ -166,8 +146,6 @@ export default {
 
         this.room = response.data.result;
 
-        // console.log("####", response.data.result);
-
         const blockResponse = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/block/${this.detailCanvasId}/list`
         );
@@ -180,7 +158,6 @@ export default {
         );
 
         this.settingEditorContent();
-        // this.editorContent = ``;
       } catch (error) {
         console.error(error);
       }
@@ -188,7 +165,6 @@ export default {
     settingEditorContent() {
       let blockToEditorContentArr = [];
       for (const block of this.blocks) {
-        // console.log(block);
         let tempBlockObj = {
           type: block.type,
           attrs: {
@@ -277,20 +253,13 @@ export default {
       });
     },
     recvMessage() {
-      console.error("in detail recv >> ", this.getCanvasAllInfo_inDetail);
-      // const recv = this.getCanvasAllInfo_inDetail;
       const blockJson = this.getCanvasAllInfo_inDetail;
-      console.error("blockJson >> ", blockJson);
       if (
         this.activeBlockId == blockJson.blockFeId &&
         blockJson.method === "UPDATE_BLOCK"
       ) {
-        // if (this.member == blockJson.member) {
-        console.log(
-          "현 focus 부분이랑 같은 block 수정 중인 부분..인데! update여서 보냄! => block Id 동일함"
-        );
+        console.error("수정 X");
       } else {
-        console.log("다른 block Id 수정 중!~");
         this.parentUpdateEditorContent = Object.assign({}, blockJson);
         // this.parentUpdateEditorContent = blockJson;
       }
@@ -306,9 +275,7 @@ export default {
     // tiptabEditor method
     deleteBlock(blockFeId) {
       const prevBlockId = this.$store.getters.getTargetBlockPrevFeId(blockFeId); //삭제전 prev block id 검색
-      console.log("prevBlockId :: ", prevBlockId);
       this.deleteBlockTargetFeIdActions(blockFeId).then((isDeleteBlock) => {
-        console.log("isDeleteBlock :: ", isDeleteBlock);
         if (isDeleteBlock) {
           // 기존 값에 있어서 삭제했다면
           this.message = {
@@ -323,8 +290,6 @@ export default {
             // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
           };
 
-          console.log(this.message);
-
           this.sendMessage();
         }
       });
@@ -333,12 +298,7 @@ export default {
       if (!blockFeId) {
         return false;
       }
-      console.log("⭐⭐⭐⭐⭐⭐editor에서 호출⭐⭐⭐⭐⭐");
-      console.log(
-        blockFeId,
-        blockContent,
-        `  previousId >> ${previousId}  \n parentId >> ${parentId}`
-      );
+      console.info(parentId);
 
       this.activeBlockId = blockFeId;
 
@@ -358,10 +318,8 @@ export default {
     },
     checkBlockMethod(targetBlockFeId) {
       const found = this.getBlockFeId(targetBlockFeId);
-      console.error("found >> ", found)
       if (found) {
         // block의 생성, 수정, 삭제 (create, update, delete)
-        // console.error("찾은거 하기...", this.recentKeyboardKey);
         return "UPDATE_BLOCK";
       } else {
         this.pushBlockFeIdsActions(targetBlockFeId);
@@ -369,18 +327,8 @@ export default {
       }
     },
     changeOrderBlock(changeOrderObj) {
-      const { prevBlockId, nextBlockId, feId, contents, parentBlockId } =
-        changeOrderObj;
-      console.log(
-        "changeOrderBlock >> ",
-        prevBlockId,
-        nextBlockId,
-        feId,
-        contents,
-        parentBlockId
-      );
 
-      this.activeBlockId = feId;
+      this.activeBlockId = changeOrderObj.feId;
 
       this.message = {
         canvasId: this.canvasId,
@@ -395,7 +343,6 @@ export default {
       this.sendMessage();
     },
     async changeCanvasName() {
-      console.error(this.room.title);
       const pageSetObj = {
         postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
         page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
@@ -417,7 +364,6 @@ export default {
       this.isReadonly = true;
     },
     async deleteCanvas() {
-      console.log("canvas 삭제 예정");
       const pageSetObj = {
         postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
         page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
