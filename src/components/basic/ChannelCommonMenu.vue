@@ -126,7 +126,7 @@ export default {
       isChannelMemberModalOpen: false,
       isDropdownOpen: false, // 드롭다운 상태 관리
       toggleBookmarkIsLoading: false,
-      defaultProfileImage: 'https://via.placeholder.com/40', // 기본 프로필 이미지 설정,
+      defaultProfileImage: require('@/assets/images/profileImage.png'), // 기본 프로필 이미지 설정,
       isBookmarked: false,
       channelDialog: false,
       updateChannelInfo: {

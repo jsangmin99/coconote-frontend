@@ -5,12 +5,12 @@
       <div class="login-buttons">
         <!-- 구글 공식 로그인 버튼 -->
         <button @click="loginWithGoogle" class="google-login">
-          <img src="@/assets/google.png" alt="Sign in with Google" />
+          <img src="@/assets/images/google.png" alt="Sign in with Google" />
         </button>
 
         <!-- 카카오 공식 로그인 버튼 -->
         <button @click="loginWithKakao" class="kakao-login">
-          <img src="@/assets/kakao_login_medium_narrow.png" alt="Login with Kakao" />
+          <img src="@/assets/images/kakao_login_medium_narrow.png" alt="Login with Kakao" />
         </button>
       </div>
     </div>

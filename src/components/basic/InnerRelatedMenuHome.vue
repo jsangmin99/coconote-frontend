@@ -500,28 +500,28 @@ export default {
     },
 
     async changeChannel(id, name, desc) {
-      this.selectedChannelMenuId = id;
-      this.setChannelInfoActions(id);
-      this.setChannelNameInfoActions(name);
-      this.setChannelDescInfoActions(desc);
+      if (id) {
+        this.selectedChannelMenuId = id;
+        this.setChannelInfoActions(id);
+        this.setChannelNameInfoActions(name);
+        this.setChannelDescInfoActions(desc);
 
-      this.$store.dispatch("notifications/clearChannelNotifications", id);
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
+        );
 
-      const response = await axios.get(
-        `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
-      );
+        const isJoin = response.data.result;
 
-      const isJoin = response.data.result;
-
-      if (isJoin) {
-        const result = await fetchChannelMemberInfo(id);
-        if (result) {
-          this.setChannelRoleInfoActions(result.channelRole);
+        if (isJoin) {
+          const result = await fetchChannelMemberInfo(id);
+          if (result) {
+            this.setChannelRoleInfoActions(result.channelRole);
+          }
+          this.$router.push(`/channel/${id}/thread/view`);
+        } else {
+          this.setChannelRoleInfoActions(null);
+          this.$router.push(`/channel/${id}`);
         }
-        this.$router.push(`/channel/${id}/thread/view`);
-      } else {
-        this.setChannelRoleInfoActions(null);
-        this.$router.push(`/channel/${id}`);
       }
     },
     async changeChannelMemberInfo(role) {
@@ -646,6 +646,7 @@ export default {
     },
     async fetchMyChannels() {
       try {
+        console.log("[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ", this.getWorkspaceId);
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${this.getWorkspaceId}`
         );

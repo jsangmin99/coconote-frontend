@@ -46,7 +46,7 @@
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index">
           <button type="button" @click="deleteImage(index)">삭제</button>
-          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
           <p class="custom-contents">{{file.name}}</p>
         </div>
       </div>
@@ -119,13 +119,13 @@
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index">
           <button type="button" @click="deleteImage(index)">삭제</button>
-          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
           <p class="custom-contents">{{file.name}}</p>
         </div>
       </div>
         <!-- 내용 작성란 -->
       <div class="text-group">
-        <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
+        <v-file-input v-if="files.length > 0" v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
         <textarea
           type="text"
           class="form-control"

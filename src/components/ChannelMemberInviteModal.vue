@@ -69,7 +69,7 @@ export default {
       channelMembers: [], // 채널 멤버 목록 추가
       isLoading: false,
       isLoadingMembers: false, // 채널 멤버 로딩 상태
-      defaultProfileImage: 'https://via.placeholder.com/40' // 프로필 이미지 없을 때 기본 이미지
+      defaultProfileImage: require('@/assets/images/profileImage.png'), // 프로필 이미지 없을 때 기본 이미지
     };
   },
   computed: {

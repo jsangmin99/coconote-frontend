@@ -4,7 +4,7 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-       <img v-if="isDifferentMember" :src="thread.image" alt="image" class="profile-image">
+        <img v-if="isDifferentMember" :src="thread.image ? thread.image : require('@/assets/images/profileImage.png')" alt="image" class="profile-image">
       </div>
     </div>
     <div class="thread-content">
@@ -87,7 +87,7 @@
       <div class="image-group">
         <div v-for="(file, index) in thread.files" :key="index">
           <div class="file-group">
-            <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+            <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
             <p class="custom-contents">{{file.fileName}}</p>
             <div class="more-btn-file2">
               <button @click="downloadFile(file.fileId,file.fileName)">다운</button>

@@ -9,7 +9,6 @@ const blockFeIds = {
     mutations: {
         setDefaultBlockFeIds(state, newIds) {
             state.defaultBlockFeIds = newIds;
-            console.error("block 전체 set 완료!!", state.defaultBlockFeIds)
         },
         pushBlockFeIds(state, newId) {
             state.defaultBlockFeIds.push(newId);
