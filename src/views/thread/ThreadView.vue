@@ -1,7 +1,7 @@
 <template>
   <div class="channelInsideContainer">
     <ChannelCommonMenu :menu="'thread'" :channelId="channelId" />
-    <ThreadComponent :id="channelId"/>
+    <ThreadComponent :id="channelId" :threadId="threadId"/>
   </div>
 </template>
   
@@ -21,9 +21,13 @@ export default {
     ThreadComponent,
   },
   data() {
-    return {};
+    return {
+      threadId: null,
+    };
   },
-  created() {},
+  created() {
+    this.threadId = this.$route.query.threadId;
+  },
   mounted() {},
   updated() {},
   beforeUnmount() {},
