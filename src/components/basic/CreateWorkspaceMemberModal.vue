@@ -44,10 +44,8 @@ export default {
         }
         await axios.post(`${process.env.VUE_APP_API_BASE_URL}/workspace/${workspaceId}/invite?email=${this.email}`);
         this.$emit('update:dialog', false);
-        this.closeModal();
       } catch(e) {
         console.log(e);
-        this.closeModal();
       }
     },
     closeModal() {
