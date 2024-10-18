@@ -25,32 +25,34 @@
 <script>
 import axios from 'axios'
 export default {
-      props: {
+  props: {
     selectedValue: {
       type: Number,
     }
   },
-    data() {
-        return {
-            email:"",
-        }
-    },
-    methods: {
-        async sendMail() {
-    try {
-      const workspaceId = localStorage.getItem('workspaceId');
+  data() {
+      return {
+          email:"",
+      }
+  },
+  methods: {
+    async sendMail() {
+      try {
+        const workspaceId = localStorage.getItem('workspaceId');
         if (!workspaceId) {
           throw new Error('Workspace ID is missing');
         }
         await axios.post(`${process.env.VUE_APP_API_BASE_URL}/workspace/${workspaceId}/invite?email=${this.email}`);
         this.$emit('update:dialog', false);
-    } catch(e) {
+        this.closeModal();
+      } catch(e) {
         console.log(e);
+        this.closeModal();
+      }
+    },
+    closeModal() {
+      this.$emit('update:dialog', false);
     }
-        },
-        closeModal() {
-            this.$emit('update:dialog', false);
-        }
-    }
+  }
 }
 </script>
