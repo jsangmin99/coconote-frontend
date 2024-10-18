@@ -1,23 +1,14 @@
 <template>
   <div class="homePageContainer">
     <div class="carouselContainer">
-      <swiper
-        :direction="'vertical'"
-        :slidesPerView="1"
-        :spaceBetween="30"
-        :mousewheel="true"
-        :pagination="{
-          clickable: true,
-        }"
-        :modules="modules"
-        class="mySwiper"
-        :autoplay="{
-          delay: 200000,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        }"
+      <v-carousel
+        class="custom-carousel"
+        progress="primary"
+        hide-delimiters
+        show-arrows="hover"
+        cycle
       >
-        <swiper-slide>
+        <v-carousel-item>
           <div class="itemContainer">
             <v-card
               elevation="10"
@@ -47,10 +38,10 @@
               </v-chip>
             </v-card>
           </div>
-        </swiper-slide>
-        <swiper-slide>
+        </v-carousel-item>
+        <v-carousel-item>
           <div class="itemContainer type2">
-            <div class="itemsWrap">
+            <div>
               <h2 class="text-h4 text-center mb-2">주요 기능</h2>
               <br />
               <v-col
@@ -71,35 +62,33 @@
               </v-col>
             </div>
           </div>
-        </swiper-slide>
-        <swiper-slide>
+        </v-carousel-item>
+        <v-carousel-item>
           <div class="itemContainer type3">
-            <h2 class="text-h5 mb-4 text-center">주요기능</h2>
+            <h2 class="text-h5 mb-4 text-center">최근 업데이트</h2>
             <!-- 제목 중앙 정렬 -->
-            <div class="cardWrap">
-              <v-card
-                class="glass-card"
-                style="max-width: 700px; margin: 0 auto"
+            <v-timeline align-top dense>
+              <v-timeline-item
                 v-for="update in recentUpdates"
                 :key="update.date"
+                color="secondary"
               >
-                <v-card-title class="update-title">{{
-                  update.title
-                }}</v-card-title>
-                <v-card-text class="update-text">
-                  {{ update.description }}
-                </v-card-text>
-              </v-card>
-            </div>
+                <v-card
+                  class="glass-card"
+                  style="max-width: 700px; margin: 0 auto"
+                >
+                  <v-card-title class="update-title">{{
+                    update.title
+                  }}</v-card-title>
+                  <v-card-text class="update-text">
+                    {{ update.description }}
+                  </v-card-text>
+                </v-card>
+              </v-timeline-item>
+            </v-timeline>
           </div>
-        </swiper-slide>
-        <!-- <swiper-slide>Slide 4</swiper-slide>
-        <swiper-slide>Slide 5</swiper-slide>
-        <swiper-slide>Slide 6</swiper-slide>
-        <swiper-slide>Slide 7</swiper-slide>
-        <swiper-slide>Slide 8</swiper-slide>
-        <swiper-slide>Slide 9</swiper-slide> -->
-      </swiper>
+        </v-carousel-item>
+      </v-carousel>
     </div>
     <div class="loginContainer">
       <div class="login-page">
@@ -123,7 +112,11 @@
               </button>
             </template>
             <template v-else>
-              <v-btn :to="'/workspace'" rounded="xl" color="blue-lighten-1">
+              <v-btn
+                :to="'/workspace'"
+                rounded="xl"
+                color="blue-lighten-1"
+              >
                 대시보드로 이동
               </v-btn>
               <v-btn
@@ -143,46 +136,7 @@
 </template>
 
 <script>
-// import { Swiper, SwiperSlide } from "swiper/vue";
-// import { Autoplay, Pagination, Navigation, Mousewheel } from "swiper/modules";
-// import "swiper/css";
-// import "swiper/css/pagination";
-// import "swiper/css/navigation";
-
-import { Swiper, SwiperSlide } from "swiper/vue";
-// Import Swiper styles
-import "swiper/css";
-import "swiper/css/pagination";
-// import "./style.css";
-import { Mousewheel, Pagination, Autoplay } from "swiper/modules";
-
 export default {
-  components: {
-    Swiper,
-    SwiperSlide,
-  },
-  setup() {
-    return {
-      modules: [Mousewheel, Pagination, Autoplay],
-    };
-  },
-  // components: {
-  //   Swiper,
-  //   SwiperSlide,
-  // },
-  // setup() {
-  //   const onSwiper = (swiper) => {
-  //     console.log(swiper);
-  //   };
-  //   const onSlideChange = () => {
-  //     console.log("slide change");
-  //   };
-  //   return {
-  //     modules: [Mousewheel, Autoplay, Pagination, Navigation],
-  //     onSwiper,
-  //     onSlideChange,
-  //   };
-  // },
   mounted() {
     this.onlineUsers = Math.floor(Math.random() * 1000) + 500;
     this.simulateOnlineUsers();
@@ -248,38 +202,13 @@ export default {
     loginWithKakao() {
       window.location.href = `${process.env.VUE_APP_BASE_URL}/oauth2/authorization/kakao`;
     },
-    logout() {
+    logout(){
       localStorage.clear();
       this.isLoggedIn = false;
-    },
+    }
   },
 };
 </script>
-
-<style>
-.swiper {
-  width: 100%;
-  height: 100%;
-}
-
-.swiper-slide {
-  text-align: center;
-  font-size: 18px;
-  background: #fff;
-
-  /* Center slide text vertically */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.swiper-slide img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-</style>
 
 <style lang="scss">
 .homePageContainer {
@@ -288,7 +217,6 @@ export default {
   .carouselContainer {
     background: #ffffff;
     flex: 2;
-    max-width: 60vw;
     .custom-carousel {
       height: 100% !important;
     }
@@ -306,22 +234,14 @@ export default {
       img {
         width: 80%;
         max-width: 50vw;
-        margin: auto;
       }
       &.type2 {
         h2 {
           font-weight: bold;
           color: #69a0f2;
         }
-        .itemsWrap {
-          > * {
-            padding: 12px 0 !important;
-            margin-bottom: 8px;
-          }
-        }
       }
       &.type3 {
-        width: 85%;
         h2 {
           font-weight: bold;
           color: #69a0f2;
@@ -337,22 +257,15 @@ export default {
           }
         }
       }
-      .cardWrap {
-        display: grid;
-        grid-gap: 12px;
-        gap: 12px;
-        grid-template-columns: 1fr 1fr;
-
-        .glass-card {
-          border: 1px solid #ebebeb;
-          box-shadow: none !important;
-          .update-title {
-            font-size: 16px;
-            color: #162138;
-          }
-          .update-text {
-            font-size: 12px;
-          }
+      .glass-card {
+        border: 1px solid #ebebeb;
+        box-shadow: none !important;
+        .update-title {
+          font-size: 16px;
+          color: #162138;
+        }
+        .update-text {
+          font-size: 12px;
         }
       }
     }
