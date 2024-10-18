@@ -288,10 +288,11 @@ export default {
       };
     },
     moveToThread(channelId, threadId){
-      this.$router.push({
-        path: `/channel/${channelId}/thread/view`,
-        query: { threadId }
-      });
+      window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}`;
+      // this.$router.push({
+      //   path: `/channel/${channelId}/thread/view`,
+      //   query: { threadId }
+      // });
     }
   }
 };

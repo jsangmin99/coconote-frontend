@@ -254,8 +254,12 @@ export default {
 
           // 일정 시간 후 강조 제거
           setTimeout(() => {
-            threadElement.classList.remove('highlight');
-          }, 2000); // 2000ms 후에 제거 (2초)
+            threadElement.classList.add('fade-out'); // fade-out 클래스를 추가
+            setTimeout(() => {
+              threadElement.classList.remove('highlight');
+              threadElement.classList.remove('fade-out'); // fade-out 클래스도 제거
+            }, 500); // 투명 효과가 완료된 후 highlight 클래스를 제거 (500ms)
+          }, 2000); // 2000ms 후에 fade-out 추가
         } else {
           console.error('스레드 요소를 찾을 수 없습니다:', threadId);
         }
@@ -859,7 +863,10 @@ textarea:focus {
   outline: none;
 }
 .highlight {
-  background-color: #e8e8e8; /* 강조할 배경 색 */
+  background-color: #e8ca93; /* 강조할 배경 색 */
   transition: background-color 0.5s ease; /* 부드러운 전환 효과 */
+}
+.fade-out {
+  background-color: transparent; /* 투명 상태 */
 }
 </style>
