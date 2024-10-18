@@ -143,7 +143,7 @@
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
-    </div>
+    </div> -->
   </div>
 </template>
 

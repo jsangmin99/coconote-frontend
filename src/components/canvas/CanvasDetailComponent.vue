@@ -207,8 +207,8 @@ export default {
 
           // 기존 내용을 보내고, 새로운 debounce를 설정
           this.setupDebounce(blockFeId, method, this.message);
-        }else{
-          // 기존에 저장된 값이라면, 덮어씌우기
+        }else if(existingEntry.method == method){
+          // 기존에 저장된 값이라면 덮어씌우기
           this.setupDebounce(blockFeId, method, this.message);
         }
       } else {
@@ -237,7 +237,7 @@ export default {
             // 메시지를 보낸 후 debounceMap에서 해당 blockFeId를 삭제
             delete this.debounceMap[blockFeId];
           });
-      }, 300);
+      }, 500);
 
       // debounceMap에 blockFeId, method, debounceFunction 저장
       this.debounceMap[blockFeId] = {
