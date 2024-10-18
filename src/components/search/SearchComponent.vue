@@ -71,7 +71,7 @@
 
           <div v-if="totalThreads > 0" class="category-section">
             <h3>쓰레드 검색 결과 ({{ totalThreads }})</h3>
-            <div v-for="(result, index) in results.threads" :key="index" class="result-card" @click="moveToThread(result.channelId, result.threadId)">
+            <div v-for="(result, index) in results.threads" :key="index" class="result-card" @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
               <h3>{{ result.content || '내용 없음' }}</h3>
               <p class="metadata">Posted by: {{ result.memberName }} | {{ result.createdTime }}</p>
             </div>
@@ -287,8 +287,10 @@ export default {
         canvasBlocks: [],
       };
     },
-    moveToThread(channelId, threadId){
-      window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}`;
+    moveToThread(channelId, threadId, parentThreadId){
+      console.log("parentThreadId: ",parentThreadId);
+      
+      window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}&parentThreadId=${parentThreadId}`;
       // this.$router.push({
       //   path: `/channel/${channelId}/thread/view`,
       //   query: { threadId }

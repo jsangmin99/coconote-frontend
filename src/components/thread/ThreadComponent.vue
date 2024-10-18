@@ -159,7 +159,7 @@ import { debounce } from "lodash";
 import { mapGetters } from 'vuex';
 
 export default {
-  props: ['id','threadId'],
+  props: ['id','threadId','parentThreadId'],
   components: {
     ThreadLineComponent,
   },
@@ -197,8 +197,9 @@ export default {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
     if(this.threadId){
-      console.log("this.threadId: ",this.threadId);
-      this.getThreadPage(this.threadId);
+      console.log("*****this.parentThreadId: ",this.parentThreadId);
+      if(this.parentThreadId) this.getThreadPage(this.parentThreadId);
+      else this.getThreadPage(this.threadId);
     }else{
       await this.getTopMessageList();
       this.scrollToBottom();

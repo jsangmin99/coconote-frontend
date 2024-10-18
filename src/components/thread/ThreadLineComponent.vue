@@ -99,11 +99,13 @@
       </div>
       
       <!-- 댓글 -->
-      <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0 && !isComment" @click="commentIn(thread)">
-        <strong class="comment">
-          {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
-        </strong>
-      </button>
+      <div>
+        <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0 && !isComment" @click="commentIn(thread)">
+          <strong class="comment">
+            {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
+          </strong>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -351,7 +353,6 @@ import axios from '@/services/axios';
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  max-height: 12px;
 }
 .tag-container {
   position: relative;
