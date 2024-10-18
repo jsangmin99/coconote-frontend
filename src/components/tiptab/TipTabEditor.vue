@@ -143,7 +143,7 @@
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
-    </div> -->
+    </div>
   </div>
 </template>
 
@@ -198,6 +198,9 @@ export default {
 
       dragCheckSelectionNode: null,
       tempDragCheckSelectionNode: null,
+
+      // 처음로딩 + 내용없음
+      isFirstAndNullContent: false,
 
       // image 업로드 용
       fileList: [], // 업로드할 파일 리스트
@@ -345,6 +348,7 @@ export default {
 
             // return removedIds; // 사라진 ID 반환
             this.$parent.deleteBlock(removedIds[0]);
+            return false;
 
             // this.nodeLength = updateAllFeIds.length;
           }
@@ -357,27 +361,29 @@ export default {
         const updateContent =
           selectedNode?.$head?.path[3]?.content?.content[0]?.text;
 
-        // console.log(
-        //   "⭐ Node:",
-        //   updateBlockID,
-        //   updateContent,
-        //   this.editor.view?.trackWrites?.dataset?.id,
-        //   updateContent == "",
-        //   this.editor.view?.trackWrites?.data,
-        //   updateContent == undefined
-        // );
+        console.log(
+          "⭐ Node:",
+          updateBlockID,
+          updateContent,
+          this.editor.view?.trackWrites?.dataset?.id,
+          updateContent == "",
+          this.editor.view?.trackWrites?.data,
+          updateContent == undefined
+        );
 
         if (this.localJSON.content == undefined) {
-          this.localJSON = this.editor.getJSON();
+          this.isFirstAndNullContent = true;
+          this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateContent 값 비교 시 무조건 같은 값
         }
 
         // 내용 차이 확인
         const filteredItems = this.localJSON?.content.filter(
           (item) => item.attrs.id === updateBlockID
         );
-
+        console.log("filteredItems >> ", filteredItems);
         if (filteredItems.length > 0) {
           if (
+            !this.isFirstAndNullContent &&
             filteredItems[0].content != undefined &&
             filteredItems[0].content[0].text == updateContent
           ) {

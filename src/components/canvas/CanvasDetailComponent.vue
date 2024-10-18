@@ -201,30 +201,33 @@ export default {
 
       if (existingEntry) {
         // 만약 기존에 저장된 method와 현재 method가 다르면 기존 이벤트를 보냄
-        if (existingEntry.method !== method) {
+        if (existingEntry.method !== method || method == "CHANGE_ORDER_BLOCK" || method == "DELETE_BLOCK") {
           // 기존에 있는 이벤트를 즉시 호출
           existingEntry.debounceFunction.flush();
 
           // 기존 내용을 보내고, 새로운 debounce를 설정
-          this.setupDebounce(blockFeId, method);
+          this.setupDebounce(blockFeId, method, this.message);
+        }else{
+          // 기존에 저장된 값이라면, 덮어씌우기
+          this.setupDebounce(blockFeId, method, this.message);
         }
       } else {
         // blockFeId에 해당하는 debounce가 없을 때 새로 설정
-        this.setupDebounce(blockFeId, method);
+        this.setupDebounce(blockFeId, method, this.message);
       }
 
       // debounce 함수를 호출
       this.debounceMap[blockFeId].debounceFunction();
     },
 
-    setupDebounce(blockFeId, method) {
+    setupDebounce(blockFeId, method, contentObj) {
       // debounce 함수 생성 및 저장
       const debounceFunction = debounce(() => {
         const pageSetObj = {
           postMessageType: "BLOCK",
           page: "VIEW",
           postEventPage: "DETAIL",
-          ...this.message,
+          ...contentObj,
         };
 
         // Vuex action 호출
@@ -234,7 +237,7 @@ export default {
             // 메시지를 보낸 후 debounceMap에서 해당 blockFeId를 삭제
             delete this.debounceMap[blockFeId];
           });
-      }, 500);
+      }, 300);
 
       // debounceMap에 blockFeId, method, debounceFunction 저장
       this.debounceMap[blockFeId] = {
@@ -258,7 +261,7 @@ export default {
         this.activeBlockId == blockJson.blockFeId &&
         blockJson.method === "UPDATE_BLOCK"
       ) {
-        console.error("수정 X");
+        console.error("ws에서 내려온 내용으로 수정 X");
       } else {
         this.parentUpdateEditorContent = Object.assign({}, blockJson);
         // this.parentUpdateEditorContent = blockJson;
@@ -318,6 +321,7 @@ export default {
     },
     checkBlockMethod(targetBlockFeId) {
       const found = this.getBlockFeId(targetBlockFeId);
+      console.error("found >> ", found);
       if (found) {
         // block의 생성, 수정, 삭제 (create, update, delete)
         return "UPDATE_BLOCK";
@@ -327,7 +331,6 @@ export default {
       }
     },
     changeOrderBlock(changeOrderObj) {
-
       this.activeBlockId = changeOrderObj.feId;
 
       this.message = {
