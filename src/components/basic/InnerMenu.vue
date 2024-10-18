@@ -6,6 +6,7 @@
         prepend-icon="mdi-alpha-w-box"
         title="workspace"
         @click="toggleDropdown"
+        :class="{ 'selected-item': selectedMenu === 'workspace' }"
       ></v-list-item>
       <!-- 홈 하위 메뉴 버튼 -->
       <v-list-item
@@ -122,7 +123,7 @@ export default {
     return {
       menu: false,
       dialog: false,
-      selectedMenu: "home",
+      selectedMenu: null,
       profileImageUrl: "", // 프로필 이미지 URL 저장
       modalPosition: { top: 0, left: 0 }, // 모달의 위치 저장
       isDropdownOpen: false,
@@ -132,16 +133,26 @@ export default {
     };
   },
   mounted() {
+    console.error("❤️❤️❤️❤️❤️",this.selectedMenu);
+    const routeName = this.$route.name;
+    const nameSelectMenuObj = {
+      MemberView: "member",
+      SEARCH: "search"
+    }
+    if(nameSelectMenuObj[routeName]){
+      this.selectedMenu = nameSelectMenuObj[routeName];
+    }else{
+      this.selectedMenu = "home";
+    }
+    // this.changeSelectedMenu(this.selectedMenu);
+
     this.fetchMyWorkspaceList();
 
     const profileImage = this.$store.getters.getProfileImage;
-    const nickname = this.$store.getters.getNickname;
 
     // 프로필 이미지 설정 로직
     if (profileImage !== "null") {
       this.profileImageUrl = profileImage;
-    } else {
-      this.generateAvatar(nickname);
     }
   },
   methods: {
@@ -184,24 +195,30 @@ export default {
       }
     },
     changeSelectedMenu(name) {
-      this.selectedMenu = name;
-      switch (this.selectedMenu) {
+      if(name == this.selectedMenu){
+        return false;
+      }
+      console.error("getWorkspaceId >> ", this.getWorkspaceId)
+      switch (name) {
         case "home":
+          console.log("###### home")
           this.locationHome();
           break;
         case "member":
-          this.$router.push(`/member/${this.getWorkspaceId}`);
+          console.log("###### member")
+          window.location.href=`/member/${this.getWorkspaceId}`;
+          // this.$router.push(`/member/${this.getWorkspaceId}`);
           break;
         case "search":
-          this.$router.push(`/workspace/${this.getWorkspaceId}/search`);
+          console.log("###### search")
+          window.location.href=`/workspace/${this.getWorkspaceId}/search`;
+          // this.$router.push(`/workspace/${this.getWorkspaceId}/search`);
           break;
       }
+      // this.selectedMenu = name;
     },
     async locationHome() {
-      const response = await axios.get(
-        `${process.env.VUE_APP_API_BASE_URL}/${this.getWorkspaceId}/channel/first`
-      );
-      this.$router.push(`/channel/${response.data.result.channelId}`);
+      window.location.href=`/channel/view`;
     },
     setModalPosition() {
       const button = this.$refs.profileButton; // 버튼 요소 참조

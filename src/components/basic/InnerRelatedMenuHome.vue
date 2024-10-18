@@ -15,7 +15,9 @@
         <v-icon class="icon-cog">mdi-cog</v-icon>
         <v-menu activator="parent">
           <v-list>
-            <v-list-item @click="startEditing(this.getWorkspaceId)"> 수정 </v-list-item>
+            <v-list-item @click="startEditing(this.getWorkspaceId)">
+              수정
+            </v-list-item>
             <v-list-item @click="deleteWorkspace(this.getWorkspaceId)">
               삭제
             </v-list-item>
@@ -311,7 +313,12 @@ export default {
     ...mapGetters("notifications", {
       notifications: "notifications", // 'notifications' 모듈의 'notifications' getter 참조
     }),
-    ...mapGetters(["getWorkspaceId", "getWorkspaceName", "getWsRole", "getChannelId"]), // 글로벌 getter 사용
+    ...mapGetters([
+      "getWorkspaceId",
+      "getWorkspaceName",
+      "getWsRole",
+      "getChannelId",
+    ]), // 글로벌 getter 사용
     notificationCounts() {
       const counts = {};
       if (this.notifications) {
@@ -333,6 +340,7 @@ export default {
     getChannelId: {
       // immediate: true, // 처음 로딩 시에도 호출
       handler(newChannelId) {
+        console.error("getChannelId handler")
         if (newChannelId != this.selectedChannelMenuId) {
           this.selectedChannelMenuId = newChannelId;
           this.changeChannel(newChannelId);
@@ -357,11 +365,12 @@ export default {
     this.fetchMyChannels();
   },
   mounted() {
-    this.selectedChannelMenuId = this.$route.params.channelId; //이 변수에서 routerId값이 변경된 것을 감지해서 항상 바뀌었으면 좋겠어
+    this.selectedChannelMenuId = this.$route.params.channelId;
     this.channelId = this.$route.params.channelId;
+    console.error("channelIDs >> ", this.selectedChannelMenuId, this.channelId)
+
     this.getSectionData();
     this.getMyBookmarks();
-    this.selectedChannelMenuId = this.$route.params.channelId; //이 변수에서 routerId값이 변경된 것을 감지해서 항상 바뀌었으면 좋겠어
     window.addEventListener("click", this.hideContextMenu);
     this.$store.dispatch("notifications/subscribeToNotifications");
     if (this.getWorkspaceId) {
@@ -447,7 +456,11 @@ export default {
     },
     async getSectionData() {
       try {
-        if(!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == ""){
+        if (
+          !this.getWorkspaceId ||
+          this.getWorkspaceId == undefined ||
+          this.getWorkspaceId == ""
+        ) {
           return false;
         }
         const response = await axios.get(
@@ -456,7 +469,10 @@ export default {
         this.sections = response.data.result;
 
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
-        if (this.sections.length > 0 && this.sections[0].channelList.length > 0) {
+        if (
+          this.sections.length > 0 &&
+          this.sections[0].channelList.length > 0
+        ) {
           const firstChannel = this.sections[0].channelList[0];
           this.channelId = firstChannel;
           this.changeChannel(
@@ -501,7 +517,11 @@ export default {
         this.$router.push(`/channel/${id}/thread/view`);
       } else {
         this.setChannelRoleInfoActions(null);
-        this.$router.push(`/channel/${id}`);
+        // this.$router.push(`/channel/${id}`);
+        this.$router.push({
+          path: `/channel/${id}`,
+          query: { isJoin: false },
+        });
       }
     },
 
@@ -544,7 +564,10 @@ export default {
           workspaceId: this.getWorkspaceId,
           sectionName: this.createSectionName,
         };
-        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/section/create`, data);
+        await axios.post(
+          `${process.env.VUE_APP_API_BASE_URL}/section/create`,
+          data
+        );
         this.sectionDialog = false;
         this.getSectionData();
       } catch (error) {
@@ -564,7 +587,10 @@ export default {
         return false;
       }
       try {
-        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/channel/create`, data);
+        await axios.post(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/create`,
+          data
+        );
         this.channelDialog = false;
         this.getSectionData();
       } catch (error) {
@@ -655,7 +681,11 @@ export default {
           "[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ",
           this.getWorkspaceId
         );
-        if(!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == ""){
+        if (
+          !this.getWorkspaceId ||
+          this.getWorkspaceId == undefined ||
+          this.getWorkspaceId == ""
+        ) {
           return false;
         }
         const response = await axios.get(
