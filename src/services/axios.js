@@ -32,6 +32,9 @@ axios.interceptors.response.use(
   (error) => {
     // 응답 에러 처리
     console.error('Response error:', error); // 에러 로그
+    if(error.response?.data){
+      alert(`${error.response?.data?.status_message} \ncode :: ${error.response?.data?.status_code}`)
+    }
     return Promise.reject(error);
   }
 );
