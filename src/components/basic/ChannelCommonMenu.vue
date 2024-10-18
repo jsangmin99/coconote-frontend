@@ -29,14 +29,14 @@
             <!-- 첫 번째 프로필 이미지 -->
             <div v-if="channelMembers.length > 0" class="circle blue-circle">
               <img
-                :src="channelMembers[0].profileImageUrl || defaultProfileImage"
+                :src="channelMembers[0].memberInfo.profileImage || defaultProfileImage"
                 alt="Profile"
               />
             </div>
             <!-- 두 번째 프로필 이미지 (있을 경우) -->
             <div v-if="channelMembers.length > 1" class="circle green-circle">
               <img
-                :src="channelMembers[1].profileImageUrl || defaultProfileImage"
+                :src="channelMembers[1].memberInfo.profileImage || defaultProfileImage"
                 alt="Profile"
               />
             </div>
