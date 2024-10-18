@@ -63,7 +63,7 @@
         :key="folder.folderId"
         class="folder-item"
         draggable="true"
-        @dragstart="onDragStart($event, 'folder', folder.folderId)"
+        @dragstart="onDragStart($event, 'folder', folder)"
         @dragover.prevent
         @drop="onDrop($event, folder.folderId)"
         @click="navigateToFolder(folder.folderId)"
@@ -85,7 +85,7 @@
         :key="file.fileId"
         class="file-item"
         draggable="true"
-        @dragstart="onDragStart($event, 'file', file.fileId)"
+        @dragstart="onDragStart($event, 'file', file)"
         @dragover.prevent
         @drop="onDrop($event, null)"
         @contextmenu.prevent="showContextMenu($event, 'file', file)"
@@ -211,10 +211,15 @@ export default {
       }
     },
     // 드래그 시작 시 호출
-    onDragStart(event, type, id) {
-      event.dataTransfer.setData("fileId", id);
-      this.draggedItem = id;
+    onDragStart(event, type, item) {
+      console.log("item: ",item);
+      console.log("item: ",item.fileId);
+      
+      event.dataTransfer.setData("file", JSON.stringify(item));
+      this.draggedItem = item;
       this.draggedType = type;
+      console.log("itemqqqq: ",this.draggedItem);
+
       // event.dataTransfer.effectAllowed = 'move';
     },
 
@@ -244,11 +249,11 @@ export default {
       try {
         if (this.draggedType === "file") {
           // 파일을 targetFolderId로 이동
-          await this.moveFile(this.draggedItem, targetFolderId);
+          await this.moveFile(this.draggedItem.fileId, targetFolderId);
           alert("파일이 성공적으로 이동되었습니다.");
         } else if (this.draggedType === "folder") {
           // 폴더를 targetFolderId로 이동
-          await this.moveFolder(this.draggedItem, targetFolderId);
+          await this.moveFolder(this.draggedItem.folderId, targetFolderId);
           alert("폴더가 성공적으로 이동되었습니다.");
         }
       } catch (error) {

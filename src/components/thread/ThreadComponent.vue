@@ -183,13 +183,13 @@ export default {
       files: null,
       fileList: [],
       // uploadProgress: [], // 업로드 진행 상황
-      filesRes: null,
+      filesRes: [],
       tagList: [],
       tagFilter: [],
       tagFilterOneToZero: false,
       isComment: false,
       parentThread: null,
-      dragedFileId: null,
+      dragedFile: null,
       isCreated: false,
     };
   },
@@ -502,11 +502,16 @@ export default {
       const authToken = localStorage.getItem('accessToken');
 
       if(this.fileList.length>0) {
+        const dragFileList = this.fileList.filter(file => file.fileId)
+        this.filesRes = dragFileList.map(file => ({id:file.fileId, fileName: file.name, fileUrl: file.imageUrl }))
+
+        const fileList = this.fileList.filter(file => !file.fileId)
+        if(fileList && fileList.length > 0)
         try{
           const presignedUrls = await this.getPresignedURL();
 
           // 각 파일에 대해 Presigned URL을 이용하여 S3에 업로드
-          const uploadedFileUrls = await Promise.all(this.fileList.map(file => this.uploadFileToS3(file.file, presignedUrls[file.name])));
+          const uploadedFileUrls = await Promise.all(fileList.map(file => this.uploadFileToS3(file.file, presignedUrls[file.name])));
 
           // 파일 중 업로드가 실패한 파일이 있으면 필터링
           const successfulUploads = uploadedFileUrls.filter(url => url !== null);
@@ -586,9 +591,8 @@ export default {
         })), // 파일 메타데이터 리스트
       };
       const response = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/files/metadata`, metadataDto);
-      this.filesRes = response.data.result;
+      this.filesRes = [...this.filesRes, ...response.data.result];
     },
-    
     
     fileUpdate(){
         this.files.forEach(file => {
@@ -604,12 +608,16 @@ export default {
 
     async handleDrop(event) {
       event.preventDefault();
+      const droppedData = event.dataTransfer.getData("file");
 
-      // DataTransfer 객체에서 드래그된 파일의 ID를 가져옴
-      this.dragedFileId= event.dataTransfer.getData("fileId");
-      if (this.dragedFileId) {
-        console.log("Dropped file with ID:", this.dragedFileId);
-      // 여기에 파일 업로드나 추가 작업을 수행할 로직을 작성
+      this.dragedFile= JSON.parse(droppedData);
+      if (this.dragedFile) {
+        console.log("Dropped file with ID:", this.dragedFile);
+        // 여기에 파일 업로드나 추가 작업을 수행할 로직을 작성
+        this.fileList.push({
+          fileId: this.dragedFile.fileId,
+          name: this.dragedFile.fileName,
+          imageUrl: this.dragedFile.fileUrl})
       } else {
         console.log("No file was dragged.");
       }
