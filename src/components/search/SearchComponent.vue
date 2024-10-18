@@ -74,7 +74,8 @@
 
           <div v-if="totalThreads > 0" class="category-section">
             <h3>쓰레드 검색 결과 ({{ totalThreads }})</h3>
-            <div v-for="(result, index) in results.threads" :key="index" class="result-card" @click="moveToThread(result.channelId, result.threadId)">
+            <div v-for="(result, index) in results.threads" :key="index" class="result-card"
+              @click="moveToThread(result.channelId, result.threadId)">
               <h3>{{ result.content || '내용 없음' }}</h3>
               <p class="metadata">Posted by: {{ result.memberName }} | {{ result.createdTime }}</p>
             </div>
@@ -171,14 +172,19 @@ export default {
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
   },
+  watch: {
+    activeTab() {
+      this.search(); // 자동으로 검색을 트리거
+    }
+  },
   methods: {
+
     async search() {
-      if (this.keyword.length < 2) {
-        return; // 검색어가 2글자 미만일 경우 검색하지 않음
+      if (!this.keyword || this.keyword.length < 2) {
+        return; // 검색어가 없거나 2글자 미만일 경우 검색하지 않음
       }
       this.loading = true;
       this.autocompleteSuggestions = []; // 검색 시 자동완성 리스트 닫기
-      this.resetResults();
 
       let url = `${process.env.VUE_APP_API_BASE_URL}/search`;
       if (this.activeTab !== 'ALL') {
@@ -199,7 +205,13 @@ export default {
         if (response.data && response.data.result) {
           // 전체 검색일 경우 결과를 카테고리별로 저장
           if (this.activeTab === 'ALL') {
-            this.results = response.data.result;
+            this.results = {
+              workspaceMembers: response.data.result.workspaceMembers || [],
+              files: response.data.result.files || [],
+              channels: response.data.result.channels || [],
+              threads: response.data.result.threads || [],
+              canvasBlocks: response.data.result.canvasBlocks || [],
+            };
             this.totalMembers = response.data.result.totalMembers || 0;
             this.totalFiles = response.data.result.totalFiles || 0;
             this.totalChannels = response.data.result.totalChannels || 0;
@@ -215,6 +227,8 @@ export default {
             this.results = response.data.result.results || [];
             this.totalPages = Math.ceil(response.data.result.total / this.pageSize);
           }
+        } else {
+          this.resetResults(); // 검색 결과가 없을 경우에도 결과 초기화
         }
       } catch (error) {
         console.error('Search failed:', error);
@@ -270,6 +284,13 @@ export default {
       }
     },
 
+    moveToThread(channelId, threadId) {
+      this.$router.push({
+        path: `/channel/${channelId}/thread/view`,
+        query: { threadId }
+      });
+    },
+
 
     handleClickOutside(event) {
       const autocomplete = this.$refs.autocomplete;
@@ -300,7 +321,6 @@ export default {
     setTab(tab) {
       this.activeTab = tab;
       this.currentPage = 1;
-      this.search();
     },
 
     nextPage() {
@@ -318,28 +338,21 @@ export default {
     },
 
     resetResults() {
-      this.results = {
-        workspaceMembers: [],
-        files: [],
-        channels: [],
-        threads: [],
-        canvasBlocks: [],
-      };
-    },
-    moveToThread(channelId, threadId){
-      this.$router.push({
-        path: `/channel/${channelId}/thread/view`,
-        query: { threadId }
-      });
+      this.results = {}; // results를 빈 객체로 초기화
+      this.totalMembers = 0;
+      this.totalFiles = 0;
+      this.totalChannels = 0;
+      this.totalThreads = 0;
+      this.totalCanvasBlocks = 0;
+      this.totalAll = 0;
     }
   }
 };
+
 </script>
 
 <style scoped>
 /* 스크롤 추가 */
-
-
 .result-container {
   min-height: 300px;
   /* 최소 높이를 300px로 설정 */
