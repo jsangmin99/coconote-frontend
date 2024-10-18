@@ -3,7 +3,7 @@
     <!-- 필터 태그 -->
     <div class="tag-filter-container">
       <div v-for="(tag,index) in tagFilter" :key="index" >
-        <button @click="removeTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+        <button @click="removeTagFilter(tag.tag, tag.threadId)"><strong class="tag" :style="{ backgroundColor: tag.tag.color }">{{tag.tag.name}}</strong></button>
       </div>
     </div>
     <!-- 스레드 그룹 -->
@@ -19,6 +19,7 @@
           </div>
         </div>
         <ThreadLineComponent
+          :id="`thread-${message.id}`"
           :thread="message"
           :createdTime="this.getTime(message.createdTime)"
           :updateMessage="updateMessage"
@@ -61,7 +62,7 @@
           @keydown="handleKeydown"
         />
         <div class="input-group-append">
-          <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList.length === 0">보내기</button>
+          <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList && fileList.length === 0">보내기</button>
         </div>
       </div>
     </div>
@@ -125,7 +126,7 @@
       </div>
         <!-- 내용 작성란 -->
       <div class="text-group">
-        <v-file-input v-if="files.length > 0" v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
+        <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
         <textarea
           type="text"
           class="form-control"
@@ -143,21 +144,14 @@
 
 <script>
 import ThreadLineComponent from "@/components/thread/ThreadLineComponent.vue";
-// import axios from "axios";
 import axios from '@/services/axios'
 import SockJS from "sockjs-client";
-// import Stomp from "stompjs";
 import { Stomp } from "@stomp/stompjs";
 import { debounce } from "lodash";
 import { mapGetters } from 'vuex';
 
 export default {
-  props: {
-    id: {
-      type: String,
-      required: true,
-    },
-  },
+  props: ['id','threadId'],
   components: {
     ThreadLineComponent,
   },
@@ -172,7 +166,7 @@ export default {
       ws: null,
       sock: null,
       reconnect: 0,
-      pageSize: 40,
+      pageSize: 50,
       currentPage: 0,
       isLoading: false,
       isLastPage: false,
@@ -186,12 +180,19 @@ export default {
       isComment: false,
       parentThread: null,
       dragedFileId: null,
+      isCreated: false,
     };
   },
-  created() {
+  async created() {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
-    this.getMessageList();
+    if(this.threadId){
+      console.log("this.threadId: ",this.threadId);
+      this.getThreadPage(this.threadId);
+    }else{
+      await this.getMessageList();
+      this.scrollToBottom();
+    }
     this.getTagList();
     this.connect();
     // window.addEventListener('scroll', this.scrollPagination)
@@ -226,32 +227,64 @@ export default {
 
         // 메시지의 태그가 tagFilter의 모든 태그를 포함하는지 확인
         return this.tagFilter.every(filter => 
-          message.tags.some(tag => filter.id === tag.id)
+          message.tags.some(tag => filter.tag.id === tag.id)
         );
       });
     },
   },
 
   methods: {
+    moveToThread(threadId){
+      // threadId가 제공된 경우에만 실행
+      if (threadId) {
+        console.log("threadId 찾음: ",threadId);
+        // 스레드 요소를 찾기
+        const threadElement = document.getElementById(`thread-${threadId}`);
+        if (threadElement) {
+          console.log("threadElement 찾음");
+          threadElement.setAttribute("tabindex", -1);
+          threadElement.focus();
+          threadElement.removeAttribute("tabindex");
+
+          // 해당 요소로 스크롤
+          // threadElement.scrollIntoView({ behavior: 'auto', block: 'center' });
+
+           // 강조 클래스 추가
+          threadElement.classList.add('highlight');
+
+          // 일정 시간 후 강조 제거
+          setTimeout(() => {
+            threadElement.classList.remove('highlight');
+          }, 2000); // 2000ms 후에 제거 (2초)
+        } else {
+          console.error('스레드 요소를 찾을 수 없습니다:', threadId);
+        }
+      }
+    },
     commentIn(thread){
       this.isComment = !this.isComment
       this.parentThread = thread
     },
     commentOut(){
+      console.log("(this.parentThread.id: ", this.parentThread.id);
       this.isComment = !this.isComment
-      this.parentThread = null
-      this.scrollToBottom();
+      this.$nextTick(() => {
+        this.moveToThread(this.parentThread.id);
+        this.parentThread = null
+      });
+      
     },
-    addTagFilter(tag){
-      this.tagFilter.push(tag)
+    addTagFilter(tag, threadId){
+      this.tagFilter.push({tag, threadId})
     },
-    removeTagFilter(tag){
-      if(this.tagFilter.length === 1) this.tagFilterOneToZero = true
-      this.tagFilter = this.tagFilter.filter(tagFilter => tagFilter.id !== tag.id);
-      if(this.tagFilterOneToZero) {
-        this.scrollToBottom();
-        this.tagFilterOneToZero = false
-      }
+    removeTagFilter(tag, threadId){
+      // if(this.tagFilter.length === 1) this.tagFilterOneToZero = true
+      this.tagFilter = this.tagFilter.filter(tagFilter => tagFilter.tag.id !== tag.id);
+      this.moveToThread(threadId);
+      // if(this.tagFilterOneToZero) {
+      //   this.scrollToBottom();
+      //   this.tagFilterOneToZero = false
+      // }
     },
     async getTagList(){
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/tag/list/${this.id}`);
@@ -596,10 +629,38 @@ export default {
 
         // 중복되지 않은 메시지를 추가
         this.messages = [...this.messages, ...newMessages];
+        console.log("시작 메시지 추가됨");
+        
       } catch (e) {
         console.log(e);
       }
-      this.scrollToBottom();
+    },
+    async getThreadPage(threadId) {
+      try {
+        const response = await axios.post(
+          `${process.env.VUE_APP_API_BASE_URL}/thread/list`,
+          { channelId: this.id, threadId, pageSize: this.pageSize}
+        );
+        this.currentPage++;
+        this.isLastPage = response.data.result.last;
+        // this.messages = [...this.messages, ...response.data.result.content]
+        
+        // 기존 메시지의 ID 집합을 생성
+        const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
+
+        // 중복되지 않은 메시지만 필터링
+        const newMessages = response.data.result.content.filter(
+          (msg) => !existingMessageIds.has(msg.id)
+        );
+
+        // 중복되지 않은 메시지를 추가
+        this.messages = [...this.messages, ...newMessages];
+      } catch (e) {
+        console.log(e);
+      }
+      this.$nextTick(() => {
+        this.moveToThread(threadId);
+      });
     },
     debouncedScrollPagination: debounce(async function () {
       const list = document.getElementById("list-group");
@@ -631,6 +692,8 @@ export default {
       }
     },
     scrollToBottom() {
+      console.log("밑으로");
+      
       setTimeout(() => {
           const container = document.getElementById("list-group");
 
@@ -706,23 +769,23 @@ export default {
       }
 
       return ampm + ' ' + hour + ':' + minute;
-  },
-  isDifferentDay(d1, d2) {
-      const day1 = new Date(d1);
-      const day2 = new Date(d2);
+    },
+    isDifferentDay(d1, d2) {
+        const day1 = new Date(d1);
+        const day2 = new Date(d2);
 
 
-      if(day1.getFullYear() == day2.getFullYear()
-      && day1.getMonth() == day2.getMonth()
-      && day1.getDay() == day2.getDay()) return false;
+        if(day1.getFullYear() == day2.getFullYear()
+        && day1.getMonth() == day2.getMonth()
+        && day1.getDay() == day2.getDay()) return false;
 
-      return true;
-  },
-  getDay(createdAt) {
+        return true;
+    },
+    getDay(createdAt) {
       const createdTime = new Date(createdAt);
 
       return `${createdTime.getFullYear()}년 ${createdTime.getMonth() + 1}월 ${createdTime.getDate()}일`; 
-  }
+    }
   },
 };
 </script>
@@ -794,5 +857,9 @@ input:focus {
 }
 textarea:focus {
   outline: none;
+}
+.highlight {
+  background-color: #e8e8e8; /* 강조할 배경 색 */
+  transition: background-color 0.5s ease; /* 부드러운 전환 효과 */
 }
 </style>
