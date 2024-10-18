@@ -1,17 +1,8 @@
 <template>
   <v-navigation-drawer permanent class="innerSubMenu" :absolute="false">
-    <div
-      class="header-container"
-      @contextmenu.prevent="showContextMenu($event, 'workspace', workpsace)"
-    >
+    <div class="header-container" @contextmenu.prevent="showContextMenu($event, 'workspace', workpsace)">
       <h1>{{ this.getWorkspaceName }}</h1>
-      <v-btn
-        v-if="this.getWsRole !== 'USER'"
-        elevation="0"
-        icon
-        color="#32446e"
-        class="small-btn"
-      >
+      <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn">
         <v-icon class="icon-cog">mdi-cog</v-icon>
         <v-menu activator="parent">
           <v-list>
@@ -29,64 +20,39 @@
         <v-icon icon="mdi-star" color="#ffbb00" />
         즐겨찾기
       </v-list-subheader>
-      <v-list-item
-        v-for="channel in myBookmarks"
-        :key="channel.channelId"
-        :class="{
-          'selected-item': selectedChannelMenuId == channel.channelId,
-        }"
-        class="channel-item"
-        @click="
+      <v-list-item v-for="channel in myBookmarks" :key="channel.channelId" :class="{
+        'selected-item': selectedChannelMenuId == channel.channelId,
+      }" class="channel-item" @click="
           changeChannel(
             channel.channelId,
             channel.channelName,
             channel.channelInfo
           )
-        "
-        @contextmenu.prevent="showContextMenu($event, 'channel', channel)"
-      >
-        <template
-          v-if="channel.isPublic || isMember(channel.channelId)"
-          v-slot:prepend
-        >
+          " @contextmenu.prevent="showContextMenu($event, 'channel', channel)">
+        <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
           <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
           <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
         </template>
 
-        <v-list-item-title
-          v-if="channel.isPublic || isMember(channel.channelId)"
-        >
-          {{ channel.channelName }}</v-list-item-title
-        >
+        <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)">
+          {{ channel.channelName }}</v-list-item-title>
       </v-list-item>
       <template v-for="section in sections" :key="section.sectionId">
         <div class="header-container">
-          <v-list-subheader
-            class="section-title"
-            @click="toggleSection(section.sectionId)"
-          >
+          <v-list-subheader class="section-title" @click="toggleSection(section.sectionId)">
             <v-icon>{{
               visibleSections.includes(section.sectionId)
                 ? "mdi-menu-down"
                 : "mdi-menu-right"
             }}</v-icon>
             <span class="section-name">{{ section.sectionName }}</span>
-            <v-btn
-              v-if="this.getWsRole !== 'USER'"
-              elevation="0"
-              icon
-              color="#32446e"
-              class="small-btn"
-              ><!-- 관리자일 때만 표시 -->
+            <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon color="#32446e"
+              class="small-btn"><!-- 관리자일 때만 표시 -->
               <v-icon class="icon-cog">mdi-cog</v-icon>
               <v-menu activator="parent">
                 <v-list>
-                  <v-list-item @click="openEditDialog(section)"
-                    >수정</v-list-item
-                  ><!-- 수정 버튼 클릭 시 모달 열기 -->
-                  <v-list-item @click="deleteSection(section.sectionId)"
-                    >삭제</v-list-item
-                  >
+                  <v-list-item @click="openEditDialog(section)">수정</v-list-item><!-- 수정 버튼 클릭 시 모달 열기 -->
+                  <v-list-item @click="deleteSection(section.sectionId)">삭제</v-list-item>
                 </v-list>
               </v-menu>
             </v-btn>
@@ -101,11 +67,7 @@
             </v-card-title>
             <v-card-text>
               <!-- 새로운 섹션 이름 입력 -->
-              <v-text-field
-                v-model="editedSectionName"
-                label="New Section Name"
-                outlined
-              ></v-text-field>
+              <v-text-field v-model="editedSectionName" label="New Section Name" outlined></v-text-field>
             </v-card-text>
             <v-card-actions>
               <v-btn color="primary" @click="editSection">저장</v-btn>
@@ -116,65 +78,42 @@
 
         <!-- v-show: 섹션을 클릭하면 하위 채널 목록을 토글 -->
         <v-list v-show="visibleSections.includes(section.sectionId)">
-          <v-list-item
-            v-for="channel in section.channelList"
-            :key="channel.channelId"
-            :class="{
-              'selected-item': selectedChannelMenuId == channel.channelId,
-            }"
-            class="channel-item"
-            @click="
+          <v-list-item v-for="channel in section.channelList" :key="channel.channelId" :class="{
+            'selected-item': selectedChannelMenuId == channel.channelId,
+          }" class="channel-item" @click="
               handleChannelClick(
                 channel.channelId,
                 channel.channelName,
                 channel.channelInfo
               )
-            "
-            @contextmenu.prevent="showContextMenu($event, 'channel', channel)"
-          >
-            <template
-              v-if="channel.isPublic || isMember(channel.channelId)"
-              v-slot:prepend
-            >
+              " @contextmenu.prevent="showContextMenu($event, 'channel', channel)">
+            <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
               <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
               <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
             </template>
 
-            <v-list-item-title
-              v-if="channel.isPublic || isMember(channel.channelId)"
-            >
-              {{ channel.channelName }}</v-list-item-title
-            >
+            <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)">
+              {{ channel.channelName }}</v-list-item-title>
             <!-- 알림 수와 삭제 버튼을 flex 컨테이너로 감쌈 -->
             <div class="notification-wrapper">
               <!-- 알림 수 표시 -->
-              <v-badge
-                v-if="notificationCounts[channel.channelId]"
-                :content="notificationCounts[channel.channelId]"
-                color="red"
-                overlap
-              >
+              <v-badge v-if="notificationCounts[channel.channelId]" :content="notificationCounts[channel.channelId]"
+                color="red" overlap>
               </v-badge>
             </div>
           </v-list-item>
 
-          <v-list-item
-            class="channelCreate"
-            @click="
-              (channelDialog = true),
-                (createChannelInfo.sectionId = section.sectionId)
-            "
-          >
+          <v-list-item class="channelCreate" @click="
+            (channelDialog = true),
+            (createChannelInfo.sectionId = section.sectionId)
+            ">
             <v-icon class="icon-plus" icon="mdi-plus" />
             채널생성
           </v-list-item>
         </v-list>
       </template>
 
-      <v-list-subheader
-        class="section-title sectionCreate"
-        @click="sectionDialog = true"
-      >
+      <v-list-subheader class="section-title sectionCreate" @click="sectionDialog = true">
         <v-icon class="icon-plus" icon="mdi-plus" /> 섹션 생성
       </v-list-subheader>
     </v-list>
@@ -185,29 +124,12 @@
       <v-card-title> 채널 관리 </v-card-title>
       <v-card-text>
         <p>채널의 이름을 입력하세요.</p>
-        <v-text-field
-          ref="channelNameInput"
-          color="primary"
-          density="compact"
-          variant="underlined"
-          v-model="createChannelInfo.channelName"
-          @keyup.enter="createChannel"
-          placeholder="이름"
-        ></v-text-field>
+        <v-text-field ref="channelNameInput" color="primary" density="compact" variant="underlined"
+          v-model="createChannelInfo.channelName" @keyup.enter="createChannel" placeholder="이름"></v-text-field>
         <p>채널의 설명을 입력하세요.</p>
-        <v-text-field
-          color="primary"
-          density="compact"
-          variant="underlined"
-          v-model="createChannelInfo.channelInfo"
-          @keyup.enter="createChannel"
-          placeholder="이름"
-        ></v-text-field>
-        <v-radio-group
-          inline
-          label="채널종류"
-          v-model="createChannelInfo.isPublic"
-        >
+        <v-text-field color="primary" density="compact" variant="underlined" v-model="createChannelInfo.channelInfo"
+          @keyup.enter="createChannel" placeholder="이름"></v-text-field>
+        <v-radio-group inline label="채널종류" v-model="createChannelInfo.isPublic">
           <v-radio label="공개채널" value="1"></v-radio>
           <v-radio label="비공개 채널" value="0"></v-radio>
         </v-radio-group>
@@ -224,15 +146,8 @@
       <v-card-title> 섹션 생성 </v-card-title>
       <v-card-text>
         섹션의 이름을 입력하세요.
-        <v-text-field
-          color="primary"
-          density="compact"
-          class="canvasTitle"
-          variant="underlined"
-          v-model="createSectionName"
-          @keyup.enter="createSection"
-          placeholder="이름"
-        ></v-text-field>
+        <v-text-field color="primary" density="compact" class="canvasTitle" variant="underlined"
+          v-model="createSectionName" @keyup.enter="createSection" placeholder="이름"></v-text-field>
       </v-card-text>
       <template v-slot:actions>
         <v-btn class="" text="생성" @click="createSection"></v-btn>
@@ -241,51 +156,28 @@
     </v-card>
   </v-dialog>
 
-  <v-dialog
-    v-model="workspaceEditModal"
-    max-width="500px"
-    class="workspaceEditModal"
-  >
+  <v-dialog v-model="workspaceEditModal" max-width="500px" class="workspaceEditModal">
     <v-card>
-      <v-card-title class="text-h5 text-center"
-        >워크스페이스 정보 수정</v-card-title
-      >
+      <v-card-title class="text-h5 text-center">워크스페이스 정보 수정</v-card-title>
       <v-card-text>
         <v-list>
           <v-text-field v-model="editedName" placeholder="이름"></v-text-field>
-          <v-text-field
-            v-model="editedWsInfo"
-            placeholder="설명"
-          ></v-text-field>
+          <v-text-field v-model="editedWsInfo" placeholder="설명"></v-text-field>
         </v-list>
       </v-card-text>
-      <v-btn
-        text="수정"
-        color="blue"
-        @click="saveEditing(this.getWorkspaceId)"
-      ></v-btn>
+      <v-btn text="수정" color="blue" @click="saveEditing(this.getWorkspaceId)"></v-btn>
     </v-card>
   </v-dialog>
 
-  <div
-    v-if="contextMenuVisible"
-    class="context-menu-leave"
-    :style="{
-      top: `${contextMenuPosition.y}px`,
-      left: `${contextMenuPosition.x}px`,
-    }"
-  >
+  <div v-if="contextMenuVisible" class="context-menu-leave" :style="{
+    top: `${contextMenuPosition.y}px`,
+    left: `${contextMenuPosition.x}px`,
+  }">
     <ul>
-      <li
-        v-if="selectedItemType === 'workspace'"
-        @click="leaveWorkspace(this.getWorkspaceId)"
-      >
+      <li v-if="selectedItemType === 'workspace'" @click="leaveWorkspace(this.getWorkspaceId)">
         워크스페이스 나가기
       </li>
-      <li
-        v-if="selectedItemType === 'channel'"
-        @click="leaveChannel(selectedItem.channelId)"
-      >
+      <li v-if="selectedItemType === 'channel'" @click="leaveChannel(selectedItem.channelId)">
         채널 나가기
       </li>
     </ul>
@@ -447,7 +339,7 @@ export default {
     },
     async getSectionData() {
       try {
-        if(!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == ""){
+        if (!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == "") {
           return false;
         }
         const response = await axios.get(
@@ -655,7 +547,7 @@ export default {
           "[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ",
           this.getWorkspaceId
         );
-        if(!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == ""){
+        if (!this.getWorkspaceId || this.getWorkspaceId == undefined || this.getWorkspaceId == "") {
           return false;
         }
         const response = await axios.get(
@@ -688,10 +580,12 @@ export default {
     },
     async getMyBookmarks() {
       try {
-        const response = await axios.get(
-          `${process.env.VUE_APP_API_BASE_URL}/bookmark/${this.getWorkspaceId}`
-        );
-        this.myBookmarks = response.data.result;
+        if (this.getWorkspaceId) {
+          const response = await axios.get(
+            `${process.env.VUE_APP_API_BASE_URL}/bookmark/${this.getWorkspaceId}`
+          );
+          this.myBookmarks = response.data.result;
+        }
       } catch (error) {
         console.log(error);
       }
@@ -827,6 +721,7 @@ h1 {
 
 .channel-item {
   position: relative;
+
   .notification-wrapper {
     position: absolute;
     right: 12px;

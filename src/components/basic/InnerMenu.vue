@@ -133,16 +133,6 @@ export default {
   },
   mounted() {
     this.fetchMyWorkspaceList();
-
-    const profileImage = this.$store.getters.getProfileImage;
-    const nickname = this.$store.getters.getNickname;
-
-    // 프로필 이미지 설정 로직
-    if (profileImage !== "null") {
-      this.profileImageUrl = profileImage;
-    } else {
-      this.generateAvatar(nickname);
-    }
   },
   methods: {
     ...mapActions([
