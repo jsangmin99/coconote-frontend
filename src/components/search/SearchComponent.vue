@@ -3,15 +3,18 @@
     <div class="search-page">
       <!-- 검색 창 -->
       <div class="search-bar">
-        <input ref="searchInput" v-model="keyword" @input="fetchAutocomplete" @keyup.enter="search"
+        <input ref="searchInput" v-model="keyword" @input="fetchAutocomplete" @keydown.down.prevent="moveDown"
+          @keydown.up.prevent="moveUp" @keydown.enter.prevent="handleEnter" @keydown.esc="closeAutocomplete"
           placeholder="검색어를 입력하세요" class="search-input" />
+
         <button @click="search" class="search-button">검색</button>
       </div>
 
       <!-- 자동완성 리스트 -->
       <div v-if="autocompleteSuggestions.length > 0" class="autocomplete-suggestions" ref="autocomplete">
         <ul>
-          <li v-for="suggestion in autocompleteSuggestions" :key="suggestion" @click="selectSuggestion(suggestion)">
+          <li v-for="(suggestion, index) in autocompleteSuggestions" :key="suggestion"
+            @click="selectSuggestion(suggestion)" :class="{ active: index === suggestionIndex }">
             {{ suggestion }}
           </li>
         </ul>
@@ -71,7 +74,8 @@
 
           <div v-if="totalThreads > 0" class="category-section">
             <h3>쓰레드 검색 결과 ({{ totalThreads }})</h3>
-            <div v-for="(result, index) in results.threads" :key="index" class="result-card" @click="moveToThread(result.channelId, result.threadId)">
+            <div v-for="(result, index) in results.threads" :key="index" class="result-card"
+              @click="moveToThread(result.channelId, result.threadId)">
               <h3>{{ result.content || '내용 없음' }}</h3>
               <p class="metadata">Posted by: {{ result.memberName }} | {{ result.createdTime }}</p>
             </div>
@@ -122,7 +126,6 @@
 
       <div v-if="!loading && results.length === 0" class="no-results-message">No results found.</div>
     </div>
-    <div class="dummy-container"></div>
   </div>
 </template>
 
@@ -143,6 +146,7 @@ export default {
         canvasBlocks: [],
       },
       autocompleteSuggestions: [],
+      suggestionIndex: -1, // 선택된 제안의 인덱스
       loading: false,
       currentPage: 1,
       totalPages: 1,
@@ -168,10 +172,19 @@ export default {
   beforeUnmount() {
     document.removeEventListener('click', this.handleClickOutside);
   },
+  watch: {
+    activeTab() {
+      this.search(); // 자동으로 검색을 트리거
+    }
+  },
   methods: {
+
     async search() {
+      if (!this.keyword || this.keyword.length < 2) {
+        return; // 검색어가 없거나 2글자 미만일 경우 검색하지 않음
+      }
       this.loading = true;
-      this.resetResults();
+      this.autocompleteSuggestions = []; // 검색 시 자동완성 리스트 닫기
 
       let url = `${process.env.VUE_APP_API_BASE_URL}/search`;
       if (this.activeTab !== 'ALL') {
@@ -192,7 +205,13 @@ export default {
         if (response.data && response.data.result) {
           // 전체 검색일 경우 결과를 카테고리별로 저장
           if (this.activeTab === 'ALL') {
-            this.results = response.data.result;
+            this.results = {
+              workspaceMembers: response.data.result.workspaceMembers || [],
+              files: response.data.result.files || [],
+              channels: response.data.result.channels || [],
+              threads: response.data.result.threads || [],
+              canvasBlocks: response.data.result.canvasBlocks || [],
+            };
             this.totalMembers = response.data.result.totalMembers || 0;
             this.totalFiles = response.data.result.totalFiles || 0;
             this.totalChannels = response.data.result.totalChannels || 0;
@@ -208,11 +227,23 @@ export default {
             this.results = response.data.result.results || [];
             this.totalPages = Math.ceil(response.data.result.total / this.pageSize);
           }
+        } else {
+          this.resetResults(); // 검색 결과가 없을 경우에도 결과 초기화
         }
       } catch (error) {
         console.error('Search failed:', error);
       } finally {
         this.loading = false;
+      }
+    },
+
+    handleEnter() {
+      // 자동완성 리스트에서 선택된 항목이 있을 때
+      if (this.suggestionIndex !== -1 && this.autocompleteSuggestions[this.suggestionIndex]) {
+        this.selectSuggestion(this.autocompleteSuggestions[this.suggestionIndex]);
+      } else {
+        // 선택된 항목이 없으면 그냥 검색
+        this.search();
       }
     },
 
@@ -233,11 +264,33 @@ export default {
         });
 
         this.autocompleteSuggestions = response.data?.result || [];
+        this.suggestionIndex = -1; // 자동완성 결과를 가져오면 인덱스를 초기화
+
       } catch (error) {
         console.error('Autocomplete failed:', error);
         this.autocompleteSuggestions = [];
       }
     },
+
+    moveDown() {
+      if (this.autocompleteSuggestions.length > 0 && this.suggestionIndex < this.autocompleteSuggestions.length - 1) {
+        this.suggestionIndex++;
+      }
+    },
+
+    moveUp() {
+      if (this.autocompleteSuggestions.length > 0 && this.suggestionIndex > 0) {
+        this.suggestionIndex--;
+      }
+    },
+
+    moveToThread(channelId, threadId) {
+      this.$router.push({
+        path: `/channel/${channelId}/thread/view`,
+        query: { threadId }
+      });
+    },
+
 
     handleClickOutside(event) {
       const autocomplete = this.$refs.autocomplete;
@@ -253,15 +306,21 @@ export default {
     },
 
     selectSuggestion(suggestion) {
-      this.keyword = suggestion;
+      if (suggestion) {
+        this.keyword = suggestion;
+        this.closeAutocomplete();
+        this.search();
+      }
+    },
+
+    closeAutocomplete() {
       this.autocompleteSuggestions = [];
-      this.search();
+      this.suggestionIndex = -1;
     },
 
     setTab(tab) {
       this.activeTab = tab;
       this.currentPage = 1;
-      this.search();
     },
 
     nextPage() {
@@ -279,28 +338,21 @@ export default {
     },
 
     resetResults() {
-      this.results = {
-        workspaceMembers: [],
-        files: [],
-        channels: [],
-        threads: [],
-        canvasBlocks: [],
-      };
-    },
-    moveToThread(channelId, threadId){
-      this.$router.push({
-        path: `/channel/${channelId}/thread/view`,
-        query: { threadId }
-      });
+      this.results = {}; // results를 빈 객체로 초기화
+      this.totalMembers = 0;
+      this.totalFiles = 0;
+      this.totalChannels = 0;
+      this.totalThreads = 0;
+      this.totalCanvasBlocks = 0;
+      this.totalAll = 0;
     }
   }
 };
+
 </script>
 
 <style scoped>
 /* 스크롤 추가 */
-
-
 .result-container {
   min-height: 300px;
   /* 최소 높이를 300px로 설정 */
@@ -341,15 +393,19 @@ export default {
   background-color: #f1f1f1;
 }
 
+.autocomplete-suggestions li.active {
+  background-color: #e0e0e0;
+}
+
 .search-page-container {
   display: flex;
   justify-content: space-between;
 }
 
-.dummy-container {
+/* .dummy-container {
   width: 15%;
-  /* 오른쪽 여백을 15%로 설정 */
-}
+ } 
+*/
 
 .search-page {
   flex: 1;
@@ -367,41 +423,49 @@ export default {
 .search-bar {
   display: flex;
   justify-content: flex-start;
-  /* 왼쪽 정렬 */
+  align-items: center;
   margin-bottom: 20px;
   position: relative;
-  /* 부모 요소를 기준으로 자동완성 리스트 위치를 설정 */
 }
 
 .search-input {
   width: 80%;
-  padding: 12px;
-  border: 2px solid #ccc;
-  border-radius: 4px;
+  padding: 12px 15px;
+  border: 2px solid #ddd;
+  border-radius: 50px;
   font-size: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #555;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  border-color: #3a8bcd;
+  box-shadow: 0 4px 8px rgba(58, 139, 205, 0.3);
 }
 
 .search-button {
   padding: 12px 20px;
-  margin-left: 10px;
-  /* 버튼을 왼쪽으로 살짝 이동 */
+  margin-left: -50px;
+  /* 버튼을 검색 바 안으로 겹치게 하기 위해 왼쪽 마진을 설정 */
   background-color: #3a8bcd;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 50px;
   cursor: pointer;
   font-size: 16px;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-button:hover {
   background-color: #337ab7;
+  transform: scale(1.05);
+}
+
+.search-button:active {
+  background-color: #2a5f8f;
+  transform: scale(0.98);
 }
 
 .result-card {
