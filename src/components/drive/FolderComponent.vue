@@ -719,6 +719,7 @@ export default {
 <style>
 .drive-container {
   padding: 20px;
+  overflow: auto;
 }
 
 .breadcrumb {

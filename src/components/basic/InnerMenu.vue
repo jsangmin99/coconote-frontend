@@ -3,9 +3,11 @@
     <v-list density="compact" nav class="menu-container">
       <!-- 현재 접속해 있는 워크스페이스 -->
       <v-list-item
+        ref="workspaceListButton"
         prepend-icon="mdi-alpha-w-box"
         title="workspace"
         @click="toggleDropdown"
+        :class="{ 'selected-item': selectedMenu === 'workspace' }"
       ></v-list-item>
       <!-- 홈 하위 메뉴 버튼 -->
       <v-list-item
@@ -122,7 +124,7 @@ export default {
     return {
       menu: false,
       dialog: false,
-      selectedMenu: "home",
+      selectedMenu: null,
       profileImageUrl: "", // 프로필 이미지 URL 저장
       modalPosition: { top: 0, left: 0 }, // 모달의 위치 저장
       isDropdownOpen: false,
@@ -132,8 +134,20 @@ export default {
     };
   },
   mounted() {
-    this.fetchMyWorkspaceList();
+    const routeName = this.$route.name;
+    const nameSelectMenuObj = {
+      MemberView: "member",
+      SEARCH: "search",
+    };
+    if (nameSelectMenuObj[routeName]) {
+      this.selectedMenu = nameSelectMenuObj[routeName];
+    } else {
+      this.selectedMenu = "home";
+    }
+    // this.changeSelectedMenu(this.selectedMenu);
 
+    this.fetchMyWorkspaceList();
+    
     const profileImage = this.$store.getters.getProfileImage;
     // const nickname = this.$store.getters.getNickname;
 
@@ -159,6 +173,13 @@ export default {
       // 드롭다운이 열리고 닫히는지 로그 확인
       console.log("Dropdown toggle");
       this.isDropdownOpen = !this.isDropdownOpen;
+      if (this.isDropdownOpen) {
+        console.error("이벤트 추가");
+        document.addEventListener("click", this.handleOutsideClick);
+      } else {
+        console.error("이벤트 삭제");
+        document.removeEventListener("click", this.handleOutsideClick);
+      }
     },
     async fetchMyWorkspaceList() {
       try {
@@ -171,7 +192,6 @@ export default {
       }
     },
     async selectWorkspace(workspaceId) {
-      console.error("selectWorkspace >> ", workspaceId)
       try {
         const wsInfo = await axios.get(
           // 워크스페이스 정보
@@ -185,24 +205,23 @@ export default {
       }
     },
     changeSelectedMenu(name) {
-      this.selectedMenu = name;
-      switch (this.selectedMenu) {
+      if (name == this.selectedMenu) {
+        return false;
+      }
+      switch (name) {
         case "home":
           this.locationHome();
           break;
         case "member":
-          this.$router.push(`/member/${this.getWorkspaceId}`);
+          window.location.href = `/member/${this.getWorkspaceId}`;
           break;
         case "search":
-          this.$router.push(`/workspace/${this.getWorkspaceId}/search`);
+          window.location.href = `/workspace/${this.getWorkspaceId}/search`;
           break;
       }
     },
     async locationHome() {
-      const response = await axios.get(
-        `${process.env.VUE_APP_API_BASE_URL}/${this.getWorkspaceId}/channel/first`
-      );
-      this.$router.push(`/channel/${response.data.result.channelId}`);
+      window.location.href = `/channel/view`;
     },
     setModalPosition() {
       const button = this.$refs.profileButton; // 버튼 요소 참조
@@ -225,8 +244,13 @@ export default {
     },
     handleOutsideClick(event) {
       // 클릭이 모달 외부인지 확인
-      if (!this.$refs.profileButton.contains(event.target)) {
+      if (
+        (!this.$refs.profileButton.contains(event.target) && this.dialog) ||
+        (!this.$refs?.workspaceListButton?.$el?.contains(event.target) &&
+          this.isDropdownOpen)
+      ) {
         this.dialog = false; // 모달 닫기
+        this.isDropdownOpen = false;
         document.removeEventListener("click", this.handleOutsideClick); // 리스너 제거
       }
     },
@@ -299,14 +323,14 @@ export default {
 }
 
 .workspace-dropdown-menu {
-  position: absolute;
+  position: fixed;
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 10px;
   z-index: 1005;
-  top: 75px;
+  top: 50px;
 }
 
 .workspace-dropdown-menu ul {
