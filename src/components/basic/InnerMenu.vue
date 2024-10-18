@@ -242,7 +242,7 @@ export default {
       // 클릭이 모달 외부인지 확인
       if (
         (!this.$refs.profileButton.contains(event.target) && this.dialog) ||
-        (!this.$refs.workspaceListButton.$el.contains(event.target) &&
+        (!this.$refs?.workspaceListButton?.$el?.contains(event.target) &&
           this.isDropdownOpen)
       ) {
         this.dialog = false; // 모달 닫기
@@ -326,7 +326,7 @@ export default {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 10px;
   z-index: 1005;
-  top: 75px;
+  top: 50px;
 }
 
 .workspace-dropdown-menu ul {
