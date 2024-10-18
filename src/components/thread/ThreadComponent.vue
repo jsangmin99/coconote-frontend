@@ -8,6 +8,10 @@
     </div>
     <!-- 스레드 그룹 -->
     <div class="list-group" ref="messageList" id="list-group">
+      <v-skeleton-loader
+        v-if="!isLastPage"
+        type="list-item-avatar, paragraph"
+      ></v-skeleton-loader>
       <div
         class="list-group-item"
         v-for="(message,index) in filteredMessages.slice().reverse()"
@@ -36,6 +40,10 @@
           :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index-1].memberId"
         />
       </div>
+      <v-skeleton-loader
+        v-if="currentBottomPage>0"
+        type="list-item-avatar, paragraph"
+      ></v-skeleton-loader>
     </div>
     
     <!-- 입력 그룹 -->
@@ -710,19 +718,25 @@ export default {
       const isBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 800;
 
       if (isTop && !this.isLastPage && !this.isLoading) {
-        this.isLoading = true;
-        if (list.scrollTop == 0 && !this.isLastPage) {
-          list.scrollTop = 20;
+        
+        if(this.messages && this.messages.length > 0){
+          this.isLoading = true;
+          let topThreadId
+          console.log("messages: ",this.messages[this.messages.length-1].id);
+          topThreadId = this.messages[this.messages.length-1].id
+
+          await this.getTopMessageList();
+          
+          this.isLoading = false;
+          this.moveToThread(topThreadId);
         }
-        await this.getTopMessageList();
-        this.isLoading = false;
       }
 
       if (isBottom && this.currentBottomPage>0 && !this.isLoading) {
         this.isLoading = true;
         await this.getBottomMessageList();
         this.isLoading = false;
-  }
+      }
     }, 200),
     scrollToBottom() {
       console.log("밑으로");
