@@ -8,6 +8,10 @@
     </div>
     <!-- 스레드 그룹 -->
     <div class="list-group" ref="messageList" id="list-group">
+      <v-skeleton-loader
+        v-if="!isLastPage"
+        type="list-item-avatar, paragraph"
+      ></v-skeleton-loader>
       <div
         class="list-group-item"
         v-for="(message,index) in filteredMessages.slice().reverse()"
@@ -36,6 +40,10 @@
           :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index-1].memberId"
         />
       </div>
+      <v-skeleton-loader
+        v-if="currentBottomPage>0"
+        type="list-item-avatar, paragraph"
+      ></v-skeleton-loader>
     </div>
     
     <!-- 입력 그룹 -->
@@ -151,7 +159,7 @@ import { debounce } from "lodash";
 import { mapGetters } from 'vuex';
 
 export default {
-  props: ['id','threadId'],
+  props: ['id','threadId','parentThreadId'],
   components: {
     ThreadLineComponent,
   },
@@ -168,18 +176,20 @@ export default {
       reconnect: 0,
       pageSize: 50,
       currentPage: 0,
+      currentTopPage: 0,
+      currentBottomPage: 0,
       isLoading: false,
       isLastPage: false,
       files: null,
       fileList: [],
       // uploadProgress: [], // 업로드 진행 상황
-      filesRes: null,
+      filesRes: [],
       tagList: [],
       tagFilter: [],
       tagFilterOneToZero: false,
       isComment: false,
       parentThread: null,
-      dragedFileId: null,
+      dragedFile: null,
       isCreated: false,
     };
   },
@@ -187,23 +197,22 @@ export default {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
     if(this.threadId){
-      console.log("this.threadId: ",this.threadId);
-      this.getThreadPage(this.threadId);
+      console.log("*****this.parentThreadId: ",this.parentThreadId);
+      if(this.parentThreadId) this.getThreadPage(this.parentThreadId);
+      else this.getThreadPage(this.threadId);
     }else{
-      await this.getMessageList();
+      await this.getTopMessageList();
       this.scrollToBottom();
     }
     this.getTagList();
     this.connect();
-    // window.addEventListener('scroll', this.scrollPagination)
-    // this.$refs.messageList.addEventListener('scroll', this.scrollPagination);
   },
   mounted() {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
   },
   updated() {},
   beforeUnmount() {
-    // window.removeEventListener('scroll', this.scrollPagination)
+    if(this.$refs.messageList)
     this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
     
     if (this.subscription) {
@@ -254,8 +263,12 @@ export default {
 
           // 일정 시간 후 강조 제거
           setTimeout(() => {
-            threadElement.classList.remove('highlight');
-          }, 2000); // 2000ms 후에 제거 (2초)
+            threadElement.classList.add('fade-out'); // fade-out 클래스를 추가
+            setTimeout(() => {
+              threadElement.classList.remove('highlight');
+              threadElement.classList.remove('fade-out'); // fade-out 클래스도 제거
+            }, 500); // 투명 효과가 완료된 후 highlight 클래스를 제거 (500ms)
+          }, 2000); // 2000ms 후에 fade-out 추가
         } else {
           console.error('스레드 요소를 찾을 수 없습니다:', threadId);
         }
@@ -490,11 +503,16 @@ export default {
       const authToken = localStorage.getItem('accessToken');
 
       if(this.fileList.length>0) {
+        const dragFileList = this.fileList.filter(file => file.fileId)
+        this.filesRes = dragFileList.map(file => ({id:file.fileId, fileName: file.name, fileUrl: file.imageUrl }))
+
+        const fileList = this.fileList.filter(file => !file.fileId)
+        if(fileList && fileList.length > 0)
         try{
           const presignedUrls = await this.getPresignedURL();
 
           // 각 파일에 대해 Presigned URL을 이용하여 S3에 업로드
-          const uploadedFileUrls = await Promise.all(this.fileList.map(file => this.uploadFileToS3(file.file, presignedUrls[file.name])));
+          const uploadedFileUrls = await Promise.all(fileList.map(file => this.uploadFileToS3(file.file, presignedUrls[file.name])));
 
           // 파일 중 업로드가 실패한 파일이 있으면 필터링
           const successfulUploads = uploadedFileUrls.filter(url => url !== null);
@@ -574,9 +592,8 @@ export default {
         })), // 파일 메타데이터 리스트
       };
       const response = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/files/metadata`, metadataDto);
-      this.filesRes = response.data.result;
+      this.filesRes = [...this.filesRes, ...response.data.result];
     },
-    
     
     fileUpdate(){
         this.files.forEach(file => {
@@ -592,32 +609,37 @@ export default {
 
     async handleDrop(event) {
       event.preventDefault();
+      const droppedData = event.dataTransfer.getData("file");
 
-      // DataTransfer 객체에서 드래그된 파일의 ID를 가져옴
-      this.dragedFileId= event.dataTransfer.getData("fileId");
-      if (this.dragedFileId) {
-        console.log("Dropped file with ID:", this.dragedFileId);
-      // 여기에 파일 업로드나 추가 작업을 수행할 로직을 작성
+      this.dragedFile= JSON.parse(droppedData);
+      if (this.dragedFile) {
+        console.log("Dropped file with ID:", this.dragedFile);
+        // 여기에 파일 업로드나 추가 작업을 수행할 로직을 작성
+        this.fileList.push({
+          fileId: this.dragedFile.fileId,
+          name: this.dragedFile.fileName,
+          imageUrl: this.dragedFile.fileUrl})
       } else {
         console.log("No file was dragged.");
       }
     },
     
-
-    async getMessageList() {
+    async getTopMessageList() {
       try {
         let params = {
           size: this.pageSize,
-          page: this.currentPage,
+          page: this.currentTopPage,
         };
 
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/thread/list/${this.id}`,
           { params }
         );
-        this.currentPage++;
+        console.log("pageNumber: " , response.data.result);
+        console.log("pageNumber: " , response.data.result.pageable.pageNumber);
+        
+        this.currentTopPage++;
         this.isLastPage = response.data.result.last;
-        // this.messages = [...this.messages, ...response.data.result.content]
         
         // 기존 메시지의 ID 집합을 생성
         const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
@@ -635,13 +657,47 @@ export default {
         console.log(e);
       }
     },
+    async getBottomMessageList() {
+      if(this.currentBottomPage>0) this.currentBottomPage--;
+      else{
+        console.log("이미 마지막 페이지 입니다");
+        return
+      }
+      try {
+        let params = {
+          size: this.pageSize,
+          page: this.currentBottomPage,
+        };
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/thread/list/${this.id}`,
+          { params }
+        );
+        this.isLastPage = response.data.result.last;
+        
+        // 기존 메시지의 ID 집합을 생성
+        const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
+
+        // 중복되지 않은 메시지만 필터링
+        const newMessages = response.data.result.content.filter(
+          (msg) => !existingMessageIds.has(msg.id)
+        );
+
+        // 중복되지 않은 메시지를 추가
+        this.messages = [...newMessages, ...this.messages];
+        console.log("시작 메시지 추가됨");
+        
+      } catch (e) {
+        console.log(e);
+      }
+    },
     async getThreadPage(threadId) {
       try {
         const response = await axios.post(
           `${process.env.VUE_APP_API_BASE_URL}/thread/list`,
           { channelId: this.id, threadId, pageSize: this.pageSize}
         );
-        this.currentPage++;
+        this.currentTopPage =  response.data.result.pageable.pageNumber+1
+        if(response.data.result.pageable.pageNumber>0) this.currentBottomPage = response.data.result.pageable.pageNumber
         this.isLastPage = response.data.result.last;
         // this.messages = [...this.messages, ...response.data.result.content]
         
@@ -668,29 +724,29 @@ export default {
         return false;
       }
       const isTop = list.scrollTop <= 800;
+      const isBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 800;
 
       if (isTop && !this.isLastPage && !this.isLoading) {
-        this.isLoading = true;
-        if (list.scrollTop == 0 && !this.isLastPage) {
-          list.scrollTop = 20;
+        
+        if(this.messages && this.messages.length > 0){
+          this.isLoading = true;
+          let topThreadId
+          console.log("messages: ",this.messages[this.messages.length-1].id);
+          topThreadId = this.messages[this.messages.length-1].id
+
+          await this.getTopMessageList();
+          
+          this.isLoading = false;
+          this.moveToThread(topThreadId);
         }
-        await this.getMessageList();
+      }
+
+      if (isBottom && this.currentBottomPage>0 && !this.isLoading) {
+        this.isLoading = true;
+        await this.getBottomMessageList();
         this.isLoading = false;
       }
     }, 200),
-    async scrollPagination() {
-      const list = document.getElementById("list-group");
-      const isTop = list.scrollTop <= 1600;
-      // "현재화면 + 스크롤로 이동한 화면 > 전체화면 -n" 의 조건이 성립되면 추가 데이터 로드
-      // const isBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 20;
-      console.log("scrollPagination%%%%%%%%%%%%%%%%%%%");
-
-      if (isTop && !this.isLastPage && !this.isLoading) {
-        this.isLoading = true;
-        await this.getMessageList();
-        this.isLoading = false;
-      }
-    },
     scrollToBottom() {
       console.log("밑으로");
       
@@ -701,7 +757,6 @@ export default {
             container.scrollTop = container.scrollHeight;
           }
         }, 1);
-      
     },
     
     deleteImage(index){
@@ -859,7 +914,10 @@ textarea:focus {
   outline: none;
 }
 .highlight {
-  background-color: #e8e8e8; /* 강조할 배경 색 */
+  background-color: #e8ca93; /* 강조할 배경 색 */
   transition: background-color 0.5s ease; /* 부드러운 전환 효과 */
+}
+.fade-out {
+  background-color: transparent; /* 투명 상태 */
 }
 </style>
