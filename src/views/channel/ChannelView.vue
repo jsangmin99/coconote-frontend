@@ -1,36 +1,31 @@
 <template>
   <div class="channelInsideContainer">
     <div class="channelInsideContentWrap">
-      <h1>channel View Test</h1>
-      <div>
-        <h2>
-          id : <span>{{ this.$store.getters.getChannelId }}</span>
-        </h2>
-        <v-btn @click="channelMemberCreate">채널 참여</v-btn>
-        <v-btn
-          @click="
-            this.$router.push(
-              `/channel/${this.$store.getters.getChannelId}/thread/view`
-            )
-          "
-          >쓰레드로 이동</v-btn
-        >
-        <v-btn
-          @click="
-            this.$router.push(
-              `/channel/${this.$store.getters.getChannelId}/canvas/view`
-            )
-          "
-          >캔버스로 이동</v-btn
-        >
-        <v-btn
-          @click="
-            this.$router.push(
-              `/channel/${this.$store.getters.getChannelId}/drive/view`
-            )
-          "
-          >드라이브로 이동</v-btn
-        >
+      <div class="channelViewContainer">
+        <div class="inner">
+          <div class="img_area">
+            <img src="@/assets/images/logo_coconote.png" alt="coconote logo" />
+          </div>
+          <h1>환영합니다!</h1>
+          <p class="desc">
+            <v-chip color="grey-lighten-3" variant="flat">
+              <span>{{ this.$store.getters.getChannelName }}</span> 채널
+            </v-chip>
+            참여하시겠습니까?
+          </p>
+          <div class="btn_area">
+            <v-btn
+              rounded="xl"
+              size="x-large"
+              block
+              variant="flat"
+              @click="channelMemberCreate"
+              style="width:50vw;"
+              color="blue-lighten-4"
+              >채널 참여</v-btn
+            >
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -44,7 +39,9 @@ import { fetchChannelMemberInfo } from "@/services/channelService"; // 모듈 im
 export default {
   components: {},
   data() {
-    return {};
+    return {
+      isJoin: null,
+    };
   },
   channelId(newVal) {
     if (newVal) {
@@ -68,9 +65,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions([
-      "setChannelRoleInfoActions",
-    ]),
+    ...mapActions(["setChannelRoleInfoActions"]),
     // 채널 참여 메서드
     async channelMemberCreate() {
       this.loading = true;
@@ -103,3 +98,35 @@ export default {
   },
 };
 </script>
+
+<style lang="scss">
+.channelViewContainer {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  .inner {
+    text-align: center;
+  }
+  h1 {
+    font-size: 3rem;
+    color: #435088;
+    margin-bottom: 24px;
+  }
+  p.desc {
+    margin-bottom: 32px;
+    span {
+      margin-right: 4px;
+    }
+  }
+  .img_area {
+    img {
+      width: 90%;
+      max-width: 15vw;
+      min-width: 150px;
+    }
+  }
+  .h1 {
+  }
+}
+</style>

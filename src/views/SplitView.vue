@@ -1,6 +1,6 @@
 <template>
   <div class="splitViewContainer">
-    <ChannelCommonMenu :menu="'split'" :channelId="channelId" />
+    <ChannelCommonMenu :menu="'split'" :channelId="channelId" :splitActiveTab="activeTabs" />
     <div class="splitTabs">
       <div class="leftTabs">
         <div class="menuBtns" v-if="menu !== 'split'">

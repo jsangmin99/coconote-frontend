@@ -86,10 +86,10 @@
       </button>
     </div>
     <div class="menuBtns" v-else>
-      <button @click="closeSplitView(0)">
+      <button @click="closeSplitView('left')">
         1화면 <v-icon icon="mdi-close" class="icon-color" />
       </button>
-      <button @click="closeSplitView(1)">
+      <button @click="closeSplitView('right')">
         2화면 <v-icon icon="mdi-close" class="icon-color" />
       </button>
     </div>
@@ -150,7 +150,7 @@ import axios from "axios";
 import { fetchChannelMemberInfo } from "@/services/channelService"; // 모듈 import
 
 export default {
-  props: ["menu"],
+  props: ["menu", "splitActiveTab"],
   name: "ChannelCommonMenu",
   components: {
     ChannelMemberModal,
@@ -181,9 +181,18 @@ export default {
       "getWorkspaceName",
     ]),
   },
+  watch: {
+    splitActiveTab: {
+      handler() {
+        // console.log("splitActiveTab 변경됨 >> ", newVal); // 값이 변경될 때마다 로그로 확인
+      },
+      deep: true,
+    },
+  },
   mounted() {
     this.loadChannelMembers(); // 컴포넌트가 마운트되면 채널 멤버를 불러옴
     document.addEventListener("click", this.handleClickOutside); //드롭다운 메뉴 외부 클릭 시 닫기
+    console.log("splitActiveTab 확인용 >> ", this.splitActiveTab);
   },
   beforeUnmount() {
     document.removeEventListener("click", this.handleClickOutside);
@@ -226,8 +235,33 @@ export default {
     goToSplitView() {
       this.$router.push(`/channel/${this.getChannelId}/split-view`);
     },
-    closeSplitView(num) {
-      console.log(num, " 화면 닫으려고 함!!");
+    closeSplitView(splitName) {
+      console.log(splitName, " 화면 닫으려고 함!!");
+
+      let objKey = "";
+      if (splitName == "left") {
+        // left를 닫아서 right 주소로 이동
+        objKey = "rightTab";
+      } else if (splitName == "right") {
+        // right 닫아서 left 주소로 이동
+        objKey = "leftTab";
+      } else {
+        console.error("잘못된 tab화면 닫음 요청입니다.");
+        return false;
+      }
+
+      let routerUrl = "";
+      if (this.splitActiveTab[objKey] == "thread") {
+        routerUrl = `/channel/${this.getChannelId}/thread/view`;
+      } else if (this.splitActiveTab[objKey] == "canvas") {
+        routerUrl = `/channel/${this.getChannelId}/canvas/view`;
+      } else if (this.splitActiveTab[objKey] == "drive") {
+        routerUrl = `/channel/${this.getChannelId}/drive/view`;
+      } else {
+        console.error("잘못된 objKey 요청입니다.");
+        return false;
+      }
+      this.$router.push(routerUrl);
     },
     openChannelMemberInviteModal() {
       this.isChannelMemberModalOpen = false; // 일단 false로 설정하여 초기화
