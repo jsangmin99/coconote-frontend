@@ -718,10 +718,12 @@ export default {
     },
     async getMyBookmarks() {
       try {
+        if (this.getWorkspaceId) {
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/bookmark/${this.getWorkspaceId}`
         );
         this.myBookmarks = response.data.result;
+        }
       } catch (error) {
         console.log(error);
       }
