@@ -168,6 +168,8 @@ export default {
       reconnect: 0,
       pageSize: 50,
       currentPage: 0,
+      currentTopPage: 0,
+      currentBottomPage: 0,
       isLoading: false,
       isLastPage: false,
       files: null,
@@ -190,20 +192,18 @@ export default {
       console.log("this.threadId: ",this.threadId);
       this.getThreadPage(this.threadId);
     }else{
-      await this.getMessageList();
+      await this.getTopMessageList();
       this.scrollToBottom();
     }
     this.getTagList();
     this.connect();
-    // window.addEventListener('scroll', this.scrollPagination)
-    // this.$refs.messageList.addEventListener('scroll', this.scrollPagination);
   },
   mounted() {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
   },
   updated() {},
   beforeUnmount() {
-    // window.removeEventListener('scroll', this.scrollPagination)
+    if(this.$refs.messageList)
     this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
     
     if (this.subscription) {
@@ -607,21 +607,22 @@ export default {
       }
     },
     
-
-    async getMessageList() {
+    async getTopMessageList() {
       try {
         let params = {
           size: this.pageSize,
-          page: this.currentPage,
+          page: this.currentTopPage,
         };
 
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/thread/list/${this.id}`,
           { params }
         );
-        this.currentPage++;
+        console.log("pageNumber: " , response.data.result);
+        console.log("pageNumber: " , response.data.result.pageable.pageNumber);
+        
+        this.currentTopPage++;
         this.isLastPage = response.data.result.last;
-        // this.messages = [...this.messages, ...response.data.result.content]
         
         // 기존 메시지의 ID 집합을 생성
         const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
@@ -639,13 +640,47 @@ export default {
         console.log(e);
       }
     },
+    async getBottomMessageList() {
+      if(this.currentBottomPage>0) this.currentBottomPage--;
+      else{
+        console.log("이미 마지막 페이지 입니다");
+        return
+      }
+      try {
+        let params = {
+          size: this.pageSize,
+          page: this.currentBottomPage,
+        };
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/thread/list/${this.id}`,
+          { params }
+        );
+        this.isLastPage = response.data.result.last;
+        
+        // 기존 메시지의 ID 집합을 생성
+        const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
+
+        // 중복되지 않은 메시지만 필터링
+        const newMessages = response.data.result.content.filter(
+          (msg) => !existingMessageIds.has(msg.id)
+        );
+
+        // 중복되지 않은 메시지를 추가
+        this.messages = [...newMessages, ...this.messages];
+        console.log("시작 메시지 추가됨");
+        
+      } catch (e) {
+        console.log(e);
+      }
+    },
     async getThreadPage(threadId) {
       try {
         const response = await axios.post(
           `${process.env.VUE_APP_API_BASE_URL}/thread/list`,
           { channelId: this.id, threadId, pageSize: this.pageSize}
         );
-        this.currentPage++;
+        this.currentTopPage =  response.data.result.pageable.pageNumber+1
+        if(response.data.result.pageable.pageNumber>0) this.currentBottomPage = response.data.result.pageable.pageNumber
         this.isLastPage = response.data.result.last;
         // this.messages = [...this.messages, ...response.data.result.content]
         
@@ -672,29 +707,23 @@ export default {
         return false;
       }
       const isTop = list.scrollTop <= 800;
+      const isBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 800;
 
       if (isTop && !this.isLastPage && !this.isLoading) {
         this.isLoading = true;
         if (list.scrollTop == 0 && !this.isLastPage) {
           list.scrollTop = 20;
         }
-        await this.getMessageList();
+        await this.getTopMessageList();
         this.isLoading = false;
       }
-    }, 200),
-    async scrollPagination() {
-      const list = document.getElementById("list-group");
-      const isTop = list.scrollTop <= 1600;
-      // "현재화면 + 스크롤로 이동한 화면 > 전체화면 -n" 의 조건이 성립되면 추가 데이터 로드
-      // const isBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 20;
-      console.log("scrollPagination%%%%%%%%%%%%%%%%%%%");
 
-      if (isTop && !this.isLastPage && !this.isLoading) {
+      if (isBottom && this.currentBottomPage>0 && !this.isLoading) {
         this.isLoading = true;
-        await this.getMessageList();
+        await this.getBottomMessageList();
         this.isLoading = false;
-      }
-    },
+  }
+    }, 200),
     scrollToBottom() {
       console.log("밑으로");
       
@@ -705,7 +734,6 @@ export default {
             container.scrollTop = container.scrollHeight;
           }
         }, 1);
-      
     },
     
     deleteImage(index){
