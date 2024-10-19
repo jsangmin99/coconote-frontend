@@ -3,27 +3,15 @@
     <!-- 현재 경로 표시 -->
     <div class="breadcrumb">
       <!-- 루트 경로로 드래그 앤 드롭 가능하게 설정 -->
-      <span
-        @click="navigateToFolder(rootFolderId)"
-        class="breadcrumb-item"
-        :class="{ active: currentFolderId === rootFolderId }"
-        draggable="true"
-        @dragover.prevent
-        @drop="onDrop($event, rootFolderId)"
-      >
+      <span @click="navigateToFolder(rootFolderId)" class="breadcrumb-item"
+        :class="{ active: currentFolderId === rootFolderId }" draggable="true" @dragover.prevent
+        @drop="onDrop($event, rootFolderId)">
         root
       </span>
 
       <span v-if="breadcrumb.length"> > </span>
-      <span
-        v-for="(folder, index) in breadcrumb"
-        :key="folder.folderId"
-        class="breadcrumb-item"
-        draggable="true"
-        @dragover.prevent
-        @drop="onDrop($event, folder.folderId)"
-        @click="navigateToFolder(folder.folderId)"
-      >
+      <span v-for="(folder, index) in breadcrumb" :key="folder.folderId" class="breadcrumb-item" draggable="true"
+        @dragover.prevent @drop="onDrop($event, folder.folderId)" @click="navigateToFolder(folder.folderId)">
         {{ folder.folderName }}
         <span v-if="index !== breadcrumb.length - 1"> > </span>
       </span>
@@ -58,111 +46,102 @@
 
     <!-- 폴더 목록 -->
     <div class="folder-list">
-      <div
-        v-for="folder in folderList"
-        :key="folder.folderId"
-        class="folder-item"
-        draggable="true"
-        @dragstart="onDragStart($event, 'folder', folder)"
-        @dragover.prevent
-        @drop="onDrop($event, folder.folderId)"
-        @click="navigateToFolder(folder.folderId)"
-        @contextmenu.prevent="showContextMenu($event, 'folder', folder)"
-      >
-        <img
-          src="@/assets/images/folder-icon.png"
-          alt="folder icon"
-          class="folder-icon"
-        />
-        <span>{{ folder.folderName }}</span>
+      <div v-for="folder in folderList" :key="folder.folderId" class="folder-item" draggable="true"
+        @dragstart="onDragStart($event, 'folder', folder)" @dragover.prevent @drop="onDrop($event, folder.folderId)"
+        @click="navigateToFolder(folder.folderId)" @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
+        <img src="@/assets/images/folder-icon.png" alt="folder icon" class="folder-icon" />
+        <span class="folder-text">{{ truncateFileName(folder.folderName) }}</span>
       </div>
     </div>
 
     <!-- 파일 목록 -->
     <div class="file-list">
-      <div
-        v-for="file in fileList"
-        :key="file.fileId"
-        class="file-item"
-        draggable="true"
-        @dragstart="onDragStart($event, 'file', file)"
-        @dragover.prevent
-        @drop="onDrop($event, null)"
-        @contextmenu.prevent="showContextMenu($event, 'file', file)"
-        @click="showFullFileName(file.fileId)"
-      >
+      <div v-for="file in fileList" :key="file.fileId" class="file-item" draggable="true"
+        @dragstart="onDragStart($event, 'file', file)" @dragover.prevent @drop="onDrop($event, null)"
+        @contextmenu.prevent="showContextMenu($event, 'file', file)" @click="showFullFileName(file.fileId)"
+        @dblclick="openPreviewModal(file)"> <!-- 더블클릭 이벤트 추가 -->
+
         <!-- 이미지 파일일 경우 -->
         <template v-if="isImage(file.fileName)">
           <img :src="file.fileUrl" alt="Image Preview" class="file-preview" />
-          <a :href="file.fileUrl" download :title="file.fileName">
-            {{
-              clickedFileId === file.fileId
-                ? file.fileName
-                : truncateFileName(file.fileName)
-            }}
-          </a>
+          <span class="file-text">
+            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+          </span>
         </template>
 
         <!-- PDF 파일일 경우 -->
         <template v-else-if="isPdf(file.fileName)">
-          <iframe
-            :src="file.fileUrl"
-            class="file-preview"
-            type="application/pdf"
-          ></iframe>
-          <div class="file-name">
-            <a :href="file.fileUrl" download :title="file.fileName">
-              {{
-                clickedFileId === file.fileId
-                  ? file.fileName
-                  : truncateFileName(file.fileName)
-              }}
-            </a>
+          <div class="file-preview-container" @contextmenu.prevent="showContextMenu($event, 'file', file)">
+            <img src="@/assets/images/pdf-icon.png" alt="PDF icon" class="file-icon" />
+            <span class="file-text">
+              {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+            </span>
           </div>
         </template>
 
         <!-- SVG 파일일 경우 -->
         <template v-else-if="isSvg(file.fileName)">
           <img :src="file.fileUrl" alt="SVG Preview" class="file-preview" />
-          <a :href="file.fileUrl" download :title="file.fileName">
-            {{
-              clickedFileId === file.fileId
-                ? file.fileName
-                : truncateFileName(file.fileName)
-            }}
-          </a>
+          <span class="file-text">
+            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+          </span>
         </template>
 
         <!-- 기타 파일일 경우 -->
         <template v-else>
           <i class="file-icon">📄</i>
-          <a :href="file.fileUrl" download :title="file.fileName">
-            {{
-              clickedFileId === file.fileId
-                ? file.fileName
-                : truncateFileName(file.fileName)
-            }}
-          </a>
+          <span class="file-text">
+            {{ clickedFileId === file.fileId ? file.fileName : truncateFileName(file.fileName) }}
+          </span>
         </template>
       </div>
     </div>
 
     <!-- 컨텍스트 메뉴 -->
-    <div
-      v-if="contextMenuVisible"
-      class="context-menu"
-      :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }"
-    >
+    <div v-if="contextMenuVisible" class="context-menu"
+      :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }">
       <ul>
         <li v-if="selectedItemType === 'folder'" @click="renameItem">이름 변경</li>
         <li v-if="selectedItemType === 'file'" @click="downloadFile(selectedItem.fileId)">
           다운로드
         </li>
+        <li v-if="selectedItemType === 'file'" @click="renameItem">파일 이름 변경</li>
         <li @click="deleteItem">삭제</li>
       </ul>
     </div>
   </div>
+
+  <!-- 파일 미리보기 모달 -->
+  <div v-if="showPreviewModal" class="modal-overlay" @click.self="closePreviewModal">
+    <div class="modal-content">
+      <button class="close-btn" @click="closePreviewModal">닫기</button>
+      <div v-if="selectedFile">
+        <!-- 이미지 파일 미리보기 -->
+        <template v-if="isImage(selectedFile.fileName)">
+          <img :src="selectedFile.fileUrl" alt="Image Preview" class="modal-preview" />
+        </template>
+
+        <!-- PDF 파일 미리보기 -->
+        <template v-else-if="isPdf(selectedFile.fileName)">
+          <iframe :src="selectedFile.fileUrl" class="modal-preview" type="application/pdf"></iframe>
+        </template>
+
+        <!-- SVG 파일 미리보기 -->
+        <template v-else-if="isSvg(selectedFile.fileName)">
+          <img :src="selectedFile.fileUrl" alt="SVG Preview" class="modal-preview" />
+        </template>
+
+        <!-- 기타 파일일 경우 -->
+        <template v-else>
+          <p>파일 미리보기를 지원하지 않는 형식입니다.</p>
+        </template>
+      </div>
+    </div>
+  </div>
+
 </template>
+
+
 
 <script>
 import axios from "@/services/axios";
@@ -186,9 +165,21 @@ export default {
       selectedItem: null, // 선택한 항목 (파일 또는 폴더)
       selectedItemType: null, // 선택한 항목의 타입 ('folder' 또는 'file')
       clickedFileId: null, // 클릭한 파일의 ID를 저장
+      showPreviewModal: false, // 모달 상태를 저장
+      selectedFile: null, // 선택된 파일 정보
     };
   },
   methods: {
+    // 파일 더블클릭 시 미리보기 모달 표시
+    openPreviewModal(file) {
+      this.selectedFile = file; // 선택된 파일 정보 저장
+      this.showPreviewModal = true; // 모달 창 열기
+    },
+    // 모달 닫기
+    closePreviewModal() {
+      this.showPreviewModal = false;
+      this.selectedFile = null; // 선택된 파일 정보 초기화
+    },
     async loadChannelDrive() {
       const channelId = this.$route.params.channelId; // URL에서 채널 ID 추출
       try {
@@ -212,13 +203,13 @@ export default {
     },
     // 드래그 시작 시 호출
     onDragStart(event, type, item) {
-      console.log("item: ",item);
-      console.log("item: ",item.fileId);
-      
+      console.log("item: ", item);
+      console.log("item: ", item.fileId);
+
       event.dataTransfer.setData("file", JSON.stringify(item));
       this.draggedItem = item;
       this.draggedType = type;
-      console.log("itemqqqq: ",this.draggedItem);
+      console.log("itemqqqq: ", this.draggedItem);
 
       // event.dataTransfer.effectAllowed = 'move';
     },
@@ -450,8 +441,8 @@ export default {
         // 파일 이름 추출
         const fileName = response.headers["content-disposition"]
           ? response.headers["content-disposition"]
-              .split("filename=")[1]
-              .replace(/"/g, "")
+            .split("filename=")[1]
+            .replace(/"/g, "")
           : "downloaded_file";
 
         // Blob을 파일로 변환하여 다운로드
@@ -590,7 +581,7 @@ export default {
       if (this.selectedItemType === "folder") {
         await this.renameFolder(this.selectedItem.folderId);
       } else if (this.selectedItemType === "file") {
-        alert("파일 이름 변경은 현재 지원되지 않습니다.");
+        await this.renameFile(this.selectedItem.fileId);
       }
 
       this.hideContextMenu();
@@ -700,6 +691,27 @@ export default {
         alert("폴더 탐색 중 오류가 발생했습니다.");
       }
     },
+    // 파일 이름 변경
+    async renameFile(fileId) {
+      const newFileName = prompt("새 파일 이름을 입력하세요:");
+      if (!newFileName) {
+        alert("유효한 파일 이름을 입력하세요.");
+        return;
+      }
+
+      try {
+        // 파일 이름 변경 API 호출
+        await axios.patch(
+          `${process.env.VUE_APP_API_BASE_URL}/files/${fileId}/rename`,
+          { newFileName }
+        );
+        alert("파일 이름이 성공적으로 변경되었습니다.");
+        this.refreshFolderList(); // 목록 갱신
+      } catch (error) {
+        console.error("파일 이름 변경 실패:", error);
+        alert("파일 이름 변경 중 오류가 발생했습니다.");
+      }
+    }
   },
   created() {
     // this.currentFolderId = this.currentFolderId || 1;
@@ -835,15 +847,25 @@ export default {
   transform: scale(1.05);
 }
 
-.file-name {
-  margin-top: 5px;
-  /* 미리보기 이미지와 파일 이름 사이의 간격 조정 */
-  text-align: center;
-  /* 파일 이름을 가운데 정렬 */
-}
 
 iframe.file-preview {
   border: none;
+}
+
+.folder-text,
+.file-text {
+  display: block;
+  margin-top: 5px;
+  text-align: center;
+  font-size: 16px;
+  color: #333;
+  word-break: break-word;
+}
+
+.file-icon {
+  width: 100px;
+  height: 90px;
+  margin-bottom: 5px;
 }
 
 /* 컨텍스트 메뉴 스타일 */
@@ -869,4 +891,44 @@ iframe.file-preview {
 .context-menu li:hover {
   background-color: #eee;
 }
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 80%;
+  max-height: 80%;
+  overflow: auto;
+  position: relative;
+}
+
+.modal-preview {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
 </style>
