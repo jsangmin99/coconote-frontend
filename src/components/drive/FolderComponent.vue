@@ -46,9 +46,11 @@
 
     <!-- 폴더 목록 -->
     <div class="folder-list">
-      <div v-for="folder in folderList" :key="folder.folderId" class="folder-item" draggable="true"
+      <div v-for="folder in folderList" :key="folder.folderId" class="folder-item"
+        :class="{ selected: selectedItems.includes(folder) }" draggable="true"
         @dragstart="onDragStart($event, 'folder', folder)" @dragover.prevent @drop="onDrop($event, folder.folderId)"
-        @click="navigateToFolder(folder.folderId)" @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
+        @click="toggleSelection($event, 'folder', folder)" @dblclick="navigateToFolder(folder.folderId)"
+        @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
         <img src="@/assets/images/folder-icon.png" alt="folder icon" class="folder-icon" />
         <span class="folder-text">{{ truncateFileName(folder.folderName) }}</span>
       </div>
@@ -57,9 +59,9 @@
     <!-- 파일 목록 -->
     <div class="file-list">
       <div v-for="file in fileList" :key="file.fileId" class="file-item" draggable="true"
+        :class="{ selected: selectedItems.includes(file) }" @click="toggleSelection($event, 'file', file)"
         @dragstart="onDragStart($event, 'file', file)" @dragover.prevent @drop="onDrop($event, null)"
-        @contextmenu.prevent="showContextMenu($event, 'file', file)" @click="showFullFileName(file.fileId)"
-        @dblclick="openPreviewModal(file)"> <!-- 더블클릭 이벤트 추가 -->
+        @contextmenu.prevent="showContextMenu($event, 'file', file)" @dblclick="openPreviewModal(file)">
 
         <!-- 이미지 파일일 경우 -->
         <template v-if="isImage(file.fileName)">
@@ -167,9 +169,54 @@ export default {
       clickedFileId: null, // 클릭한 파일의 ID를 저장
       showPreviewModal: false, // 모달 상태를 저장
       selectedFile: null, // 선택된 파일 정보
+      selectedItems: [], // 선택된 항목 목록
+      lastSelectedIndex: null, // 마지막으로 선택된 항목의 인덱스
     };
   },
   methods: {
+    // 항목 선택 토글
+    toggleSelection(event, type, item) {
+      const itemList = [...this.folderList, ...this.fileList]; // 폴더와 파일 목록을 결합
+      const currentIndex = itemList.indexOf(item);
+
+      if (event.ctrlKey || event.metaKey) {
+        // Ctrl 또는 Cmd 키를 눌렀을 때 다중 선택
+        const index = this.selectedItems.indexOf(item);
+        if (index === -1) {
+          this.selectedItems.push(item);
+        } else {
+          this.selectedItems.splice(index, 1);
+        }
+        this.lastSelectedIndex = currentIndex; // 마지막 선택된 인덱스를 업데이트
+      } else if (event.shiftKey) {
+        // Shift 키를 눌렀을 때 범위 선택
+        if (this.lastSelectedIndex !== null) {
+          const start = Math.min(this.lastSelectedIndex, currentIndex);
+          const end = Math.max(this.lastSelectedIndex, currentIndex);
+          this.selectedItems = [
+            ...new Set([
+              ...this.selectedItems,
+              ...itemList.slice(start, end + 1)
+            ])
+          ]; // 중복 항목 없이 추가
+        } else {
+          // 이전에 선택된 항목이 없을 경우 단일 선택으로 처리
+          this.selectedItems = [item];
+        }
+      } else {
+        // 단일 선택
+        this.selectedItems = [item];
+        this.lastSelectedIndex = currentIndex; // 마지막 선택된 인덱스를 업데이트
+      }
+    },
+    // 외부 클릭 시 선택 해제
+    clearSelection(event) {
+      // 클릭한 대상이 파일이나 폴더 항목이 아닐 경우 선택 해제
+      if (!event.target.closest('.file-item') && !event.target.closest('.folder-item')) {
+        this.selectedItems = [];
+        this.lastSelectedIndex = null;
+      }
+    },
     // 파일 더블클릭 시 미리보기 모달 표시
     openPreviewModal(file) {
       this.selectedFile = file; // 선택된 파일 정보 저장
@@ -203,15 +250,12 @@ export default {
     },
     // 드래그 시작 시 호출
     onDragStart(event, type, item) {
-      console.log("item: ", item);
-      console.log("item: ", item.fileId);
-
-      event.dataTransfer.setData("file", JSON.stringify(item));
-      this.draggedItem = item;
+      if (this.selectedItems.length === 0 || !this.selectedItems.includes(item)) {
+        this.selectedItems = [item];
+      }
+      event.dataTransfer.setData("items", JSON.stringify(this.selectedItems));
       this.draggedType = type;
-      console.log("itemqqqq: ", this.draggedItem);
-
-      // event.dataTransfer.effectAllowed = 'move';
+      console.log(event.dataTransfer.getData("items"));
     },
 
     // 드롭 시 호출
@@ -220,45 +264,50 @@ export default {
         alert("유효한 폴더 ID를 입력하세요.");
         return;
       }
-      // 폴더가 파일 안에 이동하지 않도록 처리
-      if (this.draggedType === "folder" && !targetFolderId) {
+
+      const draggedItems = JSON.parse(event.dataTransfer.getData("items"));
+      const draggedFolders = draggedItems.filter(item => item.folderId);
+      const draggedFiles = draggedItems.filter(item => item.fileId);
+
+      // 폴더를 파일 안에 이동하지 않도록 처리
+      if (draggedFolders.length > 0 && !targetFolderId) {
         alert("폴더는 파일 안에 이동할 수 없습니다.");
         return;
       }
 
-      // 자기 자신에게 드롭하지 못하도록 하기 (폴더와 파일 구분)
-      if (this.draggedType === "folder" && this.draggedItem === targetFolderId) {
+      // 자기 자신에게 드롭하지 못하도록 하기
+      if (draggedFolders.some(folder => folder.folderId === targetFolderId)) {
         alert("같은 폴더로 이동할 수 없습니다.");
         return;
       }
 
-      if (this.draggedType === "file" && this.currentFolderId === targetFolderId) {
+      if (draggedFiles.length > 0 && this.currentFolderId === targetFolderId) {
         alert("같은 위치로 파일을 이동할 수 없습니다.");
         return;
       }
 
       try {
-        if (this.draggedType === "file") {
-          // 파일을 targetFolderId로 이동
-          await this.moveFile(this.draggedItem.fileId, targetFolderId);
-          alert("파일이 성공적으로 이동되었습니다.");
-        } else if (this.draggedType === "folder") {
-          // 폴더를 targetFolderId로 이동
-          await this.moveFolder(this.draggedItem.folderId, targetFolderId);
-          alert("폴더가 성공적으로 이동되었습니다.");
+        // 파일 이동 처리
+        for (const file of draggedFiles) {
+          await this.moveFile(file.fileId, targetFolderId);
         }
+
+        // 폴더 이동 처리
+        for (const folder of draggedFolders) {
+          await this.moveFolder(folder.folderId, targetFolderId);
+        }
+
+        alert("항목이 성공적으로 이동되었습니다.");
       } catch (error) {
-        console.error(`${this.draggedType} 이동 실패:`, error);
-        alert(`${this.draggedType} 이동 중 오류가 발생했습니다.`);
+        console.error("항목 이동 실패:", error);
+        alert("항목 이동 중 오류가 발생했습니다.");
       }
 
-      // 드래그 상태 초기화
-      this.draggedItem = null;
       this.draggedType = null;
-
-      // 목록 갱신
+      this.selectedItems = [];
       this.refreshFolderList();
     },
+
 
     // 폴더 생성
     async createFolder() {
@@ -720,10 +769,12 @@ export default {
   mounted() {
     // window 클릭 이벤트 추가 (컨텍스트 메뉴 밖을 클릭하면 메뉴를 숨김)
     window.addEventListener("click", this.hideContextMenu);
+    window.addEventListener('click', this.clearSelection);
   },
   beforeUnmount() {
     // 컴포넌트가 파괴되기 전 window 클릭 이벤트 제거
     window.removeEventListener("click", this.hideContextMenu);
+    window.removeEventListener('click', this.clearSelection);
   },
 };
 </script>
@@ -931,4 +982,9 @@ iframe.file-preview {
   cursor: pointer;
 }
 
+.file-item.selected,
+.folder-item.selected {
+  border: 2px solid #007bff;
+  background-color: #e6f0ff;
+}
 </style>
