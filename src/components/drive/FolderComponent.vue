@@ -104,9 +104,7 @@
       :style="{ top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px` }">
       <ul>
         <li v-if="selectedItemType === 'folder'" @click="renameItem">이름 변경</li>
-        <li v-if="selectedItemType === 'file'" @click="downloadFile(selectedItem.fileId)">
-          다운로드
-        </li>
+        <li v-if="selectedItemType === 'file'" @click="downloadFile(selectedItem.fileId)">다운로드</li>
         <li v-if="selectedItemType === 'file'" @click="renameItem">파일 이름 변경</li>
         <li @click="deleteItem">삭제</li>
       </ul>
@@ -606,11 +604,25 @@ export default {
 
     // 우클릭 메뉴 보이기
     showContextMenu(event, type, item) {
-      event.preventDefault(); // 기본 우클릭 메뉴를 방지
-      this.contextMenuVisible = false; // 기존 메뉴 숨기기
+      event.preventDefault();
       this.contextMenuPosition = { x: event.clientX, y: event.clientY };
-      this.selectedItem = item;
-      this.selectedItemType = type;
+
+      // 다중 선택된 항목이 있는 경우
+      if (this.selectedItems.length > 1) {
+        this.selectedItem = null; // 개별 항목이 아닌 다중 선택 처리
+        this.selectedItemType = 'multiple';
+      } else {
+        // 단일 항목 선택 시
+        this.selectedItem = item;
+        this.selectedItemType = type;
+
+        // 다중 선택이 아닌 경우, 선택된 항목 목록에 현재 항목만 설정
+        if (!this.selectedItems.includes(item)) {
+          this.selectedItems = [item];
+        }
+      }
+
+      this.contextMenuVisible = true;
 
       // DOM 업데이트 후 메뉴가 보이도록 $nextTick 사용
       this.$nextTick(() => {
@@ -637,13 +649,28 @@ export default {
     },
     // 삭제
     async deleteItem() {
-      if (this.selectedItemType === "folder") {
+      if (this.selectedItemType === 'multiple') {
+      // 다중 선택된 항목을 삭제
+      const confirmed = confirm("선택된 모든 항목을 삭제하시겠습니까?");
+      if (!confirmed) return;
+
+      for (const item of this.selectedItems) {
+        if (item.fileId) {
+          await this.deleteFile(item.fileId);
+        } else if (item.folderId) {
+          await this.deleteFolder(item.folderId);
+        }
+      }
+    } else {
+      // 단일 항목 삭제
+      if (this.selectedItemType === 'folder') {
         await this.deleteFolder(this.selectedItem.folderId);
-      } else if (this.selectedItemType === "file") {
+      } else if (this.selectedItemType === 'file') {
         await this.deleteFile(this.selectedItem.fileId);
       }
-
-      this.hideContextMenu();
+    }
+    this.hideContextMenu();
+    this.refreshFolderList();
     },
     // 이동
     async moveItem() {
