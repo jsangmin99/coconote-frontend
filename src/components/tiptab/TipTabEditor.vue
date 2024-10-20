@@ -161,6 +161,9 @@ import DraggableItem from "@/components/tiptab/DraggableItem";
 import Image from "@tiptap/extension-image"; // 이미지 추가용
 // import { NodePos } from '@tiptap/core';
 
+// 코드 내 들여쓰기 용 
+import { Indent } from "@/components/tiptab/indent";
+
 import { mapGetters, mapActions } from "vuex";
 
 export default {
@@ -316,6 +319,7 @@ export default {
             // Do something with the node
           },
         }),
+        Indent
       ],
       onUpdate: () => {
         const selectedNode = this.editor.state.selection;
