@@ -59,7 +59,8 @@
     <!-- 파일 목록 -->
     <div class="file-list">
       <div v-for="file in fileList" :key="file.fileId" class="file-item" draggable="true"
-        :class="{ selected: selectedItems.includes(file) }" @click="toggleSelection($event, 'file', file)"
+        :class="{ selected: selectedItems.includes(file) }"
+        @click="toggleSelection($event, 'file', file); showFullFileName(file.fileId)"
         @dragstart="onDragStart($event, 'file', file)" @dragover.prevent @drop="onDrop($event, null)"
         @contextmenu.prevent="showContextMenu($event, 'file', file)" @dblclick="openPreviewModal(file)">
 
@@ -225,27 +226,43 @@ export default {
       this.showPreviewModal = false;
       this.selectedFile = null; // 선택된 파일 정보 초기화
     },
+
     async loadChannelDrive() {
       const channelId = this.$route.params.channelId; // URL에서 채널 ID 추출
+      const folderId = this.$route.params.folderId || null; // URL에서 폴더 ID 추출
       try {
-        const response = await axios.get(
-          `${process.env.VUE_APP_API_BASE_URL}/channel/${channelId}/drive`
-        );
+        // 요청 URL을 폴더 ID가 있는 경우와 없는 경우로 분기
+        console.log("xxxc", folderId);
+        const url = folderId
+          ? `${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}`
+          : `${process.env.VUE_APP_API_BASE_URL}/channel/${channelId}/drive`;
+
+        const response = await axios.get(url);
         const data = response.data.result;
-        this.rootFolderId = data.nowFolderId; // 루트 폴더 설정
-        this.currentFolderId = data.nowFolderId;
+
+        // 폴더와 파일 목록, 경로 설정
+        this.rootFolderId = data.rootFolderId || data.nowFolderId; // 루트 폴더 ID 설정
+        this.currentFolderId = data.nowFolderId || folderId; // 현재 폴더 ID 설정
         this.folderList = data.folderListDto || [];
         this.fileList = data.fileListDto || [];
-        this.parentFolderId = null; // 루트 폴더의 상위 폴더는 없으므로 null로 설정
-        this.breadcrumb =
-          data.nowFolderId === this.rootFolderId
-            ? []
-            : [{ folderId: this.currentFolderId, folderName: data.nowFolderName }];
+        this.parentFolderId = data.parentFolderId || null; // 부모 폴더 ID 설정
+
+        // Breadcrumb 설정
+        this.breadcrumb = (data.breadcrumb || []).map((item) => ({
+          folderId: item.folderId,
+          folderName: item.folderName,
+        }));
+
+        // 선택된 파일 강조 표시
+        if (this.$route.query.fileId) {
+          this.highlightFile(this.$route.query.fileId);
+        }
       } catch (error) {
         console.error("채널 드라이브 로딩 실패:", error);
         alert("채널 드라이브 로딩 중 오류가 발생했습니다.");
       }
     },
+
     // 드래그 시작 시 호출
     onDragStart(event, type, item) {
       if (this.selectedItems.length === 0 || !this.selectedItems.includes(item)) {
@@ -383,6 +400,12 @@ export default {
       }
     },
 
+
+    // 파일 이름을 정규화하는 함수
+    normalizeFileName(fileName) {
+      return fileName.normalize("NFC");
+    },
+
     // 파일 업로드
     async uploadFiles() {
       if (!this.files.length) return;
@@ -466,7 +489,7 @@ export default {
         folderId: this.currentFolderId,
         fileType: "OTHER",
         fileSaveListDto: uploadedFileUrls.map((url, index) => ({
-          fileName: this.files[index].name,
+          fileName: this.normalizeFileName(this.files[index].name), // 파일 이름을 정규화하여 저장
           fileUrl: url,
         })),
       };
@@ -650,27 +673,27 @@ export default {
     // 삭제
     async deleteItem() {
       if (this.selectedItemType === 'multiple') {
-      // 다중 선택된 항목을 삭제
-      const confirmed = confirm("선택된 모든 항목을 삭제하시겠습니까?");
-      if (!confirmed) return;
+        // 다중 선택된 항목을 삭제
+        const confirmed = confirm("선택된 모든 항목을 삭제하시겠습니까?");
+        if (!confirmed) return;
 
-      for (const item of this.selectedItems) {
-        if (item.fileId) {
-          await this.deleteFile(item.fileId);
-        } else if (item.folderId) {
-          await this.deleteFolder(item.folderId);
+        for (const item of this.selectedItems) {
+          if (item.fileId) {
+            await this.deleteFile(item.fileId);
+          } else if (item.folderId) {
+            await this.deleteFolder(item.folderId);
+          }
+        }
+      } else {
+        // 단일 항목 삭제
+        if (this.selectedItemType === 'folder') {
+          await this.deleteFolder(this.selectedItem.folderId);
+        } else if (this.selectedItemType === 'file') {
+          await this.deleteFile(this.selectedItem.fileId);
         }
       }
-    } else {
-      // 단일 항목 삭제
-      if (this.selectedItemType === 'folder') {
-        await this.deleteFolder(this.selectedItem.folderId);
-      } else if (this.selectedItemType === 'file') {
-        await this.deleteFile(this.selectedItem.fileId);
-      }
-    }
-    this.hideContextMenu();
-    this.refreshFolderList();
+      this.hideContextMenu();
+      this.refreshFolderList();
     },
     // 이동
     async moveItem() {
@@ -787,16 +810,34 @@ export default {
         console.error("파일 이름 변경 실패:", error);
         alert("파일 이름 변경 중 오류가 발생했습니다.");
       }
-    }
+    },
+    highlightFile(fileId) {
+      // 파일 목록에서 해당 파일을 찾아 강조 표시
+      this.selectedFileId = fileId;
+    },
   },
   created() {
     // this.currentFolderId = this.currentFolderId || 1;
     this.loadChannelDrive();
+    // URL에서 전달된 folderId로 폴더를 탐색
+    this.currentFolderId = this.$props.folderId || this.rootFolderId;
+    if (this.currentFolderId) {
+      this.navigateToFolder(this.currentFolderId);
+    }
+    // URL에서 전달된 fileId로 파일 강조 표시
+    const fileId = this.$props.fileId;
+    if (fileId) {
+      this.highlightFile(fileId);
+    }
   },
   mounted() {
     // window 클릭 이벤트 추가 (컨텍스트 메뉴 밖을 클릭하면 메뉴를 숨김)
     window.addEventListener("click", this.hideContextMenu);
     window.addEventListener('click', this.clearSelection);
+    const fileId = this.$route.query.fileId;
+    if (fileId) {
+      this.highlightFile(fileId);
+    }
   },
   beforeUnmount() {
     // 컴포넌트가 파괴되기 전 window 클릭 이벤트 제거
