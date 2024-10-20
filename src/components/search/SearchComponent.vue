@@ -48,15 +48,15 @@
       <div v-if="!loading" class="result-container">
         <!-- 전체 검색 시 모든 카테고리 결과 출력 -->
         <template v-if="activeTab === 'ALL'">
-          <div v-if="totalMembers > 0" class="category-section">
+          <div v-if="results.workspaceMembers.length > 0" class="category-section">
             <h3>멤버 검색 결과 ({{ totalMembers }})</h3>
             <div v-for="(result, index) in results.workspaceMembers" :key="index" class="result-card">
               <h3>{{ result.memberName || '멤버 이름 없음' }}</h3>
               <p>{{ result.email || '이메일 없음' }}</p>
             </div>
           </div>
-          <!-- 파일 검색 결과 -->
-          <div v-if="totalFiles > 0" class="category-section">
+
+          <div v-if="results.files.length > 0" class="category-section">
             <h3>파일 검색 결과 ({{ totalFiles }})</h3>
             <div v-for="(result, index) in results.files" :key="index" class="file-result-card"
               @click="moveToFileLocation(result.channelId, result.folderId, result.fileId)">
@@ -73,25 +73,31 @@
             </div>
           </div>
 
-          <div v-if="totalChannels > 0" class="category-section">
+          <div v-if="results.channels.length > 0" class="category-section">
             <h3>채널 검색 결과 ({{ totalChannels }})</h3>
-            <div v-for="(result, index) in results.channels" :key="index" class="result-card">
-              <h3>{{ result.channelName || '채널 이름 없음' }}</h3>
-              <p>{{ result.channelInfo || '채널 정보 없음' }}</p>
+            <div v-for="(result, index) in results.channels" :key="index" class="channel-result-card">
+              <div class="channel-status">
+                <i :class="result.isPublic ? 'mdi mdi-lock-open-outline' : 'mdi mdi-lock'" class="lock-icon"></i>
+              </div>
+              <div class="channel-info">
+                <h3 class="channel-name">{{ result.channelName || '채널 이름 없음' }}</h3>
+                <p class="channel-description">{{ result.channelInfo || '채널 설명 없음' }}</p>
+                <button @click="handleChannelClick(result.channelId, result.channelName, result.channelInfo)"
+                  class="moveToChannel">채널 이동</button>
+              </div>
             </div>
           </div>
 
-          <div v-if="totalThreads > 0" class="category-section">
+          <div v-if="results.threads.length > 0" class="category-section">
             <h3>쓰레드 검색 결과 ({{ totalThreads }})</h3>
             <div v-for="(result, index) in results.threads" :key="index" class="result-card"
               @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
-
               <h3>{{ result.content || '내용 없음' }}</h3>
               <p class="metadata">Posted by: {{ result.memberName }} | {{ result.createdTime }}</p>
             </div>
           </div>
 
-          <div v-if="totalCanvasBlocks > 0" class="category-section">
+          <div v-if="results.canvasBlocks.length > 0" class="category-section">
             <h3>캔버스 & 블록 검색 결과 ({{ totalCanvasBlocks }})</h3>
             <div v-for="(result, index) in results.canvasBlocks" :key="index" class="result-card">
               <h3>{{ result.canvasTitle || '제목 없음' }} (Canvas & Block)</h3>
@@ -100,18 +106,20 @@
           </div>
         </template>
 
-        <!-- 카테고리별 검색 결과 -->
+        <!-- 개별 카테고리 탭에서의 검색 결과 -->
         <template v-else>
-          <div v-for="(result, index) in results" :key="index" class="result-card">
-            <template v-if="activeTab === 'CANVAS_BLOCK'">
-              <h3>{{ result.canvasTitle || '제목 없음' }} (Canvas & Block)</h3>
-              <p>{{ result.blockContents || '내용 없음' }}</p>
-            </template>
-            <template v-else-if="activeTab === 'CHANNEL'">
-              <h3>{{ result.channelName || '채널 이름 없음' }}</h3>
-              <p>{{ result.channelInfo || '채널 정보 없음' }}</p>
-            </template>
-            <template v-else-if="activeTab === 'FILE'">
+          <div v-if="activeTab === 'MEMBER' && results.length > 0" class="category-section">
+            <h3>멤버 검색 결과 ({{ totalMembers }})</h3>
+            <div v-for="(result, index) in results" :key="index" class="result-card">
+              <h3>{{ result.memberName || '멤버 이름 없음' }}</h3>
+              <p>{{ result.email || '이메일 없음' }}</p>
+            </div>
+          </div>
+
+          <div v-if="activeTab === 'FILE' && results.length > 0" class="category-section">
+            <h3>파일 검색 결과 ({{ totalFiles }})</h3>
+            <div v-for="(result, index) in results" :key="index" class="file-result-card"
+              @click="moveToFileLocation(result.channelId, result.folderId, result.fileId)">
               <div class="file-info">
                 <img :src="result.fileUrl" alt="File Preview" class="file-preview" />
                 <div class="file-details">
@@ -122,15 +130,39 @@
                   </p>
                 </div>
               </div>
-            </template>
-            <template v-else-if="activeTab === 'THREAD'">
+            </div>
+          </div>
+
+          <div v-if="activeTab === 'CHANNEL' && results.length > 0" class="category-section">
+            <h3>채널 검색 결과 ({{ totalChannels }})</h3>
+            <div v-for="(result, index) in results" :key="index" class="channel-result-card">
+              <div class="channel-status">
+                <i :class="result.isPublic ? 'mdi mdi-lock-open-outline' : 'mdi mdi-lock'" class="lock-icon"></i>
+              </div>
+              <div class="channel-info">
+                <h3 class="channel-name">{{ result.channelName || '채널 이름 없음' }}</h3>
+                <p class="channel-description">{{ result.channelInfo || '채널 설명 없음' }}</p>
+                <button @click="handleChannelClick(result.channelId, result.channelName, result.channelInfo)"
+                  class="moveToChannel">채널 이동</button>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="activeTab === 'THREAD' && results.length > 0" class="category-section">
+            <h3>쓰레드 검색 결과 ({{ totalThreads }})</h3>
+            <div v-for="(result, index) in results" :key="index" class="result-card"
+              @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
               <h3>{{ result.content || '내용 없음' }}</h3>
               <p class="metadata">Posted by: {{ result.memberName }} | {{ result.createdTime }}</p>
-            </template>
-            <template v-else-if="activeTab === 'MEMBER'">
-              <h3>{{ result.memberName || '멤버 이름 없음' }}</h3>
-              <p>{{ result.email || '이메일 없음' }}</p>
-            </template>
+            </div>
+          </div>
+
+          <div v-if="activeTab === 'CANVAS_BLOCK' && results.length > 0" class="category-section">
+            <h3>캔버스 & 블록 검색 결과 ({{ totalCanvasBlocks }})</h3>
+            <div v-for="(result, index) in results" :key="index" class="result-card">
+              <h3>{{ result.canvasTitle || '제목 없음' }} (Canvas & Block)</h3>
+              <p>{{ result.blockContents || '내용 없음' }}</p>
+            </div>
           </div>
         </template>
 
@@ -142,14 +174,17 @@
         </div>
       </div>
 
-      <div v-if="!loading && results.length === 0" class="no-results-message">No results found.</div>
+      <div v-if="!loading && totalAll === 0" class="no-results-message">No results found.</div>
     </div>
   </div>
 </template>
 
+
+
 <script>
 import axios from 'axios';
 import debounce from 'lodash/debounce';
+import { mapActions } from 'vuex';
 
 export default {
   props: ['workspaceId'],
@@ -223,16 +258,36 @@ export default {
         if (response.data && response.data.result) {
           // 전체 검색일 경우 결과를 카테고리별로 저장
           if (this.activeTab === 'ALL') {
+            let channels = response.data.result.channels || [];
+            this.totalChannels = response.data.result.totalChannels || 0;
+
+            // 비공개 채널의 경우 가입 여부 확인하여 필터링
+            const filteredChannels = await Promise.all(
+              channels.map(async (channel) => {
+                if (!channel.isPublic) {
+                  const isJoinResponse = await axios.get(
+                    `${process.env.VUE_APP_API_BASE_URL}/channel/${channel.channelId}/isjoin`
+                  );
+                  const isJoin = isJoinResponse.data.result;
+                  if (!isJoin) {
+                    return null; // 가입되지 않은 비공개 채널은 제외
+                  }
+                }
+                return channel;
+              })
+            );
+
+            // null 값이 아닌 채널만 필터링
             this.results = {
               workspaceMembers: response.data.result.workspaceMembers || [],
               files: response.data.result.files || [],
-              channels: response.data.result.channels || [],
+              channels: filteredChannels.filter((channel) => channel !== null),
               threads: response.data.result.threads || [],
               canvasBlocks: response.data.result.canvasBlocks || [],
             };
+
             this.totalMembers = response.data.result.totalMembers || 0;
             this.totalFiles = response.data.result.totalFiles || 0;
-            this.totalChannels = response.data.result.totalChannels || 0;
             this.totalThreads = response.data.result.totalThreads || 0;
             this.totalCanvasBlocks = response.data.result.totalCanvasBlocks || 0;
             this.totalAll = this.totalMembers + this.totalFiles + this.totalChannels + this.totalThreads + this.totalCanvasBlocks;
@@ -370,6 +425,41 @@ export default {
       }
     },
 
+    async handleChannelClick(id, name, desc) {
+      this.selectedChannelMenuId = id;
+      this.setChannelInfoActions(id);
+      this.setChannelNameInfoActions(name);
+      this.setChannelDescInfoActions(desc);
+
+      // Vuex에 현재 채널 설정
+      this.$store.dispatch("notifications/changeChannel", id);
+
+      try {
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
+        );
+
+        const isJoin = response.data.result;
+
+        if (isJoin) {
+          this.$router.push(`/channel/${id}/thread/view`);
+        } else {
+          this.$router.push({
+            path: `/channel/${id}`,
+            query: { isJoin: false },
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check channel join status:', error);
+      }
+    },
+    ...mapActions([
+      'setChannelInfoActions',
+      'setChannelNameInfoActions',
+      'setChannelDescInfoActions',
+    ]),
+
+
 
     handleClickOutside(event) {
       const autocomplete = this.$refs.autocomplete;
@@ -431,60 +521,11 @@ export default {
 </script>
 
 <style scoped>
-/* 스크롤 추가 */
-.result-container {
-  min-height: 300px;
-  /* 최소 높이를 300px로 설정 */
-  max-height: 650px;
-  /* 최대 높이를 600px로 설정 */
-  overflow-y: auto;
-  padding: 20px;
-  background-color: #f7f7f7;
-  /* 밝은 배경 색상 */
-  border-radius: 8px;
-}
-
-.autocomplete-suggestions {
-  background-color: white;
-  border: 1px solid #ccc;
-  position: absolute;
-  max-height: 200px;
-  overflow-y: auto;
-  width: 55%;
-  border-radius: 4px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-
-.autocomplete-suggestions ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.autocomplete-suggestions li {
-  padding: 10px;
-  cursor: pointer;
-  color: #333;
-}
-
-.autocomplete-suggestions li:hover {
-  background-color: #f1f1f1;
-}
-
-.autocomplete-suggestions li.active {
-  background-color: #e0e0e0;
-}
-
+/* 기본 검색 페이지 스타일 */
 .search-page-container {
   display: flex;
   justify-content: space-between;
 }
-
-/* .dummy-container {
-  width: 15%;
- } 
-*/
 
 .search-page {
   flex: 1;
@@ -499,6 +540,7 @@ export default {
   /* 화면의 90% 높이로 설정 */
 }
 
+/* 검색 바 스타일 */
 .search-bar {
   display: flex;
   justify-content: flex-start;
@@ -547,53 +589,40 @@ export default {
   transform: scale(0.98);
 }
 
-.result-card {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.loading-message,
-.no-results-message {
-  text-align: center;
-  font-size: 1.2em;
-  color: #666;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
-  align-items: center;
-  /* 버튼과 텍스트를 수직으로 가운데 정렬 */
-
-}
-
-.pagination button {
-  padding: 10px;
-  background-color: #3a8bcd;
-  border: none;
-  color: white;
+/* 자동완성 리스트 스타일 */
+.autocomplete-suggestions {
+  background-color: white;
+  border: 1px solid #ccc;
+  position: absolute;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 55%;
   border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.autocomplete-suggestions ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.autocomplete-suggestions li {
+  padding: 10px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
+  color: #333;
 }
 
-.pagination button:hover {
-  background-color: #337ab7;
+.autocomplete-suggestions li:hover {
+  background-color: #f1f1f1;
 }
 
-.pagination span {
-  color: #555;
-  font-size: 14px;
-  margin-top: 5px;
-  /* 살짝 아래로 내리기 */
+.autocomplete-suggestions li.active {
+  background-color: #e0e0e0;
 }
 
+/* 탭 스타일 */
 .tabs {
   display: flex;
   gap: 10px;
@@ -618,6 +647,26 @@ export default {
   color: white;
 }
 
+/* 결과 컨테이너 및 메시지 */
+.result-container {
+  min-height: 300px;
+  /* 최소 높이를 300px로 설정 */
+  max-height: 650px;
+  /* 최대 높이를 650px로 설정 */
+  overflow-y: auto;
+  padding: 20px;
+  background-color: #f7f7f7;
+  border-radius: 8px;
+}
+
+.loading-message,
+.no-results-message {
+  text-align: center;
+  font-size: 1.2em;
+  color: #666;
+}
+
+/* 카테고리 섹션 스타일 */
 .category-section {
   margin-bottom: 30px;
 }
@@ -631,30 +680,57 @@ p {
   color: #666;
 }
 
-a {
-  color: #3a8bcd;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-.file-result-card {
+/* 페이징 스타일 */
+.pagination {
   display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
   align-items: center;
+  /* 버튼과 텍스트를 수직으로 가운데 정렬 */
+}
+
+.pagination button {
+  padding: 10px;
+  background-color: #3a8bcd;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.pagination button:hover {
+  background-color: #337ab7;
+}
+
+.pagination span {
+  color: #555;
+  font-size: 14px;
+  margin-top: 5px;
+  /* 살짝 아래로 내리기 */
+}
+
+/* 공통 카드 스타일 */
+.result-card,
+.file-result-card,
+.channel-result-card {
   background-color: #fff;
-  padding: 15px;
+  padding: 20px;
   border-radius: 8px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease;
 }
 
-.file-result-card:hover {
+.result-card:hover,
+.file-result-card:hover,
+.channel-result-card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* 파일 결과 스타일 */
 .file-info {
   display: flex;
   align-items: center;
@@ -688,5 +764,48 @@ a:hover {
 
 .file-link a:hover {
   text-decoration: underline;
+}
+
+/* 채널 정보 스타일 */
+.channel-status {
+  margin-right: 15px;
+}
+
+.lock-icon {
+  font-size: 24px;
+  color: #888;
+}
+
+.channel-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.channel-name {
+  font-size: 18px;
+  color: #333;
+  margin: 0;
+}
+
+.channel-description {
+  font-size: 14px;
+  color: #666;
+  margin: 5px 0;
+}
+
+.moveToChannel {
+  background-color: #3a8bcd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.moveToChannel:hover {
+  background-color: #337ab7;
 }
 </style>
