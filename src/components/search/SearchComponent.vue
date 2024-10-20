@@ -55,12 +55,21 @@
               <p>{{ result.email || '이메일 없음' }}</p>
             </div>
           </div>
-
+          <!-- 파일 검색 결과 -->
           <div v-if="totalFiles > 0" class="category-section">
             <h3>파일 검색 결과 ({{ totalFiles }})</h3>
-            <div v-for="(result, index) in results.files" :key="index" class="result-card">
-              <h3>{{ result.fileName || '파일 이름 없음' }}</h3>
-              <p><a :href="result.fileUrl" target="_blank">Download</a></p>
+            <div v-for="(result, index) in results.files" :key="index" class="file-result-card"
+              @click="moveToFileLocation(result.channelId, result.folderId, result.fileId)">
+              <div class="file-info">
+                <img :src="result.fileUrl" alt="File Preview" class="file-preview" />
+                <div class="file-details">
+                  <h3 class="file-name">{{ result.fileName || '파일 이름 없음' }}</h3>
+                  <p class="file-link">
+                    <button @click.stop.prevent="downloadFile(result.fileId)"
+                      style="color: blue; background: none; border: none; cursor: pointer; text-decoration: underline;">Download</button>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -74,7 +83,8 @@
 
           <div v-if="totalThreads > 0" class="category-section">
             <h3>쓰레드 검색 결과 ({{ totalThreads }})</h3>
-            <div v-for="(result, index) in results.threads" :key="index" class="result-card" @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
+            <div v-for="(result, index) in results.threads" :key="index" class="result-card"
+              @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
 
               <h3>{{ result.content || '내용 없음' }}</h3>
               <p class="metadata">Posted by: {{ result.memberName }} | {{ result.createdTime }}</p>
@@ -102,8 +112,16 @@
               <p>{{ result.channelInfo || '채널 정보 없음' }}</p>
             </template>
             <template v-else-if="activeTab === 'FILE'">
-              <h3>{{ result.fileName || '파일 이름 없음' }}</h3>
-              <p><a :href="result.fileUrl" target="_blank">Download</a></p>
+              <div class="file-info">
+                <img :src="result.fileUrl" alt="File Preview" class="file-preview" />
+                <div class="file-details">
+                  <h3 class="file-name">{{ result.fileName || '파일 이름 없음' }}</h3>
+                  <p class="file-link">
+                    <button @click.stop.prevent="downloadFile(result.fileId)"
+                      style="color: blue; background: none; border: none; cursor: pointer; text-decoration: underline;">Download</button>
+                  </p>
+                </div>
+              </div>
             </template>
             <template v-else-if="activeTab === 'THREAD'">
               <h3>{{ result.content || '내용 없음' }}</h3>
@@ -284,14 +302,72 @@ export default {
       }
     },
 
-    moveToThread(channelId, threadId, parentThreadId){
-      console.log("parentThreadId: ",parentThreadId);
-      
+    moveToThread(channelId, threadId, parentThreadId) {
+      console.log("parentThreadId: ", parentThreadId);
+
       window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}&parentThreadId=${parentThreadId}`;
       // this.$router.push({
       //   path: `/channel/${channelId}/thread/view`,
       //   query: { threadId }
       // });
+    },
+
+    // 파일 위치로 이동
+    async moveToFileLocation(channelId, folderId, fileId) {
+      console.log("파일 위치로 이동:", channelId, folderId, fileId);
+      if (!folderId || !channelId) {
+        alert("파일의 위치를 찾을 수 없습니다.");
+        return;
+      }
+      try {
+        // 드라이브 경로로 이동
+        window.location.href = `/channel/${channelId}/drive/view/${folderId}?fileId=${fileId}`;
+
+        // Vue Router를 사용하여 폴더 및 파일 경로로 이동
+        // this.$router.push({
+        // path: `/channel/${channelId}/drive/view/${folderId}`,
+        // query: { fileId }
+        // });
+
+      } catch (error) {
+        console.error("파일 위치로 이동 중 오류 발생:", error);
+      }
+
+    },
+
+    async downloadFile(fileId) {
+      try {
+        // presigned URL 가져오기
+        const response = await axios.get(
+          `http://localhost:8080/api/v1/files/${fileId}/download`
+        );
+
+        const presignedUrl = response.data.result; // presigned URL 가져오기
+
+        // Blob을 사용하여 파일 다운로드
+        const fileResponse = await axios.get(presignedUrl, { responseType: "blob" });
+
+        // 파일 이름 추출
+        const fileName = response.headers["content-disposition"]
+          ? response.headers["content-disposition"]
+            .split("filename=")[1]
+            .replace(/"/g, "")
+          : "downloaded_file";
+
+        // Blob을 파일로 변환하여 다운로드
+        const blob = new Blob([fileResponse.data], {
+          type: fileResponse.headers["content-type"],
+        });
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.setAttribute("download", fileName); // 서버에서 전달된 파일 이름으로 설정
+        document.body.appendChild(link);
+        link.click(); // 링크 클릭 이벤트로 다운로드 시작
+        document.body.removeChild(link); // 링크 제거
+      } catch (error) {
+        console.error("파일 다운로드에 실패했습니다.", error);
+        alert("파일 다운로드 중 오류가 발생했습니다.");
+      }
     },
 
 
@@ -561,6 +637,56 @@ a {
 }
 
 a:hover {
+  text-decoration: underline;
+}
+
+.file-result-card {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.file-result-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+}
+
+.file-preview {
+  width: 50px;
+  height: 50px;
+  margin-right: 15px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name {
+  font-size: 16px;
+  color: #333;
+  margin: 0;
+}
+
+.file-link a {
+  color: #3a8bcd;
+  font-size: 14px;
+  text-decoration: none;
+  margin-top: 5px;
+}
+
+.file-link a:hover {
   text-decoration: underline;
 }
 </style>
