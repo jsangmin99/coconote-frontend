@@ -102,6 +102,8 @@ export default {
       sender: "",
       member: "",
       message: "",
+      debounceMessage: "", // timer 걸고 보낼 메시지 용 (업데이트 용)
+      timeoutSendFun: null, // timer function 담을 용
       messages: [],
 
       getCanvasAllInfo_inDetail: null,
@@ -114,8 +116,6 @@ export default {
       activeBlockId: null,
       editorContent: null,
       parentUpdateEditorContent: "초기 값",
-
-      debounceMap: {}, // 각 blockFeId별 debounce 함수를 저장할 객체
     };
   },
   mounted() {
@@ -194,35 +194,67 @@ export default {
         content: blockToEditorContentArr,
       };
     },
-    sendMessage() {
+    async sendMessage() {
+      const blockFeId = this.message.blockFeId;
+      const method = this.message.method;
+      if (
+        method == "CREATE_BLOCK" ||
+        method == "CHANGE_ORDER_BLOCK" ||
+        method == "DELETE_BLOCK"
+      ) {
+        console.error("✖️✖️✖️✖️ type 1");
+        await this.clearTimeDebounceFun();
+        await this.postSendMessage();
+        this.debounceMessage = { ...this.message };
+        await this.postSendMessage();
+      } else if (blockFeId != this.debounceMessage.blockFeId) {
+        console.error("✖️✖️✖️✖️ type 2");
+        await this.postSendMessage();
+        await this.clearTimeDebounceFun();
+        await this.timerSendMessage();
+      } else if (
+        this.timeoutSendFun &&
+        blockFeId == this.debounceMessage.blockFeId &&
+        method == this.debounceMessage.method
+      ) {
+        console.error("✖️✖️✖️✖️ type 3");
+        this.debounceMessage = { ...this.message };
+      } else {
+        console.error("✖️✖️✖️✖️ type 4");
+        await this.clearTimeDebounceFun();
+        await this.timerSendMessage();
+      }
+    },
+    timerSendMessage() {
+      this.debounceMessage = { ...this.message };
+      this.timeoutSendFun = setTimeout(() => {
+        this.postSendMessage();
+        this.clearTimeDebounceFun();
+        // 원하는 작업을 수행
+      }, 500); // 0.5초 후에 실행
+    },
+    postSendMessage() {
       const pageSetObj = {
         workspaceId: this.getWorkspaceId,
         postMessageType: "BLOCK", // 현 이벤트가 canvas 인지 block인지 구분
         page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
         postEventPage: "DETAIL", // 이 이벤트를 호출한 페이지
-        ...this.message,
+        ...this.debounceMessage,
       };
       this.$store.dispatch("setInfoMultiTargetAction", pageSetObj);
     },
+    clearTimeDebounceFun() {
+      clearTimeout(this.timeoutSendFun);
+      this.timeoutSendFun = null;
+    },
     recvMessage() {
       const blockJson = this.getCanvasAllInfo_inDetail;
-      console.error("🤔🤔🤔🤔🤔🤔",this.getWorkspaceMemberId,blockJson.workspaceMemberId)
-      if (
-        this.getWorkspaceMemberId == blockJson.workspaceMemberId
-      ) {
+      if (this.getWorkspaceMemberId == blockJson.workspaceMemberId) {
         console.error("수정 X");
       } else {
+        blockJson.isRecvMessage = true;
         this.parentUpdateEditorContent = Object.assign({}, blockJson);
-        // this.parentUpdateEditorContent = blockJson;
       }
-      // if (recv.type === "CANVAS") {
-      // } else {
-      //   this.messages.unshift({
-      //     type: recv.type,
-      //     member: recv.type === "ENTER" ? "[알림]" : recv.member,
-      //     message: recv.message,
-      //   });
-      // }
     },
     // tiptabEditor method
     deleteBlock(blockFeId) {
@@ -279,7 +311,6 @@ export default {
       }
     },
     changeOrderBlock(changeOrderObj) {
-
       this.activeBlockId = changeOrderObj.feId;
 
       this.message = {

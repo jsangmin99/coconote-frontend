@@ -158,6 +158,7 @@ export default {
             this.latestWatchBlockMsg.method == newVal.method &&
             this.latestWatchBlockMsg.blockContents == newVal.blockContents
           ) {
+            console.error("🤔🤔🤔🤔🤔", this.latestWatchBlockMsg, newVal)
             isReturn = false;
           }
 
@@ -165,9 +166,15 @@ export default {
           this.latestWatchBlockMsg.method = newVal.method;
           this.latestWatchBlockMsg.blockContents = newVal.blockContents;
 
+          console.error("🤔🤔🤔🤔🤔22222", this.latestWatchBlockMsg, newVal, isReturn)
+
           if (!isReturn) {
             return false;
           }
+
+          if(!newVal.blockFeId){
+          return false;
+        }
 
           if (newVal.method == "CREATE_BLOCK") {
             this.sendMessageCanvas();
@@ -324,6 +331,9 @@ export default {
         if (recv.canvasId != this.canvasId) {
           return false;
         }
+        if(!recv.blockFeId){
+          return false;
+        }
         setInfoObj = {
           postMessageType: "BLOCK",
           page: "DETAIL",
@@ -341,6 +351,7 @@ export default {
           parentBlockId: recv.parentBlockId,
           blockContents: recv.blockContents,
           blockType: recv.blockType,
+
         };
       } else {
         return false;

@@ -205,6 +205,8 @@ export default {
       // 처음로딩 + 내용없음
       isFirstAndNullContent: false,
 
+      isRecvUpdate :false, // socket 메시지인지 아닌지 확인 용
+
       // image 업로드 용
       fileList: [], // 업로드할 파일 리스트
       tempFilesRes: null, // 서버에 저장된 파일 메타데이터 응답
@@ -322,6 +324,10 @@ export default {
         Indent
       ],
       onUpdate: () => {
+        if(this.isRecvUpdate){
+          this.isRecvUpdate = false;
+          return false;
+        }
         const selectedNode = this.editor.state.selection;
         let isReturn = true;
 
@@ -349,12 +355,11 @@ export default {
             const removedIds = originAllFeIds.filter(
               (id) => !updateAllFeIds.includes(id)
             );
-
-            // return removedIds; // 사라진 ID 반환
-            this.$parent.deleteBlock(removedIds[0]);
-            return false;
-
-            // this.nodeLength = updateAllFeIds.length;
+            console.error("removedIds >> ", removedIds)
+            if(removedIds.length > 0){
+              this.$parent.deleteBlock(removedIds[0]);
+              return false;
+            }
           }
         }
 
@@ -488,6 +493,7 @@ export default {
         "부모 컴포넌트로부터 새로운 content를 받았습니다:",
         newContent
       );
+      this.isRecvUpdate = newContent.isRecvMessage;
 
       let targetElement = document.querySelector(
         `#editorArea [data-id="${newContent.blockFeId}"]`
@@ -503,7 +509,9 @@ export default {
         this.deleteBlockTargetFeIdActions(newContent.blockFeId).then(
           (isDeleteBlock) => {
             console.log("isDeleteBlock newContent.feId :: ", isDeleteBlock);
-            this.nodeLength = this.nodeLength - 1;
+            console.error("이전 nodeLength :: DELETE_BLOCK ::", this.nodeLength)
+            this.nodeLength = this.localJSON.content.length;
+            console.error("이후 nodeLength :: DELETE_BLOCK ::", this.nodeLength)
           }
         );
       } else if (newContent.method == "CHANGE_ORDER_BLOCK") {
@@ -581,7 +589,9 @@ export default {
               newContent.blockFeId,
               newContent.prevBlockId
             );
-            this.nodeLength = this.nodeLength + 1;
+            console.error("이전 nodeLength", this.nodeLength)
+            this.nodeLength = this.localJSON.content.length;
+            console.error("이후 nodeLength", this.nodeLength)
             console.log("zzz>> ", newContent.method, this.nodeLength);
           }
 
