@@ -2,75 +2,50 @@
   <div v-if="!isComment" class="container">
     <!-- 필터 태그 -->
     <div class="tag-filter-container">
-      <div v-for="(tag,index) in tagFilter" :key="index" >
-        <button @click="removeTagFilter(tag.tag, tag.threadId)"><strong class="tag" :style="{ backgroundColor: tag.tag.color }">{{tag.tag.name}}</strong></button>
+      <div v-for="(tag, index) in tagFilter" :key="index">
+        <button @click="removeTagFilter(tag.tag, tag.threadId)"><strong class="tag"
+            :style="{ backgroundColor: tag.tag.color }">{{ tag.tag.name }}</strong></button>
       </div>
     </div>
     <!-- 스레드 그룹 -->
     <div class="list-group" ref="messageList" id="list-group">
-      <v-skeleton-loader
-        v-if="!isLastPage"
-        type="list-item-avatar, paragraph"
-      ></v-skeleton-loader>
-      <div
-        class="list-group-item"
-        v-for="(message,index) in filteredMessages.slice().reverse()"
-        :key="message.id"
-      >
-        <div v-if="index === 0 || (index > 0 && this.isDifferentDay(message.createdTime,  filteredMessages.slice().reverse()[index-1].createdTime))">
+      <v-skeleton-loader v-if="!isLastPage" type="list-item-avatar, paragraph"></v-skeleton-loader>
+      <div class="list-group-item" v-for="(message, index) in filteredMessages.slice().reverse()" :key="message.id">
+        <div
+          v-if="index === 0 || (index > 0 && this.isDifferentDay(message.createdTime, filteredMessages.slice().reverse()[index - 1].createdTime))">
           <div style="display: flex; align-content: center; text-align: center; margin: auto;">
-              <hr style="width: 27%; margin:auto;"><span style="margin:auto;">{{this.getDay(message.createdTime)}}</span><hr style="width: 27%; margin:auto;">
+            <hr style="width: 27%; margin:auto;"><span style="margin:auto;">{{ this.getDay(message.createdTime) }}</span>
+            <hr style="width: 27%; margin:auto;">
           </div>
         </div>
-        <ThreadLineComponent
-          :id="`thread-${message.id}`"
-          :thread="message"
-          :createdTime="this.getTime(message.createdTime)"
-          :updateMessage="updateMessage"
-          :deleteMessage="deleteMessage"
-          :deleteFile="deleteFile"
-          :createAndAddTag="createAndAddTag"
-          :tagList="tagList"
-          :addTag="addTag"
-          :removeTag="removeTag"
-          :addTagFilter="addTagFilter"
-          :removeTagFilter="removeTagFilter"
-          :tagFilter="tagFilter"
+        <ThreadLineComponent :id="`thread-${message.id}`" :thread="message"
+          :createdTime="this.getTime(message.createdTime)" :updateMessage="updateMessage" :deleteMessage="deleteMessage"
+          :deleteFile="deleteFile" :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag"
+          :removeTag="removeTag" :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
           :commentIn="commentIn"
-          :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index-1].memberId"
-        />
+          :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index - 1].memberId" />
       </div>
-      <v-skeleton-loader
-        v-if="currentBottomPage>0"
-        type="list-item-avatar, paragraph"
-      ></v-skeleton-loader>
+      <v-skeleton-loader v-if="currentBottomPage > 0" type="list-item-avatar, paragraph"></v-skeleton-loader>
     </div>
-    
+
     <!-- 입력 그룹 -->
-    <div 
-      class="input-group" 
-      @dragover.prevent 
-      @drop="handleDrop"
-    >
+    <div class="input-group" @dragover.prevent @drop="handleDrop">
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index">
           <button type="button" @click="deleteImage(index)">삭제</button>
-          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
-          <p class="custom-contents">{{file.name}}</p>
+          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
+            style="height: 120px; width: 120px; object-fit: cover;">
+          <p class="custom-contents">{{ file.name }}</p>
         </div>
       </div>
-        
+
       <div class="text-group">
         <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
-        <textarea
-          type="text"
-          class="form-control"
-          v-model="message"
-          v-on:keypress.enter="sendMessage"
-          @keydown="handleKeydown"
-        />
+        <textarea type="text" class="form-control" v-model="message" v-on:keypress.enter="sendMessage"
+          @keydown="handleKeydown" />
         <div class="input-group-append">
-          <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList && fileList.length === 0">보내기</button>
+          <button class="btn btn-primary" type="button" @click="sendMessage"
+            :disabled="!message && fileList && fileList.length === 0">보내기</button>
         </div>
       </div>
     </div>
@@ -82,68 +57,41 @@
       <h2>스레드</h2>
     </div>
     <div class="comment-group">
-      <ThreadLineComponent
-        :thread="parentThread"
-        :createdTime="this.getTime(parentThread.createdTime)"
-        :updateMessage="updateMessage"
-        :deleteMessage="deleteMessage"
-        :deleteFile="deleteFile"
-        :createAndAddTag="createAndAddTag"
-        :tagList="tagList"
-        :addTag="addTag"
-        :removeTag="removeTag"
-        :addTagFilter="addTagFilter"
-        :removeTagFilter="removeTagFilter"
-        :tagFilter="tagFilter"
-        :isComment="isComment"
-        :isDifferentMember="true"
-      />
-      <h5>{{ parentThread.childThreads && parentThread.childThreads.length > 0 ? `밑으로 ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
-      
-      <div v-for="(message,index) in parentThread.childThreads" :key="index">
-        <ThreadLineComponent
-          :thread="message"
-          :createdTime="this.getTime(message.createdTime)"
-          :updateMessage="updateMessage"
-          :deleteMessage="deleteMessage"
-          :deleteFile="deleteFile"
-          :createAndAddTag="createAndAddTag"
-          :tagList="tagList"
-          :addTag="addTag"
-          :removeTag="removeTag"
-          :addTagFilter="addTagFilter"
-          :removeTagFilter="removeTagFilter"
-          :tagFilter="tagFilter"
-          :isDifferentMember="index === 0 || message.memberId !=  parentThread.childThreads[index-1].memberId"
-        />
+      <ThreadLineComponent :thread="parentThread" :createdTime="this.getTime(parentThread.createdTime)"
+        :updateMessage="updateMessage" :deleteMessage="deleteMessage" :deleteFile="deleteFile"
+        :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
+        :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter" :isComment="isComment"
+        :isDifferentMember="true" />
+      <h5>{{ parentThread.childThreads && parentThread.childThreads.length > 0 ? `밑으로
+        ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
+
+      <div v-for="(message, index) in parentThread.childThreads" :key="index">
+        <ThreadLineComponent :thread="message" :createdTime="this.getTime(message.createdTime)"
+          :updateMessage="updateMessage" :deleteMessage="deleteMessage" :deleteFile="deleteFile"
+          :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
+          :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
+          :isDifferentMember="index === 0 || message.memberId != parentThread.childThreads[index - 1].memberId" />
       </div>
     </div>
     <!-- 입력 그룹 -->
-    <div 
-      class="input-group" 
-      @dragover.prevent 
-      @drop="handleDrop"
-    >
+    <div class="input-group" @dragover.prevent @drop="handleDrop">
       <!-- 파일 올리기 -->
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index">
           <button type="button" @click="deleteImage(index)">삭제</button>
-          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
-          <p class="custom-contents">{{file.name}}</p>
+          <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
+            style="height: 120px; width: 120px; object-fit: cover;">
+          <p class="custom-contents">{{ file.name }}</p>
         </div>
       </div>
-        <!-- 내용 작성란 -->
+      <!-- 내용 작성란 -->
       <div class="text-group">
         <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
-        <textarea
-          type="text"
-          class="form-control"
-          v-model="message"
-          v-on:keypress.enter="sendMessage"
-          @keydown="handleKeydown"
-        />
+        <textarea type="text" class="form-control" v-model="message" v-on:keypress.enter="sendMessage"
+          @keydown="handleKeydown" />
         <div class="input-group-append">
-          <button class="btn btn-primary" type="button" @click="sendMessage" :disabled="!message && fileList.length === 0">보내기</button>
+          <button class="btn btn-primary" type="button" @click="sendMessage"
+            :disabled="!message && fileList.length === 0">보내기</button>
         </div>
       </div>
     </div>
@@ -159,7 +107,7 @@ import { debounce } from "lodash";
 import { mapGetters } from 'vuex';
 
 export default {
-  props: ['id','threadId','parentThreadId'],
+  props: ['id', 'threadId', 'parentThreadId'],
   components: {
     ThreadLineComponent,
   },
@@ -196,11 +144,11 @@ export default {
   async created() {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
-    if(this.threadId){
-      console.log("*****this.parentThreadId: ",this.parentThreadId);
-      if(this.parentThreadId) this.getThreadPage(this.parentThreadId);
+    if (this.threadId) {
+      console.log("*****this.parentThreadId: ", this.parentThreadId);
+      if (this.parentThreadId) this.getThreadPage(this.parentThreadId);
       else this.getThreadPage(this.threadId);
-    }else{
+    } else {
       await this.getTopMessageList();
       this.scrollToBottom();
     }
@@ -210,11 +158,11 @@ export default {
   mounted() {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
   },
-  updated() {},
+  updated() { },
   beforeUnmount() {
-    if(this.$refs.messageList)
-    this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
-    
+    if (this.$refs.messageList)
+      this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
+
     if (this.subscription) {
       this.subscription.unsubscribe(); // 구독 해제
       console.log("WebSocket subscription unsubscribed.");
@@ -235,7 +183,7 @@ export default {
         if (!message.tags) return false; // 태그가 없는 경우 제외
 
         // 메시지의 태그가 tagFilter의 모든 태그를 포함하는지 확인
-        return this.tagFilter.every(filter => 
+        return this.tagFilter.every(filter =>
           message.tags.some(tag => filter.tag.id === tag.id)
         );
       });
@@ -243,10 +191,10 @@ export default {
   },
 
   methods: {
-    moveToThread(threadId){
+    moveToThread(threadId) {
       // threadId가 제공된 경우에만 실행
       if (threadId) {
-        console.log("threadId 찾음: ",threadId);
+        console.log("threadId 찾음: ", threadId);
         // 스레드 요소를 찾기
         const threadElement = document.getElementById(`thread-${threadId}`);
         if (threadElement) {
@@ -258,7 +206,7 @@ export default {
           // 해당 요소로 스크롤
           // threadElement.scrollIntoView({ behavior: 'auto', block: 'center' });
 
-           // 강조 클래스 추가
+          // 강조 클래스 추가
           threadElement.classList.add('highlight');
 
           // 일정 시간 후 강조 제거
@@ -274,23 +222,23 @@ export default {
         }
       }
     },
-    commentIn(thread){
+    commentIn(thread) {
       this.isComment = !this.isComment
       this.parentThread = thread
     },
-    commentOut(){
+    commentOut() {
       console.log("(this.parentThread.id: ", this.parentThread.id);
       this.isComment = !this.isComment
       this.$nextTick(() => {
         this.moveToThread(this.parentThread.id);
         this.parentThread = null
       });
-      
+
     },
-    addTagFilter(tag, threadId){
-      this.tagFilter.push({tag, threadId})
+    addTagFilter(tag, threadId) {
+      this.tagFilter.push({ tag, threadId })
     },
-    removeTagFilter(tag, threadId){
+    removeTagFilter(tag, threadId) {
       // if(this.tagFilter.length === 1) this.tagFilterOneToZero = true
       this.tagFilter = this.tagFilter.filter(tagFilter => tagFilter.tag.id !== tag.id);
       this.moveToThread(threadId);
@@ -299,7 +247,7 @@ export default {
       //   this.tagFilterOneToZero = false
       // }
     },
-    async getTagList(){
+    async getTagList() {
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/tag/list/${this.id}`);
       this.tagList = response.data.result
     },
@@ -307,102 +255,102 @@ export default {
       if (recv.type === "UPDATE") {
         // UPDATE일 경우, 해당 id의 메시지를 찾아 content를 업데이트
         let messageToUpdate;
-        
-        if(recv.parentThreadId){
+
+        if (recv.parentThreadId) {
           const parent = this.messages.find(message => message.id === recv.parentThreadId);
           messageToUpdate = parent.childThreads.find(message => message.id === recv.id);
-        }else{
+        } else {
           messageToUpdate = this.messages.find(message => message.id === recv.id);
         }
 
         if (messageToUpdate) {
-            // 메시지가 존재할 경우 content 업데이트
-            messageToUpdate.content = recv.content;
+          // 메시지가 존재할 경우 content 업데이트
+          messageToUpdate.content = recv.content;
         }
-      } else if(recv.type === "ADD_TAG" || recv.type === "CREATE_AND_ADD_TAG"){
+      } else if (recv.type === "ADD_TAG" || recv.type === "CREATE_AND_ADD_TAG") {
 
         let messageToUpdate;
-        
-        if(recv.parentThreadId){
+
+        if (recv.parentThreadId) {
           const parent = this.messages.find(message => message.id === recv.parentThreadId);
           messageToUpdate = parent.childThreads.find(message => message.id === recv.id);
-        }else{
+        } else {
           messageToUpdate = this.messages.find(message => message.id === recv.id);
         }
 
-        if(messageToUpdate){
-          if(!messageToUpdate.tags || messageToUpdate.tags.length === 0){
-            messageToUpdate.tags = [{id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId}]
-          }else{
-            messageToUpdate.tags.push({id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId});
+        if (messageToUpdate) {
+          if (!messageToUpdate.tags || messageToUpdate.tags.length === 0) {
+            messageToUpdate.tags = [{ id: recv.tagId, name: recv.tagName, color: recv.tagColor, threadTagId: recv.threadTagId }]
+          } else {
+            messageToUpdate.tags.push({ id: recv.tagId, name: recv.tagName, color: recv.tagColor, threadTagId: recv.threadTagId });
           }
         }
         // 태그를 만들면 바로 태그리스트에 넣어주려 했는데 그럴러면 type을 하나더 추가해서 분기해줘야 될듯 나중에 시간나면 할예정
-        if(recv.type === "CREATE_AND_ADD_TAG"){
-          
-          this.tagList.push({id:recv.tagId, name:recv.tagName, color:recv.tagColor, threadTagId:recv.threadTagId});
+        if (recv.type === "CREATE_AND_ADD_TAG") {
+
+          this.tagList.push({ id: recv.tagId, name: recv.tagName, color: recv.tagColor, threadTagId: recv.threadTagId });
         }
 
-      } else if(recv.type === "REMOVE_TAG"){
+      } else if (recv.type === "REMOVE_TAG") {
         let messageToUpdate;
-        
-        if(recv.parentThreadId){
+
+        if (recv.parentThreadId) {
           const parent = this.messages.find(message => message.id === recv.parentThreadId);
           messageToUpdate = parent.childThreads.find(message => message.id === recv.id);
-        }else{
+        } else {
           messageToUpdate = this.messages.find(message => message.id === recv.id);
         }
-        
-        if(messageToUpdate){
+
+        if (messageToUpdate) {
           messageToUpdate.tags = messageToUpdate.tags.filter(tag => tag.id !== recv.tagId);
         }
-      } else if(recv.type === "DELETE"){
+      } else if (recv.type === "DELETE") {
         // DELETE일 경우, messages에서 해당 id의 메시지를 제거
-        console.log("recv.parentThreadId: ",recv.parentThreadId);
-        
-        if(recv.parentThreadId){
+        console.log("recv.parentThreadId: ", recv.parentThreadId);
+
+        if (recv.parentThreadId) {
           console.log("부모 있");
-          
+
           const parent = this.messages.find(message => message.id === recv.parentThreadId);
           parent.childThreads = parent.childThreads.filter(message => message.id !== recv.id);
-        }else{
+        } else {
           console.log("부모 없");
           this.messages = this.messages.filter(message => message.id !== recv.id);
         }
-      } else if(recv.type === "DELETE_FILE"){
+      } else if (recv.type === "DELETE_FILE") {
         // DELETE_File일 경우, messages.files에서 해당 id의 파일을 제거
         let messageToUpdate;
-        
-        if(recv.parentThreadId){
+
+        if (recv.parentThreadId) {
           const parent = this.messages.find(message => message.id === recv.parentThreadId);
           messageToUpdate = parent.childThreads.find(message => message.id === recv.id);
-        }else{
+        } else {
           messageToUpdate = this.messages.find(message => message.id === recv.id);
         }
 
-        if(messageToUpdate){
+        if (messageToUpdate) {
           messageToUpdate.files = messageToUpdate.files.filter(file => file.fileId !== recv.fileId);
         }
       }
       else {
         // 새로운 메시지일 경우 기존 로직
-        if(recv.parentThreadId){
+        if (recv.parentThreadId) {
           console.log("부모id 받아옴");
-          
+
           const messageToUpdate = this.messages.find(message => message.id === recv.parentThreadId);
 
-          if(messageToUpdate){
-            if(!messageToUpdate.childThreads || messageToUpdate.childThreads.length === 0){
+          if (messageToUpdate) {
+            if (!messageToUpdate.childThreads || messageToUpdate.childThreads.length === 0) {
               console.log("first");
-              
+
               messageToUpdate.childThreads = [recv]
-            }else{
+            } else {
               console.log("이미 자식 존재");
-              
+
               messageToUpdate.childThreads.push(recv);
             }
           }
-        }else{
+        } else {
           this.messages.unshift({
             id: recv.id,
             memberName: recv.memberName,
@@ -412,15 +360,15 @@ export default {
             files: recv.files,
           });
         }
-        
+
         this.scrollToBottom();
       }
     },
-    createAndAddTag(id, tagName, tagColor){
+    createAndAddTag(id, tagName, tagColor) {
       const authToken = localStorage.getItem('accessToken');
       this.ws.send(
         "/pub/chat/message",
-        {Authorization: authToken},
+        { Authorization: authToken },
         JSON.stringify({
           type: "ADD_TAG",
           channelId: this.roomId,
@@ -430,11 +378,11 @@ export default {
         })
       );
     },
-    addTag(id, tagId){
+    addTag(id, tagId) {
       const authToken = localStorage.getItem('accessToken');
       this.ws.send(
         "/pub/chat/message",
-        {Authorization: authToken},
+        { Authorization: authToken },
         JSON.stringify({
           type: "ADD_TAG",
           channelId: this.roomId,
@@ -443,11 +391,11 @@ export default {
         })
       );
     },
-    removeTag(id, tagId, threadTagId){
+    removeTag(id, tagId, threadTagId) {
       const authToken = localStorage.getItem('accessToken');
       this.ws.send(
         "/pub/chat/message",
-        {Authorization: authToken},
+        { Authorization: authToken },
         JSON.stringify({
           type: "REMOVE_TAG",
           channelId: this.roomId,
@@ -457,11 +405,11 @@ export default {
         })
       );
     },
-    updateMessage(id, message){
+    updateMessage(id, message) {
       const authToken = localStorage.getItem('accessToken');
       this.ws.send(
         "/pub/chat/message",
-        {Authorization: authToken},
+        { Authorization: authToken },
         JSON.stringify({
           type: "UPDATE",
           channelId: this.roomId,
@@ -470,11 +418,11 @@ export default {
         })
       );
     },
-    deleteMessage(id){
+    deleteMessage(id) {
       const authToken = localStorage.getItem('accessToken');
       this.ws.send(
         "/pub/chat/message",
-        {Authorization: authToken},
+        { Authorization: authToken },
         JSON.stringify({
           type: "DELETE",
           channelId: this.roomId,
@@ -482,11 +430,11 @@ export default {
         })
       );
     },
-    deleteFile(id, fileId){
+    deleteFile(id, fileId) {
       const authToken = localStorage.getItem('accessToken');
       this.ws.send(
         "/pub/chat/message",
-        {Authorization: authToken},
+        { Authorization: authToken },
         JSON.stringify({
           type: "DELETE_FILE",
           channelId: this.roomId,
@@ -502,37 +450,37 @@ export default {
       }
       const authToken = localStorage.getItem('accessToken');
 
-      if(this.fileList.length>0) {
+      if (this.fileList.length > 0) {
         const dragFileList = this.fileList.filter(file => file.fileId)
-        this.filesRes = dragFileList.map(file => ({id:file.fileId, fileName: file.name, fileUrl: file.imageUrl }))
+        this.filesRes = dragFileList.map(file => ({ id: file.fileId, fileName: file.name, fileUrl: file.imageUrl }))
 
         const fileList = this.fileList.filter(file => !file.fileId)
-        if(fileList && fileList.length > 0)
-        try{
-          const presignedUrls = await this.getPresignedURL();
+        if (fileList && fileList.length > 0)
+          try {
+            const presignedUrls = await this.getPresignedURL();
 
-          // 각 파일에 대해 Presigned URL을 이용하여 S3에 업로드
-          const uploadedFileUrls = await Promise.all(fileList.map(file => this.uploadFileToS3(file.file, presignedUrls[file.name])));
+            // 각 파일에 대해 Presigned URL을 이용하여 S3에 업로드
+            const uploadedFileUrls = await Promise.all(fileList.map(file => this.uploadFileToS3(file.file, presignedUrls[file.name])));
 
-          // 파일 중 업로드가 실패한 파일이 있으면 필터링
-          const successfulUploads = uploadedFileUrls.filter(url => url !== null);
-          
+            // 파일 중 업로드가 실패한 파일이 있으면 필터링
+            const successfulUploads = uploadedFileUrls.filter(url => url !== null);
 
-          // 성공적으로 업로드된 파일만 메타데이터 저장
-          if (successfulUploads.length) {
-            await this.saveFileMetadata(successfulUploads);
-          } else {
-            alert('모든 파일 업로드에 실패했습니다.');
+
+            // 성공적으로 업로드된 파일만 메타데이터 저장
+            if (successfulUploads.length) {
+              await this.saveFileMetadata(successfulUploads);
+            } else {
+              alert('모든 파일 업로드에 실패했습니다.');
+            }
+          } catch (error) {
+            console.error('Upload failed:', error);
+            alert('파일 업로드 중 오류가 발생했습니다.');
           }
-        }catch(error){
-          console.error('Upload failed:', error);
-          alert('파일 업로드 중 오류가 발생했습니다.'); 
-        }
       }
 
       this.ws.send(
         "/pub/chat/message",
-        {Authorization: authToken},
+        { Authorization: authToken },
         JSON.stringify({
           type: "TALK",
           channelId: this.roomId,
@@ -540,7 +488,7 @@ export default {
           parentId: (this.parentThread ? this.parentThread.id : null),
           content: this.message,
           workspaceId: this.workspaceId,
-          files: this.filesRes?.map(file => ({fileId:file.id, fileName: file.fileName, fileURL: file.fileUrl }))
+          files: this.filesRes?.map(file => ({ fileId: file.id, fileName: file.fileName, fileURL: file.fileUrl }))
         })
       );
       this.files = null;
@@ -549,15 +497,15 @@ export default {
       this.uploadProgress = [];
       this.filesRes = null;
     },
-    async getPresignedURL(){
-      const reqFiles = this.fileList.map(file => ({fileName:file.name, fileSize:file.size}))
+    async getPresignedURL() {
+      const reqFiles = this.fileList.map(file => ({ fileName: file.name, fileSize: file.size }))
       const response = await axios.post(
-          `${process.env.VUE_APP_API_BASE_URL}/files/presigned-urls`, reqFiles
+        `${process.env.VUE_APP_API_BASE_URL}/files/presigned-urls`, reqFiles
       );
       return response.data.result;
     },
     async uploadFileToS3(file, presignedUrl) {
-      
+
       try {
         const config = {
           headers: {
@@ -594,36 +542,54 @@ export default {
       const response = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/files/metadata`, metadataDto);
       this.filesRes = [...this.filesRes, ...response.data.result];
     },
-    
-    fileUpdate(){
-        this.files.forEach(file => {
-          this.fileList.push({
-            name: file.name,
-            size: file.size,
-            type: file.type, 
-            file,
-            imageUrl: URL.createObjectURL(file)})
-        });
-        this.files = null;
+
+    fileUpdate() {
+      this.files.forEach(file => {
+        this.fileList.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          file,
+          imageUrl: URL.createObjectURL(file)
+        })
+      });
+      this.files = null;
     },
 
     async handleDrop(event) {
       event.preventDefault();
-      const droppedData = event.dataTransfer.getData("file");
+      const droppedData = event.dataTransfer.getData("items");
 
-      this.dragedFile= JSON.parse(droppedData);
-      if (this.dragedFile) {
-        console.log("Dropped file with ID:", this.dragedFile);
-        // 여기에 파일 업로드나 추가 작업을 수행할 로직을 작성
-        this.fileList.push({
-          fileId: this.dragedFile.fileId,
-          name: this.dragedFile.fileName,
-          imageUrl: this.dragedFile.fileUrl})
+      // 드롭된 데이터 로그 출력
+      console.log("드롭된 데이터(raw):", droppedData);
+
+      // 드롭된 데이터가 유효한지 확인합니다.
+      if (droppedData && droppedData.trim() !== "") {
+        try {
+          const parsedData = JSON.parse(droppedData);
+          console.log("드롭된 데이터(parsed):", parsedData);
+
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            this.dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
+            console.log("드롭된 파일 ID:", this.dragedFile.fileId);
+            // 파일 업로드나 추가 작업을 수행할 로직 작성
+            this.fileList.push({
+              fileId: this.dragedFile.fileId,
+              name: this.dragedFile.fileName,
+              imageUrl: this.dragedFile.fileUrl
+            });
+          } else {
+            console.log("드래그된 파일이 없습니다.");
+          }
+        } catch (error) {
+          console.error("JSON 파싱 오류:", error);
+        }
       } else {
-        console.log("No file was dragged.");
+        console.log("드롭된 데이터가 없습니다.");
       }
     },
-    
+
+
     async getTopMessageList() {
       try {
         let params = {
@@ -635,12 +601,12 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/thread/list/${this.id}`,
           { params }
         );
-        console.log("pageNumber: " , response.data.result);
-        console.log("pageNumber: " , response.data.result.pageable.pageNumber);
-        
+        console.log("pageNumber: ", response.data.result);
+        console.log("pageNumber: ", response.data.result.pageable.pageNumber);
+
         this.currentTopPage++;
         this.isLastPage = response.data.result.last;
-        
+
         // 기존 메시지의 ID 집합을 생성
         const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
 
@@ -652,14 +618,14 @@ export default {
         // 중복되지 않은 메시지를 추가
         this.messages = [...this.messages, ...newMessages];
         console.log("시작 메시지 추가됨");
-        
+
       } catch (e) {
         console.log(e);
       }
     },
     async getBottomMessageList() {
-      if(this.currentBottomPage>0) this.currentBottomPage--;
-      else{
+      if (this.currentBottomPage > 0) this.currentBottomPage--;
+      else {
         console.log("이미 마지막 페이지 입니다");
         return
       }
@@ -673,7 +639,7 @@ export default {
           { params }
         );
         this.isLastPage = response.data.result.last;
-        
+
         // 기존 메시지의 ID 집합을 생성
         const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
 
@@ -685,7 +651,7 @@ export default {
         // 중복되지 않은 메시지를 추가
         this.messages = [...newMessages, ...this.messages];
         console.log("시작 메시지 추가됨");
-        
+
       } catch (e) {
         console.log(e);
       }
@@ -694,13 +660,13 @@ export default {
       try {
         const response = await axios.post(
           `${process.env.VUE_APP_API_BASE_URL}/thread/list`,
-          { channelId: this.id, threadId, pageSize: this.pageSize}
+          { channelId: this.id, threadId, pageSize: this.pageSize }
         );
-        this.currentTopPage =  response.data.result.pageable.pageNumber+1
-        if(response.data.result.pageable.pageNumber>0) this.currentBottomPage = response.data.result.pageable.pageNumber
+        this.currentTopPage = response.data.result.pageable.pageNumber + 1
+        if (response.data.result.pageable.pageNumber > 0) this.currentBottomPage = response.data.result.pageable.pageNumber
         this.isLastPage = response.data.result.last;
         // this.messages = [...this.messages, ...response.data.result.content]
-        
+
         // 기존 메시지의 ID 집합을 생성
         const existingMessageIds = new Set(this.messages.map((msg) => msg.id));
 
@@ -720,28 +686,28 @@ export default {
     },
     debouncedScrollPagination: debounce(async function () {
       const list = document.getElementById("list-group");
-      if(!list){ // debounce로 인해 다른 컴포넌트에서 늦게 실행되는 오류
+      if (!list) { // debounce로 인해 다른 컴포넌트에서 늦게 실행되는 오류
         return false;
       }
       const isTop = list.scrollTop <= 800;
       const isBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 800;
 
       if (isTop && !this.isLastPage && !this.isLoading) {
-        
-        if(this.messages && this.messages.length > 0){
+
+        if (this.messages && this.messages.length > 0) {
           this.isLoading = true;
           let topThreadId
-          console.log("messages: ",this.messages[this.messages.length-1].id);
-          topThreadId = this.messages[this.messages.length-1].id
+          console.log("messages: ", this.messages[this.messages.length - 1].id);
+          topThreadId = this.messages[this.messages.length - 1].id
 
           await this.getTopMessageList();
-          
+
           this.isLoading = false;
           this.moveToThread(topThreadId);
         }
       }
 
-      if (isBottom && this.currentBottomPage>0 && !this.isLoading) {
+      if (isBottom && this.currentBottomPage > 0 && !this.isLoading) {
         this.isLoading = true;
         await this.getBottomMessageList();
         this.isLoading = false;
@@ -749,17 +715,17 @@ export default {
     }, 200),
     scrollToBottom() {
       console.log("밑으로");
-      
-      setTimeout(() => {
-          const container = document.getElementById("list-group");
 
-          if (container) {
-            container.scrollTop = container.scrollHeight;
-          }
-        }, 1);
+      setTimeout(() => {
+        const container = document.getElementById("list-group");
+
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }, 1);
     },
-    
-    deleteImage(index){
+
+    deleteImage(index) {
       this.fileList.splice(index, 1);
     },
     handleKeydown(event) {
@@ -783,7 +749,7 @@ export default {
 
       const authToken = localStorage.getItem('accessToken');
       this.ws.connect(
-        {Authorization: authToken},
+        { Authorization: authToken },
         (frame) => {
           console.log("frame: ", frame);
           this.ws.subscribe(`/sub/chat/room/${this.roomId}`, (message) => {
@@ -809,37 +775,37 @@ export default {
       let hour = createdTime.getHours();
       let minute = createdTime.getMinutes();
       let ampm;
-      if(hour < 12) {
-          ampm = '오전'
+      if (hour < 12) {
+        ampm = '오전'
       } else {
-          ampm = '오후'
-          hour -= 12;
+        ampm = '오후'
+        hour -= 12;
       }
-      if(hour < 10) {
-          hour = '0'+hour;
+      if (hour < 10) {
+        hour = '0' + hour;
       }
 
-      if(minute < 10) {
-          minute = '0'+minute;
+      if (minute < 10) {
+        minute = '0' + minute;
       }
 
       return ampm + ' ' + hour + ':' + minute;
     },
     isDifferentDay(d1, d2) {
-        const day1 = new Date(d1);
-        const day2 = new Date(d2);
+      const day1 = new Date(d1);
+      const day2 = new Date(d2);
 
 
-        if(day1.getFullYear() == day2.getFullYear()
+      if (day1.getFullYear() == day2.getFullYear()
         && day1.getMonth() == day2.getMonth()
         && day1.getDay() == day2.getDay()) return false;
 
-        return true;
+      return true;
     },
     getDay(createdAt) {
       const createdTime = new Date(createdAt);
 
-      return `${createdTime.getFullYear()}년 ${createdTime.getMonth() + 1}월 ${createdTime.getDate()}일`; 
+      return `${createdTime.getFullYear()}년 ${createdTime.getMonth() + 1}월 ${createdTime.getDate()}일`;
     }
   },
 };
@@ -847,77 +813,102 @@ export default {
 
 <style scoped>
 .container {
-  padding:  0 0 0 24px;
+  padding: 0 0 0 24px;
   height: 100%;
 }
+
 .list-group {
-  overflow-y: auto; /* 세로 스크롤 가능 */
+  overflow-y: auto;
+  /* 세로 스크롤 가능 */
   height: 100%;
   max-height: calc(100vh - 240px);
 }
-.list-group-item{
+
+.list-group-item {
   gap: 10px;
   padding: 3px 0;
 }
+
 .input-group {
   position: fixed;
-  bottom: 0; /* 하단에 고정 */
-  background-color: white; /* 배경색 설정 */
+  bottom: 0;
+  /* 하단에 고정 */
+  background-color: white;
+  /* 배경색 설정 */
   border: 1px solid;
   margin-right: 24px;
   width: 80%;
 }
+
 .image-group {
   display: flex;
   flex-direction: row;
   width: 120px;
   max-height: 180px;
 }
-.custom-contents{
-  max-width: 120px; /* 제목의 최대 너비를 설정 */
-  overflow: hidden; /* 내용이 넘칠 경우 숨김 처리 */
-  text-overflow: ellipsis !important; /* 넘치는 텍스트에 '...' 추가*/
-  white-space: nowrap; /* 텍스트 줄 바꿈 방지 */
+
+.custom-contents {
+  max-width: 120px;
+  /* 제목의 최대 너비를 설정 */
+  overflow: hidden;
+  /* 내용이 넘칠 경우 숨김 처리 */
+  text-overflow: ellipsis !important;
+  /* 넘치는 텍스트에 '...' 추가*/
+  white-space: nowrap;
+  /* 텍스트 줄 바꿈 방지 */
 }
+
 .text-group {
   display: flex;
   flex-direction: row;
   width: 100%;
 }
+
 .form-control {
   width: 100%;
 
 }
-.tag-filter-container{
+
+.tag-filter-container {
   display: flex;
   flex-direction: row;
   gap: 5px;
 }
+
 .tag {
   border-radius: 5px;
   padding: 0 5px 1px 5px;
   color: white;
   font-size: 11px;
 }
-.thread-title{
+
+.thread-title {
   display: flex;
   flex-direction: row;
 }
-.comment-group{
+
+.comment-group {
   overflow-y: auto;
   max-height: calc(100vh - 240px);
 }
+
 input:focus {
   outline: none;
 }
+
 textarea:focus {
   outline: none;
 }
+
 .highlight {
-  background-color: #e8ca93; /* 강조할 배경 색 */
-  transition: background-color 0.5s ease; /* 부드러운 전환 효과 */
+  background-color: #e8ca93;
+  /* 강조할 배경 색 */
+  transition: background-color 0.5s ease;
+  /* 부드러운 전환 효과 */
 }
+
 .fade-out {
-  background-color: transparent; /* 투명 상태 */
+  background-color: transparent;
+  /* 투명 상태 */
 }
 </style>
