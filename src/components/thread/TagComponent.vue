@@ -385,9 +385,26 @@ export default {
   85% { box-shadow: 0 10px 10px violet; }
   100% { box-shadow: 0 -10px 10px red; }
 }
+@keyframes circle-motion {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(50px, 0) rotate(90deg);
+  }
+  50% {
+    transform: translate(50px, 50px) rotate(180deg);
+  }
+  75% {
+    transform: translate(0, 50px) rotate(270deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(360deg);
+  }
+}
 .highlight {
   border: 2px solid; /* 두께 설정 */
-  animation: rainbow-border 1.5s linear infinite, rainbow-shadow 1.5s linear infinite; /* 애니메이션 설정 */
+  animation: rainbow-border 1.5s linear infinite, rainbow-shadow 1.5s linear infinite, circle-motion 3s linear infinite; /* 애니메이션 설정 */
   /* box-shadow: 0 0 10px rgba(255, 255, 0, 0.8); /* 반짝임 효과 */
   transform: scale(1.1);
 }
