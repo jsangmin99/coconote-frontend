@@ -7,6 +7,7 @@
         <img v-if="isDifferentMember" :src="thread.image ? thread.image : require('@/assets/images/profileImage.png')" alt="image" class="profile-image">
       </div>
     </div>
+    
     <div class="thread-content">
       <div class="title">
 
@@ -85,26 +86,26 @@
       
       <!-- 파일 -->
       <div class="image-group">
-        <div v-for="(file, index) in thread.files" :key="index">
-          <div class="file-group">
-            <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
-            <p class="custom-contents">{{file.fileName}}</p>
-            <div class="more-btn-file2">
-              <button @click="downloadFile(file.fileId,file.fileName)">다운</button>
-            </div>
-            <div class="more-btn-file">
-              <button @click="deleteF(file.fileId)">삭제</button>
-            </div>
+        <div class="file-group" v-for="(file, index) in thread.files" :key="index">
+          <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+          <p class="custom-contents">{{file.fileName}}</p>
+          <div class="more-btn-file2">
+            <button @click="downloadFile(file.fileId,file.fileName)">다운</button>
+          </div>
+          <div class="more-btn-file">
+            <button @click="deleteF(file.fileId)">삭제</button>
           </div>
         </div>
       </div>
       
       <!-- 댓글 -->
-      <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0 && !isComment" @click="commentIn(thread)">
-        <strong class="comment">
-          {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
-        </strong>
-      </button>
+      <div>
+        <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0 && !isComment" @click="commentIn(thread)">
+          <strong class="comment">
+            {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
+          </strong>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -332,11 +333,14 @@ import axios from '@/services/axios';
   object-fit: cover;
 }
 .thread-content {
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   width: 100%;
 }
 .title {
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
 }
 .nickName {
@@ -347,9 +351,8 @@ import axios from '@/services/axios';
 }
 .tag-group {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
   gap: 5px;
-  max-height: 12px;
 }
 .tag-container {
   position: relative;
@@ -430,9 +433,7 @@ import axios from '@/services/axios';
 }
 .image-group {
   display: flex;
-  flex-direction: row;
-  width: 120px;
-  max-height: 180px;
+  flex-wrap: wrap;
   gap: 10px;
 }
 .file-group{

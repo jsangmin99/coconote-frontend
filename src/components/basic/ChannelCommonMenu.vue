@@ -4,21 +4,13 @@
       <div class="titleArea">
         <div class="col">
           <div>
-            <v-icon
-              @click.stop="toggleBookmark(getChannelId)"
-              :color="isBookmarked ? '#ffbb00' : 'grey'"
-              class="star active"
-              >mdi-star</v-icon
-            >
+            <v-icon @click.stop="toggleBookmark(getChannelId)" :color="isBookmarked ? '#ffbb00' : 'grey'"
+              class="star active">mdi-star</v-icon>
           </div>
           <h1>{{ getChannelName }}</h1>
           <div>
-            <v-icon
-              v-if="getChannelRole === 'MANAGER'"
-              icon="mdi-pencil-outline"
-              class="pencil"
-              @click="startEditingChannel"
-            />
+            <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-pencil-outline" class="pencil"
+              @click="startEditingChannel" />
           </div>
         </div>
         <div class="col">
@@ -28,25 +20,15 @@
             <v-icon icon="mdi-plus" class="plus-icon"></v-icon>
             <!-- 첫 번째 프로필 이미지 -->
             <div v-if="channelMembers.length > 0" class="circle blue-circle">
-              <img
-                :src="channelMembers[0].profileImageUrl || defaultProfileImage"
-                alt="Profile"
-              />
+              <img :src="channelMembers[0].memberInfo.profileImage || defaultProfileImage" alt="Profile" />
             </div>
             <!-- 두 번째 프로필 이미지 (있을 경우) -->
             <div v-if="channelMembers.length > 1" class="circle green-circle">
-              <img
-                :src="channelMembers[1].profileImageUrl || defaultProfileImage"
-                alt="Profile"
-              />
+              <img :src="channelMembers[1].memberInfo.profileImage || defaultProfileImage" alt="Profile" />
             </div>
           </div>
           <!-- 클릭 이벤트로 드롭다운 토글 -->
-          <v-icon
-            v-if="getChannelRole === 'MANAGER'"
-            icon="mdi-dots-vertical"
-            @click="toggleDropdown"
-          >
+          <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown">
             <span @click="console.log('dots clicked')"></span>
           </v-icon>
         </div>
@@ -63,16 +45,10 @@
     </div>
 
     <div class="menuBtns" v-if="menu !== 'split'">
-      <button
-        @click="moveMenu('thread')"
-        :class="{ active: menu === 'thread' }"
-      >
+      <button @click="moveMenu('thread')" :class="{ active: menu === 'thread' }">
         쓰레드
       </button>
-      <button
-        @click="moveMenu('canvas')"
-        :class="{ active: menu === 'canvas' }"
-      >
+      <button @click="moveMenu('canvas')" :class="{ active: menu === 'canvas' }">
         캔버스
       </button>
       <button @click="moveMenu('drive')" :class="{ active: menu === 'drive' }">
@@ -86,45 +62,28 @@
       </button>
     </div>
     <div class="menuBtns" v-else>
-      <button @click="closeSplitView(0)">
+      <button @click="closeSplitView('left')">
         1화면 <v-icon icon="mdi-close" class="icon-color" />
       </button>
-      <button @click="closeSplitView(1)">
+      <button @click="closeSplitView('right')">
         2화면 <v-icon icon="mdi-close" class="icon-color" />
       </button>
     </div>
 
     <!-- 모달 컴포넌트 -->
-    <ChannelMemberModal
-      v-if="isChannelMemberModalOpen"
-      :channelId="getChannelId"
-      :workspaceId="getWorkspaceId"
-      @closeModal="closeChannelMemberInviteModal"
-    />
+    <ChannelMemberModal v-if="isChannelMemberModalOpen" :channelId="getChannelId" :workspaceId="getWorkspaceId"
+      @closeModal="closeChannelMemberInviteModal" />
 
     <v-dialog v-model="channelDialog" width="auto" class="channelDialog">
       <v-card max-width="400">
         <v-card-title> 채널 수정 </v-card-title>
         <v-card-text>
           <p>채널의 이름을 입력하세요.</p>
-          <v-text-field
-            ref="channelNameInput"
-            color="primary"
-            density="compact"
-            variant="underlined"
-            v-model="updateChannelInfo.channelName"
-            @keyup.enter="saveEditingChannel"
-            placeholder="이름"
-          ></v-text-field>
+          <v-text-field ref="channelNameInput" color="primary" density="compact" variant="underlined"
+            v-model="updateChannelInfo.channelName" @keyup.enter="saveEditingChannel" placeholder="이름"></v-text-field>
           <p>채널의 설명을 입력하세요.</p>
-          <v-text-field
-            color="primary"
-            density="compact"
-            variant="underlined"
-            v-model="updateChannelInfo.channelInfo"
-            @keyup.enter="saveEditingChannel"
-            placeholder="이름"
-          ></v-text-field>
+          <v-text-field color="primary" density="compact" variant="underlined" v-model="updateChannelInfo.channelInfo"
+            @keyup.enter="saveEditingChannel" placeholder="이름"></v-text-field>
           <!-- <v-radio-group
           inline
           label="채널종류"
@@ -150,7 +109,7 @@ import axios from "axios";
 import { fetchChannelMemberInfo } from "@/services/channelService"; // 모듈 import
 
 export default {
-  props: ["menu"],
+  props: ["menu", "splitActiveTab"],
   name: "ChannelCommonMenu",
   components: {
     ChannelMemberModal,
@@ -168,6 +127,7 @@ export default {
         channelName: "",
         channelInfo: "",
       },
+      rootFolderId: "",
     };
   },
   computed: {
@@ -181,9 +141,19 @@ export default {
       "getWorkspaceName",
     ]),
   },
+  watch: {
+    splitActiveTab: {
+      handler() {
+        // console.log("splitActiveTab 변경됨 >> ", newVal); // 값이 변경될 때마다 로그로 확인
+      },
+      deep: true,
+    },
+  },
   mounted() {
     this.loadChannelMembers(); // 컴포넌트가 마운트되면 채널 멤버를 불러옴
+    this.fetchRootFolderId(); // 루트 폴더 ID 가져오기
     document.addEventListener("click", this.handleClickOutside); //드롭다운 메뉴 외부 클릭 시 닫기
+    console.log("splitActiveTab 확인용 >> ", this.splitActiveTab);
   },
   beforeUnmount() {
     document.removeEventListener("click", this.handleClickOutside);
@@ -219,15 +189,58 @@ export default {
       }
     },
     moveMenu(name) {
-      this.$router.push(
-        `/channel/${this.$store.getters.getChannelId}/${name}/view`
-      );
+      if (name === 'drive') {
+        if (!this.rootFolderId) {
+          alert("루트 폴더 ID를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+          return;
+        }
+        const folderId = this.rootFolderId;
+        this.$router.push(`/channel/${this.getChannelId}/drive/view/${folderId}`);
+      } else {
+        this.$router.push(`/channel/${this.getChannelId}/${name}/view`);
+      }
+    },
+    // rootFolderId를 불러오는 메서드 추가
+    async fetchRootFolderId() {
+      try {
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/channel/${this.getChannelId}/drive/folder/root-folder`
+        );
+        this.rootFolderId = response.data.result.nowFolderId; // 루트 폴더 ID를 설정
+      } catch (error) {
+        console.error("루트 폴더 ID를 불러오는 중 오류 발생", error);
+      }
     },
     goToSplitView() {
       this.$router.push(`/channel/${this.getChannelId}/split-view`);
     },
-    closeSplitView(num) {
-      console.log(num, " 화면 닫으려고 함!!");
+    closeSplitView(splitName) {
+      console.log(splitName, " 화면 닫으려고 함!!");
+
+      let objKey = "";
+      if (splitName == "left") {
+        // left를 닫아서 right 주소로 이동
+        objKey = "rightTab";
+      } else if (splitName == "right") {
+        // right 닫아서 left 주소로 이동
+        objKey = "leftTab";
+      } else {
+        console.error("잘못된 tab화면 닫음 요청입니다.");
+        return false;
+      }
+
+      let routerUrl = "";
+      if (this.splitActiveTab[objKey] == "thread") {
+        routerUrl = `/channel/${this.getChannelId}/thread/view`;
+      } else if (this.splitActiveTab[objKey] == "canvas") {
+        routerUrl = `/channel/${this.getChannelId}/canvas/view`;
+      } else if (this.splitActiveTab[objKey] == "drive") {
+        routerUrl = `/channel/${this.getChannelId}/drive/view`;
+      } else {
+        console.error("잘못된 objKey 요청입니다.");
+        return false;
+      }
+      this.$router.push(routerUrl);
     },
     openChannelMemberInviteModal() {
       this.isChannelMemberModalOpen = false; // 일단 false로 설정하여 초기화
