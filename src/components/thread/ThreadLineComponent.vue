@@ -21,8 +21,9 @@
             <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
             <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
           </div>
-          <button @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
+          <button @click="toggleTagMenu">#</button>
           <div class="tag-toggle">
+            
             <input
               v-if="isTagMenuVisible"
               type="text"
@@ -56,30 +57,34 @@
             @keydown="handleKeydown"
           />
         </div>
+        <!-- 내용 태그 -->
         <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
           <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
             <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
             <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
           </div>
-          <button @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
+          <button class="tagButton" @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
           <div class="tag-toggle">
-            <input
-              v-if="isTagMenuVisible"
-              type="text"
-              class="tag-input"
-              placeholder="tags"
-              v-model="tagName"
-              v-on:keypress.enter="createTag"
-              v-on:input="adjustWidth"
-              ref="tagInput"
-              :style="{ width: inputWidth + 'px'}"
-            >
-            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
-              <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
-                <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+            <div class="tag-input-group">
+              <input
+                v-if="isTagMenuVisible"
+                type="text"
+                class="tag-input"
+                placeholder="tags"
+                v-model="tagName"
+                v-on:keypress.enter="createTag"
+                v-on:input="adjustWidth"
+                ref="tagInput"
+                :style="{ width: inputWidth + 'px'}"
+              >
+              <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
+                <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
+                  <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+                </div>
+                <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
               </div>
-              <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
             </div>
+            
           </div>
         </div>
       </div>
@@ -351,6 +356,7 @@ import axios from '@/services/axios';
 }
 .tag-group {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   gap: 5px;
 }
@@ -475,6 +481,12 @@ import axios from '@/services/axios';
 }
 .form-control {
   width: 80%;
+}
+.tagButton{
+  height: fit-content;
+}
+.tag-input-group{
+  position: relative;
 }
 input:focus {
   outline: none;

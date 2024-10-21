@@ -148,7 +148,7 @@ export default {
     async searchBySelectedTags() {
       try {
         const params = new URLSearchParams();
-        params.append('workspaceId', this.id);
+        params.append('workspaceId', localStorage.getItem('workspaceId'));
         params.append('page', 0);
         params.append('size', 20);
         this.selectedTags.forEach(tag => params.append('tags', tag.name));
@@ -200,8 +200,8 @@ export default {
 .menu-btn {
   display: none;
   position: absolute;
-  top: 0;
-  right: 0;
+  top: -15px;
+  right: -8px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -266,6 +266,12 @@ export default {
 /* 검색 결과 스타일 */
 .filter-result {
   margin-top: 20px;
+  max-height: 23%; /* 원하는 최대 높이 설정 */
+  overflow-y: auto; /* 세로 스크롤 표시 */
+  border: 1px solid #ccc; /* 선택 사항: 경계선 추가 */
+  border-radius: 8px; /* 선택 사항: 경계선 둥글게 */
+  padding: 10px; /* 선택 사항: 패딩 추가 */
+  background-color: white;
 }
 
 .no-results,

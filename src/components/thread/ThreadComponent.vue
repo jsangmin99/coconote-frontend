@@ -41,7 +41,7 @@
 
       <div class="text-group">
         <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
-        <textarea rows="1" type="text" class="form-control" v-model="message" @input="adjustHeight" v-on:keypress.enter="sendMessage"
+        <textarea rows="1" type="text" class="form-control" v-model="message" @input="adjustHeight()" v-on:keypress.enter="sendMessage"
           @keydown="handleKeydown" ref="textarea"/>
         <div class="input-group-append">
           <button class="btn btn-primary" type="button" @click="sendMessage"
