@@ -21,6 +21,7 @@ const workspace = {
             localStorage.setItem("workspaceName", workspaceNameValue);
         },
         setMemberInfo(state, memberInfo) {
+            console.log("[workspace.js] setMemberInfo() memberInfo : ", memberInfo);
             state.nickname = memberInfo.nickname;
             state.workspaceMemberId = memberInfo.workspaceMemberId;
             state.profileImage = memberInfo.profileImage;

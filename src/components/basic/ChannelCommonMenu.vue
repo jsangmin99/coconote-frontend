@@ -15,9 +15,9 @@
         </div>
         <div class="col">
           <!-- + 아이콘 -->
-          <div class="icon-container" @click="openChannelMemberInviteModal">
+          <div class="icon-container">
             <!-- + 아이콘 -->
-            <v-icon icon="mdi-plus" class="plus-icon"></v-icon>
+            <v-icon icon="mdi-plus" class="plus-icon" @click="openChannelMemberInviteModal"></v-icon>
             <!-- 첫 번째 프로필 이미지 -->
             <div v-if="channelMembers.length > 0" class="circle blue-circle">
               <img :src="channelMembers[0].memberInfo.profileImage || defaultProfileImage" alt="Profile" />
@@ -80,7 +80,7 @@
         <v-card-text>
           <p>채널의 이름을 입력하세요.</p>
           <v-text-field ref="channelNameInput" color="primary" density="compact" variant="underlined"
-            v-model="updateChannelInfo.channelName" @keyup.enter="saveEditingChannel" placeholder="이름"></v-text-field>
+            v-model="updateChannelInfo.channelName" @keyup.enter="saveEditingChannel" placeholder="이름" :rules="nameRules"></v-text-field>
           <p>채널의 설명을 입력하세요.</p>
           <v-text-field color="primary" density="compact" variant="underlined" v-model="updateChannelInfo.channelInfo"
             @keyup.enter="saveEditingChannel" placeholder="이름"></v-text-field>
@@ -128,6 +128,10 @@ export default {
         channelInfo: "",
       },
       rootFolderId: "",
+      nameRules: [
+        v => !!v || 'Name is required',
+        v => (v && v.length >= 1) || 'Name must be at least 1 characters'
+      ],
     };
   },
   computed: {
@@ -301,6 +305,9 @@ export default {
       this.updateChannelInfo.channelInfo = this.getChannelDesc;
     },
     async saveEditingChannel() {
+      if (this.updateChannelInfo.channelName.length == 0) {
+        return ;
+      }
       const data = {
         channelName: this.updateChannelInfo.channelName,
         channelInfo: this.updateChannelInfo.channelInfo,
