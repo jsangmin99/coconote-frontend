@@ -161,6 +161,9 @@ import DraggableItem from "@/components/tiptab/DraggableItem";
 import Image from "@tiptap/extension-image"; // 이미지 추가용
 // import { NodePos } from '@tiptap/core';
 
+// 코드 내 들여쓰기 용 
+import { Indent } from "@/components/tiptab/indent";
+
 import { mapGetters, mapActions } from "vuex";
 
 export default {
@@ -198,6 +201,9 @@ export default {
 
       dragCheckSelectionNode: null,
       tempDragCheckSelectionNode: null,
+
+      // 처음로딩 + 내용없음
+      isFirstAndNullContent: false,
 
       // image 업로드 용
       fileList: [], // 업로드할 파일 리스트
@@ -313,6 +319,7 @@ export default {
             // Do something with the node
           },
         }),
+        Indent
       ],
       onUpdate: () => {
         const selectedNode = this.editor.state.selection;
@@ -345,6 +352,7 @@ export default {
 
             // return removedIds; // 사라진 ID 반환
             this.$parent.deleteBlock(removedIds[0]);
+            return false;
 
             // this.nodeLength = updateAllFeIds.length;
           }
@@ -357,27 +365,29 @@ export default {
         const updateContent =
           selectedNode?.$head?.path[3]?.content?.content[0]?.text;
 
-        // console.log(
-        //   "⭐ Node:",
-        //   updateBlockID,
-        //   updateContent,
-        //   this.editor.view?.trackWrites?.dataset?.id,
-        //   updateContent == "",
-        //   this.editor.view?.trackWrites?.data,
-        //   updateContent == undefined
-        // );
+        console.log(
+          "⭐ Node:",
+          updateBlockID,
+          updateContent,
+          this.editor.view?.trackWrites?.dataset?.id,
+          updateContent == "",
+          this.editor.view?.trackWrites?.data,
+          updateContent == undefined
+        );
 
         if (this.localJSON.content == undefined) {
-          this.localJSON = this.editor.getJSON();
+          this.isFirstAndNullContent = true;
+          this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateContent 값 비교 시 무조건 같은 값
         }
 
         // 내용 차이 확인
         const filteredItems = this.localJSON?.content.filter(
           (item) => item.attrs.id === updateBlockID
         );
-
+        console.log("filteredItems >> ", filteredItems);
         if (filteredItems.length > 0) {
           if (
+            !this.isFirstAndNullContent &&
             filteredItems[0].content != undefined &&
             filteredItems[0].content[0].text == updateContent
           ) {
@@ -781,9 +791,9 @@ export default {
   display: flex;
   flex-direction: column;
   #editorArea {
-    height: 100%;
+    min-height: 100%;
     > div {
-      height: 100%;
+      min-height: 100%;
     }
   }
 }

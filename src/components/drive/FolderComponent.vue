@@ -268,9 +268,12 @@ export default {
       if (this.selectedItems.length === 0 || !this.selectedItems.includes(item)) {
         this.selectedItems = [item];
       }
-      event.dataTransfer.setData("items", JSON.stringify(this.selectedItems));
+      const dataToTransfer = JSON.stringify(this.selectedItems);
+      event.dataTransfer.setData("items", dataToTransfer);
       this.draggedType = type;
-      console.log(event.dataTransfer.getData("items"));
+
+      // 드래그 시작 시 전송할 데이터 로그 출력
+      console.log("드래그 시작 - 전송할 데이터:", dataToTransfer);
     },
 
     // 드롭 시 호출
