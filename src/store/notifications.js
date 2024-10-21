@@ -22,11 +22,16 @@ const mutations = {
         state.eventSource = eventSource;
     },
     ADD_NOTIFICATION(state, notification) {
-        if (!state.notifications.some(n => n.id === notification.id)) {
-            state.notifications.push(notification);
-            state.notificationCounts[notification.channelId] = (state.notificationCounts[notification.channelId] || 0) + 1;
-        }
+        // 중복 알림 필터링 제거
+        state.notifications.push(notification);
+        // 새로운 객체로 할당하여 반응성 유지
+        state.notificationCounts = {
+            ...state.notificationCounts,
+            [notification.channelId]: (state.notificationCounts[notification.channelId] || 0) + 1,
+        };
+        console.log("Updated notificationCounts:", state.notificationCounts);
     },
+
     REMOVE_NOTIFICATIONS_BY_CHANNEL(state, channelId) {
         state.notifications = state.notifications.filter(n => n.channelId !== channelId);
         delete state.notificationCounts[channelId];
@@ -60,15 +65,20 @@ const actions = {
 
         eventSource.onopen = () => {
             commit('SET_CONNECTION_STATUS', true);
-            commit('CLEAR_NOTIFICATIONS');
         };
 
         eventSource.addEventListener('notification', (event) => {
             try {
                 const data = JSON.parse(event.data);
-                if (data.channelId !== state.currentChannelId) {
-                    commit('ADD_NOTIFICATION', data);
-                    showNotificationToast(data);
+                console.log('New notification:', data);
+                // 현재 사용자의 알림은 무시
+                if (data.userId != localStorage.getItem('workspaceMemberId')) { 
+                    console.log(data.userId, localStorage.getItem('workspaceMemberId'));
+                    if (data.channelId != localStorage.getItem('channelId')) {
+                        console.log("SSE channel Id:", data.channelId , "localStorage channel Id:", localStorage.getItem('channelId'));
+                        commit('ADD_NOTIFICATION', data); // 알림 추가
+                        showNotificationToast(data); // 알림 토스트 표시
+                    }
                 }
             } catch (e) {
                 console.error("Error processing notification:", e);
@@ -80,10 +90,9 @@ const actions = {
             commit('SET_EVENT_SOURCE', null);
         };
 
-        eventSource.addEventListener('keepAlive', () => console.log('Received ping from server'));
-
         commit('SET_EVENT_SOURCE', eventSource);
     },
+
 
     async clearChannelNotifications({ commit }, channelId) {
         try {
