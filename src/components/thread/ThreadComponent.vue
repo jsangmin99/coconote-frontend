@@ -41,11 +41,13 @@
 
       <div class="text-group">
         <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
-        <textarea type="text" class="form-control" v-model="message" v-on:keypress.enter="sendMessage"
-          @keydown="handleKeydown" />
+        <textarea rows="1" type="text" class="form-control" v-model="message" @input="adjustHeight" v-on:keypress.enter="sendMessage"
+          @keydown="handleKeydown" ref="textarea"/>
         <div class="input-group-append">
           <button class="btn btn-primary" type="button" @click="sendMessage"
-            :disabled="!message && fileList && fileList.length === 0">보내기</button>
+            :disabled="!message && fileList && fileList.length === 0">
+            <img :src="require('@/assets/images/send_icon.png')" alt="보내기" style="height: 20px; width: 20px;">
+          </button>
         </div>
       </div>
     </div>
@@ -491,6 +493,10 @@ export default {
           files: this.filesRes?.map(file => ({ fileId: file.id, fileName: file.fileName, fileURL: file.fileUrl }))
         })
       );
+
+      const textarea = this.$refs.textarea;
+      textarea.style.height = 'auto'; 
+
       this.files = null;
       this.message = "";
       this.fileList = [];
@@ -806,7 +812,21 @@ export default {
       const createdTime = new Date(createdAt);
 
       return `${createdTime.getFullYear()}년 ${createdTime.getMonth() + 1}월 ${createdTime.getDate()}일`;
-    }
+    },
+    adjustHeight() {
+      const textarea = this.$refs.textarea;
+      setTimeout(() => {
+        textarea.style.height = 'auto'; // 이전 높이를 초기화
+        textarea.style.height = `${textarea.scrollHeight}px`; // 내용에 맞게 높이 조정
+      }, 0);
+
+        // max-height에 따라 스크롤바 보이기
+      if (textarea.scrollHeight > parseInt(getComputedStyle(textarea).maxHeight)) {
+        textarea.style.overflowY = 'auto'; // 스크롤바 보이기
+      } else {
+        textarea.style.overflowY = 'hidden'; // 스크롤바 숨기기
+      }
+    },
   },
 };
 </script>
@@ -836,7 +856,9 @@ export default {
   background-color: white;
   /* 배경색 설정 */
   border: 1px solid;
+  border-radius: 5px;
   margin-right: 24px;
+  margin-bottom: 10px;
   width: 80%;
 }
 
@@ -861,12 +883,16 @@ export default {
 .text-group {
   display: flex;
   flex-direction: row;
+  align-items: center;
   width: 100%;
 }
 
 .form-control {
+  resize: none;
   width: 100%;
-
+  max-height: 40vh;
+  overflow-y: auto;
+  margin-left: 5px;
 }
 
 .tag-filter-container {
