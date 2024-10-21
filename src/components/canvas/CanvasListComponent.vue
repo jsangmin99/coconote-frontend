@@ -1,22 +1,35 @@
 <template>
-  <v-list class="h-100">
+  <v-list class="canvasLists h-100" v-if="this.canvasIdInList > 0">
     <v-list-item
+      class="canvasListItem"
       prepend-icon="mdi-note-text-outline"
       v-for="item in chatrooms"
       :key="item.id"
       :data-id="item.id"
       @click="changeCanvasId(item.id)"
-      :class="{ active: this.canvasIdInList === item.id }"
+      :class="{ active: this.canvasIdInList == item.id }"
     >
       {{ item.title }}
     </v-list-item>
-    <v-list-item class="list-create">
+    <v-list-item class="canvasListItem list-create">
+      <v-btn 
+        v-if="!isVisibleCreateTextarea"
+        density="compact"
+        class="create-btn"
+        variant
+        block
+        @click="isVisibleCreateTextarea = true"
+      >
+        + 페이지 추가
+      </v-btn>
       <v-text-field
+        v-else
         color="primary"
         density="compact"
         class="form-control"
         variant="underlined"
         v-model="canvasName"
+        label="캔버스 명"
         @keyup.enter="createCanvas"
       ></v-text-field>
     </v-list-item>
@@ -49,7 +62,9 @@ export default {
             }, 1000);
           } else if (this.getCanvasAllInfo_inList.method == "UPDATE_CANVAS") {
             this.onCanvasInfoChanged();
-          } else if (this.getCanvasAllInfo_inList.method == "CHANGE_ORDER_CANVAS") {
+          } else if (
+            this.getCanvasAllInfo_inList.method == "CHANGE_ORDER_CANVAS"
+          ) {
             this.changeOrderInList();
           } else if (this.getCanvasAllInfo_inList.method == "DELETE_CANVAS") {
             this.canvasDeleteInList();
@@ -63,6 +78,7 @@ export default {
   },
   computed: {
     ...mapGetters([
+      "getWorkspaceId",
       "getChannelId",
       // canvas용 vuex
       "getCanvasAllInfo",
@@ -75,6 +91,7 @@ export default {
       alert("잘못된 접근입니다.");
       return false;
     }
+    this.canvasIdInList = this.$route.params.canvasId;
     this.isFirst = true;
     this.findAllRoom();
   },
@@ -90,17 +107,24 @@ export default {
       canvasMessage: "",
       canvasMessages: [],
       getCanvasAllInfo_inList: null,
+
+      isVisibleCreateTextarea: false, // 페이지 추가 버튼 용
     };
   },
   methods: {
     ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction"]),
     findAllRoom() {
       axios
-        .get(`${process.env.VUE_APP_API_BASE_URL}/canvas/${this.channelId}/list`)
+        .get(
+          `${process.env.VUE_APP_API_BASE_URL}/canvas/${this.channelId}/list`
+        )
         .then((response) => {
           this.chatrooms = response.data.result.content;
           if (this.chatrooms.length > 0 && this.isFirst) {
-            if (this.$route.params.canvasId && this.$route.params.canvasId > 0) {
+            if (
+              this.$route.params.canvasId &&
+              this.$route.params.canvasId > 0
+            ) {
               this.changeCanvasId(this.$route.params.canvasId); // url id 선택
             } else {
               this.changeCanvasId(response.data.result.content[0].id); // 첫번째 id 자동선택
@@ -114,40 +138,13 @@ export default {
         alert("캔버스 제목을 입력해 주십시요.");
         return;
       } else {
-        // let prevCanvasId = null;
-        // if (this.chatrooms && this.chatrooms.length > 0) {
-        //   prevCanvasId = this.chatrooms[this.chatrooms.length - 1].id;
-        // }
-        // const params = {
-        //   canvasTitle: this.canvasName,
-        //   parentCanvasId: null,
-        //   prevCanvasId: prevCanvasId,
-        //   channelId: this.$route.params.channelId,
-        // };
-
         try {
-          // const response = await axios.post(
-          //   `${process.env.VUE_APP_API_BASE_URL}/canvas/create`,
-          //   params
-          // );
-          // console.log(response);
-          // const targetRes = response.data.result;
-          // this.canvasName = "";
-
-          // this.$store.dispatch("setCanvasAllInfoAction", {
-          //   method: "create",
-          //   title: targetRes.title,
-          //   canvasId: targetRes.canvasId,
-          //   parentCanvasId: targetRes.parentCanvasId,
-          //   prevCanvasId: targetRes.prevCanvasId,
-          //   nextCanvasId: targetRes.nextCanvasId,
-          //   member: targetRes.member,
-          // });
           let prevCanvasId = null;
           if (this.chatrooms && this.chatrooms.length > 0) {
             prevCanvasId = this.chatrooms[this.chatrooms.length - 1].id;
           }
           const setInfoObj = {
+            workspaceId: this.getWorkspaceId,
             postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
             page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
             postEventPage: "LIST", // 이 이벤트를 호출한 페이지
@@ -162,7 +159,8 @@ export default {
           };
 
           this.$store.dispatch("setInfoMultiTargetAction", setInfoObj);
-
+          this.isVisibleCreateTextarea = false;
+          this.canvasName = ""
           // this.findAllRoom();
         } catch (error) {
           alert("채팅방 개설에 실패하였습니다.");
@@ -174,8 +172,13 @@ export default {
       if (sender) {
         this.canvasIdInList = canvasId;
         this.$emit("updateCanvasId", canvasId);
-        if(this.$route.name == "CanvasView" || this.$route.name == "CanvasEmptyView"){
-          this.$router.push(`/channel/${this.getChannelId}/canvas/view/${canvasId}`);
+        if (
+          this.$route.name == "CanvasView" ||
+          this.$route.name == "CanvasEmptyView"
+        ) {
+          this.$router.push(
+            `/channel/${this.getChannelId}/canvas/view/${canvasId}`
+          );
         }
       }
     },
@@ -209,9 +212,33 @@ export default {
 [v-cloak] {
   display: none;
 }
-.canvasListContainer{
-  .active{
-    background-color: #e3e3e3;
+.canvasLists {
+  font-size: 12px;
+  padding: 8px !important;
+  .active {
+    background-color: #ffffff !important;
+  }
+  .canvasListItem{
+    min-height: auto !important;
+    grid-template-columns: 28px 1fr auto;
+    padding: 8px 8px !important;
+    border-radius: 8px !important;
+  }
+  .list-create{
+    display: block !important;
+    padding: 0 !important;
+    margin-top: 10px;
+
+    .list-create input::placeholder{
+      font-size: 10px !important;
+    }
+
+    .create-btn{
+      font-size: 10px;
+      background: #E5E5E5 !important;
+      color: #494949;
+    }
+    
   }
 }
 </style>
