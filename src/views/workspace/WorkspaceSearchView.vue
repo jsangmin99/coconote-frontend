@@ -47,11 +47,10 @@ export default {
         console.log("[WorkspaceSearchView] 이미 workspace가 있음!!");
         this.workspaceId = lsWsId;
         const lsWsName = localStorage.getItem("workspaceName");
-        await this.setWorkspaceInfoActions(lsWsId).then(() => {
-          this.setWorkspaceNameInfoActions(lsWsName).then(() => {
-            this.getMyFirstChannelInWorkspace();
-          });
-        });
+        await this.setWorkspaceInfoActions(lsWsId);
+        await this.setWorkspaceNameInfoActions(lsWsName);
+        await this.getMyFirstChannelInWorkspace();
+        await this.getWorkspaceMemberInfo(this.workspaceId);
       } else {
         console.error("새로운 workspace~~");
         this.getMyFirstWorkspace();

@@ -359,6 +359,7 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
         );
         this.sections = response.data.result;
+        this.visibleSections = this.sections.map(section => section.sectionId);// 섹션의 토글을 모두 열도록 초기화
 
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
         if (
