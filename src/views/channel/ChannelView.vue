@@ -65,7 +65,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions(["setChannelRoleInfoActions"]),
+    ...mapActions(["setChannelRoleInfoActions", "setMemberInfoActions"]),
     // 채널 참여 메서드
     async channelMemberCreate() {
       this.loading = true;
@@ -73,7 +73,17 @@ export default {
         const response = await axios.post(
           `${process.env.VUE_APP_API_BASE_URL}/channel/member/create/${this.getChannelId}`
         );
-        alert(response.data.status_message); // 성공 메시지 출력
+        const result = response.data.result;
+        console.log("[ChannelView] channelMemberCreate() result : ", result);
+        this.setChannelRoleInfoActions(result.channelRole);
+        this.setMemberInfoActions(
+          {
+            nickname : result.memberInfo.nickname,
+            workspaceMemberId : result.memberInfo.workspaceMemberId,
+            profileImage : result.memberInfo.profileImage,
+            wsRole : result.memberInfo.wsRole
+          });
+        // this.$router.push(`/channel/${this.getChannelId}/thread/view`);
       } catch (error) {
         console.error("채널 가입 실패:", error);
         alert("채널 가입에 실패했습니다.");

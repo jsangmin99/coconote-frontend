@@ -69,7 +69,7 @@
             </v-card-title>
             <v-card-text>
               <!-- 새로운 섹션 이름 입력 -->
-              <v-text-field v-model="editedSectionName" label="New Section Name" outlined></v-text-field>
+              <v-text-field v-model="editedSectionName" label="New Section Name" outlined :rules="nameRules"></v-text-field>
             </v-card-text>
             <v-card-actions>
               <v-btn color="primary" @click="editSection">저장</v-btn>
@@ -127,10 +127,10 @@
       <v-card-text>
         <p>채널의 이름을 입력하세요.</p>
         <v-text-field ref="channelNameInput" color="primary" density="compact" variant="underlined"
-          v-model="createChannelInfo.channelName" @keyup.enter="createChannel" placeholder="이름"></v-text-field>
+          v-model="createChannelInfo.channelName" @keyup.enter="createChannel" placeholder="이름" :rules="nameRules"></v-text-field>
         <p>채널의 설명을 입력하세요.</p>
         <v-text-field color="primary" density="compact" variant="underlined" v-model="createChannelInfo.channelInfo"
-          @keyup.enter="createChannel" placeholder="이름"></v-text-field>
+          @keyup.enter="createChannel" placeholder="설명"></v-text-field>
         <v-radio-group inline label="채널종류" v-model="createChannelInfo.isPublic">
           <v-radio label="공개채널" value="1"></v-radio>
           <v-radio label="비공개 채널" value="0"></v-radio>
@@ -149,7 +149,8 @@
       <v-card-text>
         섹션의 이름을 입력하세요.
         <v-text-field color="primary" density="compact" class="canvasTitle" variant="underlined"
-          v-model="createSectionName" @keyup.enter="createSection" placeholder="이름"></v-text-field>
+          v-model="createSectionName" @keyup.enter="createSection" placeholder="이름" :rules="nameRules"
+          ></v-text-field>
       </v-card-text>
       <template v-slot:actions>
         <v-btn class="" text="생성" @click="createSection"></v-btn>
@@ -163,7 +164,7 @@
       <v-card-title class="text-h5 text-center">워크스페이스 정보 수정</v-card-title>
       <v-card-text>
         <v-list>
-          <v-text-field v-model="editedName" placeholder="이름"></v-text-field>
+          <v-text-field v-model="editedName" placeholder="이름" :rules="nameRules"></v-text-field>
           <v-text-field v-model="editedWsInfo" placeholder="설명"></v-text-field>
         </v-list>
       </v-card-text>
@@ -226,6 +227,9 @@ export default {
       console.log("Notification counts:", counts);
       return counts;
     },
+    getWsRole() {
+      return this.$store.getters.wsRole; // Vuex의 wsRole getter에서 값 가져오기
+    }
   },
   watch: {
     // 라우터 파라미터 channelId의 변화를 감지
@@ -289,12 +293,16 @@ export default {
         sectionId: null,
         channelName: "",
         channelInfo: "",
-        isPublic: 1,
+        isPublic: "1",
       },
       workspaceEditModal: false,
       editedName: "",
       editedWsInfo: "",
       myChannels: [],
+      nameRules: [
+        v => !!v || 'Name is required',
+        v => (v && v.length >= 1) || 'Name must be at least 1 characters'
+      ],
 
       editDialog: false, // dialog 창 상태
       editedSectionId: null, // 수정 중인 섹션 ID
@@ -386,7 +394,6 @@ export default {
     //   this.changeChannelMemberInfo(chMember.data.result.channelRole);
 
     // },
-
     async handleChannelClick(id, name, desc) {
       this.selectedChannelMenuId = id;
       this.setChannelInfoActions(id);
@@ -417,7 +424,6 @@ export default {
         });
       }
     },
-
     async changeChannel(id, name, desc) {
       if (id == this.selectedChannelMenuId) {
         return false;
@@ -452,6 +458,9 @@ export default {
       this.setChannelRoleInfoActions(role);
     },
     async createSection() {
+      if (this.createSectionName.length == 0) {
+        return ;
+      }
       try {
         const data = {
           workspaceId: this.getWorkspaceId,
@@ -468,6 +477,9 @@ export default {
       }
     },
     async createChannel() {
+      if (this.createChannelInfo.channelName.length == 0) {
+        return ;
+      }
       const data = {
         sectionId: this.createChannelInfo.sectionId,
         channelName: this.createChannelInfo.channelName,
@@ -503,6 +515,9 @@ export default {
       }
     },
     async saveEditing(workspaceId) {
+      if (this.editedName.length == 0) {
+        return ;
+      }
       try {
         await axios.patch(
           `${process.env.VUE_APP_API_BASE_URL}/workspace/update/${workspaceId}`,
@@ -543,6 +558,9 @@ export default {
       }
     },
     async editSection() {
+      if (this.editedSectionName.length == 0) {
+        return ;
+      } 
       try {
         const response = await axios.patch(
           `${process.env.VUE_APP_API_BASE_URL}/section/update/${this.editedSectionId}`,
@@ -659,7 +677,6 @@ export default {
         await axios.delete(
           `${process.env.VUE_APP_API_BASE_URL}/channel/${channelId}/member/leave`
         );
-        alert("채널에서 나갔습니다.");
         this.$router.push("/workspace").then(() => {
           location.reload(); // URL 변경 후 페이지 새로고침
         });

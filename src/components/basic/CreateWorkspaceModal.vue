@@ -5,9 +5,9 @@
         워크스페이스 생성하기 </v-card-title><br />
       <v-card-text>
         <v-form @submit.prevent="createWorkspace">
-          <v-text-field label="name" v-model="name" required>
+          <v-text-field label="워크스페이스의 이름을 입력하세요" v-model="name" required :rules="nameRules">
           </v-text-field>
-          <v-text-field label="wsInfo" v-model="wsInfo" required>
+          <v-text-field label="워크스페이스의 설명을 입력하세요." v-model="wsInfo" required>
           </v-text-field>
           <v-btn type="submit" color="blue">완료</v-btn>
           <v-btn color="grey" @click="closeModal">닫기</v-btn>
@@ -28,6 +28,10 @@ export default {
       name: "",
       wsInfo: "",
       channelId: null,
+      nameRules: [
+        v => !!v || 'Name is required',
+        v => (v && v.length >= 1) || 'Name must be at least 1 characters'
+      ],
     }
   },
   methods: {
@@ -42,6 +46,10 @@ export default {
 
     ]),
     async createWorkspace() {
+      if (this.name.length <= 0) {
+        return;
+      }
+
       const body = {
         name: this.name,
         wsInfo: this.wsInfo,
