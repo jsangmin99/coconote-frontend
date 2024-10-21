@@ -161,7 +161,9 @@ import DraggableItem from "@/components/tiptab/DraggableItem";
 import Image from "@tiptap/extension-image"; // 이미지 추가용
 // import { NodePos } from '@tiptap/core';
 
-// 코드 내 들여쓰기 용 
+import Placeholder from "@tiptap/extension-placeholder";
+
+// 코드 내 들여쓰기 용
 import { Indent } from "@/components/tiptab/indent";
 
 import { mapGetters, mapActions } from "vuex";
@@ -194,7 +196,7 @@ export default {
       editor: null,
       localJSON: "",
       localHTML: "",
-      defaultContent: this.initialContent, // 부모로부터 받은 데이터를 초기값으로 설정
+      defaultContent: (this.initialContent ? this.initialContent : "<p></p>"), // 부모로부터 받은 데이터를 초기값으로 설정
       updateEditorContent: this.parentUpdateEditorContent,
 
       dragCheckEditorJson: null,
@@ -205,7 +207,7 @@ export default {
       // 처음로딩 + 내용없음
       isFirstAndNullContent: false,
 
-      isRecvUpdate :false, // socket 메시지인지 아닌지 확인 용
+      isRecvUpdate: false, // socket 메시지인지 아닌지 확인 용
 
       // image 업로드 용
       fileList: [], // 업로드할 파일 리스트
@@ -321,10 +323,21 @@ export default {
             // Do something with the node
           },
         }),
-        Indent
+        Indent,
+        Placeholder.configure({
+          placeholder: "내용을 작성하세요.",
+          // Use different placeholders depending on the node type:
+          // placeholder: ({ node }) => {
+          //   if (node.type.name === 'heading') {
+          //     return 'What’s the title?'
+          //   }
+
+          //   return 'Can you add some further context?'
+          // },
+        }),
       ],
       onUpdate: () => {
-        if(this.isRecvUpdate){
+        if (this.isRecvUpdate) {
           this.isRecvUpdate = false;
           return false;
         }
@@ -355,8 +368,8 @@ export default {
             const removedIds = originAllFeIds.filter(
               (id) => !updateAllFeIds.includes(id)
             );
-            console.error("removedIds >> ", removedIds)
-            if(removedIds.length > 0){
+            console.error("removedIds >> ", removedIds);
+            if (removedIds.length > 0) {
               this.$parent.deleteBlock(removedIds[0]);
               return false;
             }
@@ -438,7 +451,7 @@ export default {
           parentId
         );
       },
-      content: this.defaultContent,
+      content: (this.defaultContent == "" ? "<p></p>" : this.defaultContent),
     });
 
     this.editor.on("create", ({ editor }) => {
@@ -509,9 +522,15 @@ export default {
         this.deleteBlockTargetFeIdActions(newContent.blockFeId).then(
           (isDeleteBlock) => {
             console.log("isDeleteBlock newContent.feId :: ", isDeleteBlock);
-            console.error("이전 nodeLength :: DELETE_BLOCK ::", this.nodeLength)
+            console.error(
+              "이전 nodeLength :: DELETE_BLOCK ::",
+              this.nodeLength
+            );
             this.nodeLength = this.localJSON.content.length;
-            console.error("이후 nodeLength :: DELETE_BLOCK ::", this.nodeLength)
+            console.error(
+              "이후 nodeLength :: DELETE_BLOCK ::",
+              this.nodeLength
+            );
           }
         );
       } else if (newContent.method == "CHANGE_ORDER_BLOCK") {
@@ -589,9 +608,9 @@ export default {
               newContent.blockFeId,
               newContent.prevBlockId
             );
-            console.error("이전 nodeLength", this.nodeLength)
+            console.error("이전 nodeLength", this.nodeLength);
             this.nodeLength = this.localJSON.content.length;
-            console.error("이후 nodeLength", this.nodeLength)
+            console.error("이후 nodeLength", this.nodeLength);
             console.log("zzz>> ", newContent.method, this.nodeLength);
           }
 
@@ -910,6 +929,23 @@ export default {
     border-top: 1px solid var(--gray-2);
     margin: 2rem 0;
   }
+  /* Placeholder (at the top) */
+  p.is-editor-empty:first-child::before {
+    color: var(--gray-4);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  /* Placeholder (on every new line) */
+  /* .is-empty::before {
+    color: var(--gray-4);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  } */
 }
 
 ::selection {
@@ -981,5 +1017,46 @@ export default {
     color: #0d0d0d50;
     border-radius: 0.25rem;
   }
+}
+</style>
+
+<style lang="scss">
+/* Basic editor styles */
+.tiptap {
+  :first-child {
+    margin-top: 0;
+  }
+
+  /* Placeholder (at the top) 
+  p.is-editor-empty:first-child::before {
+    color: var(--gray-4);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }*/
+  p.is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+  p.is-empty::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  /* Placeholder (on every new line) */
+  /* .is-empty::before {
+    color: var(--gray-4);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  } */
 }
 </style>
