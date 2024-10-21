@@ -387,19 +387,19 @@ export default {
 }
 @keyframes circle-motion {
   0% {
-    transform: translate(0, 0) rotate(0deg);
+    transform: translate(0, 0) rotate(0deg) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
   }
   25% {
-    transform: translate(50px, 0) rotate(90deg);
+    transform: translate(50px, 0) rotate(90deg) matrix3d(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1);
   }
   50% {
-    transform: translate(50px, 500px) rotate(180deg);
+    transform: translate(50px, 500px) rotate(180deg) matrix3d(3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1);
   }
   75% {
-    transform: translate(0, 50px) rotate(270deg);
+    transform: translate(0, 50px) rotate(270deg) matrix3d(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1);
   }
   100% {
-    transform: translate(0, 0) rotate(360deg);
+    transform: translate(0, 0) rotate(360deg) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
   }
 }
 .highlight {
