@@ -330,6 +330,7 @@ export default {
           postEventPage: "VIEW", // 이 이벤트를 호출한 페이지
           method: recv.method,
 
+          workspaceMemberId: recv.workspaceMemberId,
           channelId: recv.channelId,
           canvasId: recv.canvasId,
 
