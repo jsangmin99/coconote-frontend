@@ -293,7 +293,7 @@ export default {
 }
 
 .filter-result li:hover {
-  transform: translateY(-2px);
+  transform: translateY(-5px) scale(1.02);
 }
 
 /* 검색 결과 내용 스타일 */
@@ -393,7 +393,7 @@ export default {
     transform: translate(50px, 0) rotate(90deg);
   }
   50% {
-    transform: translate(50px, 50px) rotate(180deg);
+    transform: translate(50px, 500px) rotate(180deg);
   }
   75% {
     transform: translate(0, 50px) rotate(270deg);
