@@ -6,6 +6,7 @@
         prepend-icon="mdi-alpha-w-box"
         title="workspace"
         @click="toggleDropdown"
+        :class="{ 'selected-item': selectedMenu === 'workspace' }"
       ></v-list-item>
       <!-- 홈 하위 메뉴 버튼 -->
       <v-list-item
@@ -33,17 +34,7 @@
       <!-- Spacer로 나머지 공간 확보 -->
       <div style="flex-grow: 2"></div>
 
-      <!-- 드롭다운 메뉴 -->
-      <div v-if="isDropdownOpen" class="workspace-dropdown-menu" @click.stop>
-        <ul v-for="workspace in workspaceList" :key="workspace.workspaceId">
-          <li @click="selectWorkspace(workspace.workspaceId)">
-            {{ workspace.name }}
-          </li>
-        </ul>
-        <ul>
-          <li @click="showWorkspaceModal">+</li>
-        </ul>
-      </div>
+
 
       <!-- 프로필 및 로그아웃 버튼을 하단에 배치 -->
       <div
@@ -70,6 +61,19 @@
       @update:dialog="dialog = $event"
       :modalPosition="modalPosition"
     />
+
+            <!-- 드롭다운 메뉴 -->
+      <div v-if="isDropdownOpen" class="workspace-dropdown-menu" @click.stop>
+        <ul v-for="workspace in workspaceList" :key="workspace.workspaceId">
+          <li @click="selectWorkspace(workspace.workspaceId)">
+            {{ workspace.name }}
+          </li>
+        </ul>
+        <ul>
+          <li @click="showWorkspaceModal">+</li>
+        </ul>
+      </div>
+
   </v-navigation-drawer>
   <CreateWorkspaceModal
     v-model="createWorkspace"
@@ -86,6 +90,9 @@
     v-if="selectedMenu === 'member'"
     :selectedValue="selectedValue"
   /> -->
+
+
+
 </template>
 
 <script>
@@ -122,7 +129,7 @@ export default {
     return {
       menu: false,
       dialog: false,
-      selectedMenu: "home",
+      selectedMenu: null,
       profileImageUrl: "", // 프로필 이미지 URL 저장
       modalPosition: { top: 0, left: 0 }, // 모달의 위치 저장
       isDropdownOpen: false,
@@ -132,17 +139,20 @@ export default {
     };
   },
   mounted() {
-    this.fetchMyWorkspaceList();
-
-    const profileImage = this.$store.getters.getProfileImage;
-    const nickname = this.$store.getters.getNickname;
-
-    // 프로필 이미지 설정 로직
-    if (profileImage !== "null") {
-      this.profileImageUrl = profileImage;
-    } else {
-      this.generateAvatar(nickname);
+    console.error("❤️❤️❤️❤️❤️",this.selectedMenu);
+    const routeName = this.$route.name;
+    const nameSelectMenuObj = {
+      MemberView: "member",
+      SEARCH: "search"
     }
+    if(nameSelectMenuObj[routeName]){
+      this.selectedMenu = nameSelectMenuObj[routeName];
+    }else{
+      this.selectedMenu = "home";
+    }
+    // this.changeSelectedMenu(this.selectedMenu);
+
+    this.fetchMyWorkspaceList();
   },
   methods: {
     ...mapActions([
@@ -164,7 +174,9 @@ export default {
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/workspace/list`
         );
+      
         this.workspaceList = response.data.result; // 내 워크스페이스 목록 가져오기
+        console.log(this.workspaceList);
       } catch (e) {
         console.log(e);
       }
@@ -184,24 +196,30 @@ export default {
       }
     },
     changeSelectedMenu(name) {
-      this.selectedMenu = name;
-      switch (this.selectedMenu) {
+      if(name == this.selectedMenu){
+        return false;
+      }
+      console.error("getWorkspaceId >> ", this.getWorkspaceId)
+      switch (name) {
         case "home":
+          console.log("###### home")
           this.locationHome();
           break;
         case "member":
-          this.$router.push(`/member/${this.getWorkspaceId}`);
+          console.log("###### member")
+          window.location.href=`/member/${this.getWorkspaceId}`;
+          // this.$router.push(`/member/${this.getWorkspaceId}`);
           break;
         case "search":
-          this.$router.push(`/workspace/${this.getWorkspaceId}/search`);
+          console.log("###### search")
+          window.location.href=`/workspace/${this.getWorkspaceId}/search`;
+          // this.$router.push(`/workspace/${this.getWorkspaceId}/search`);
           break;
       }
+      // this.selectedMenu = name;
     },
     async locationHome() {
-      const response = await axios.get(
-        `${process.env.VUE_APP_API_BASE_URL}/${this.getWorkspaceId}/channel/first`
-      );
-      this.$router.push(`/channel/${response.data.result.channelId}`);
+      window.location.href=`/channel/view`;
     },
     setModalPosition() {
       const button = this.$refs.profileButton; // 버튼 요소 참조
@@ -298,6 +316,7 @@ export default {
 }
 
 .workspace-dropdown-menu {
+//  transform: rotate(180deg);
   position: absolute;
   background-color: white;
   border: 1px solid #ccc;
