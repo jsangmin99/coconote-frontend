@@ -1,27 +1,36 @@
 <template>
+<v-container>
   <div>
     <h1>모든 회원</h1>
-              <v-btn @click="showMailSender" color="#3a8bcd" text="회원 초대">
-          </v-btn>
-            <v-row>
-              <v-col v-for="member in workspaceMemberList" :key="member.workspaceMemberId" sm="3" md="2">
-                <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card">
-                    <v-img height="200px"></v-img>
-                    <v-card-text class="member-position">{{ member.nickname }}</v-card-text>
-                    <v-card-title class="member-name">{{ member.nickname }}</v-card-title>
-                    <v-chip small :color="getChipColor(member.wsRole)">{{ member.wsRole }}</v-chip>
-                </v-card>
-            </v-col>
-        </v-row>
+    <v-btn @click="showMailSender" color="#3a8bcd" text="회원 초대"></v-btn>
   </div>
+  <br>
+  <br>
+  <br>
+  <div>
+  <v-row>
+    <v-col v-for="member in workspaceMemberList" :key="member.workspaceMemberId" cols="2" md="2">
+      <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card">
+        <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require('@/assets/images/profileImage.png')" alt="Profile Image" style="width: 100%;"/>
+          <v-card-text class="member-info">{{ member.nickname || '별명 없음' }}</v-card-text>
+          <v-card-title class="member-title">{{ member.memberName || '이름 없음' }}</v-card-title>
+          <v-icon v-if="member.wsRole === 'PMANAGER'"  color='#ffbb00'>mdi-crown</v-icon>
+          <v-icon v-if="member.wsRole === 'SMANAGER'"  color='#C0C0C0'>mdi-crown</v-icon>
+          <!-- <v-chip small :color="getChipColor(member.wsRole)">{{ member.wsRole }}</v-chip> -->
+        </v-card>
+      </v-col>
+    </v-row>
+  </div>
+</v-container>
+  
 
-    <v-dialog v-model="workspaceMemberModal" max-width="500px" class="workspaceMemberModal">
-       <v-card v-if="editingMemberId === workspaceMemberInfo.workspaceMemberId">
-      <v-card-title class="text-h5 text-center">
+    <v-dialog v-model="workspaceMemberModal" max-width="600px" class="workspaceMemberModal">
+       <!-- <v-card v-if="editingMemberId === workspaceMemberInfo.workspaceMemberId"> -->
+       <v-card>
+      <!-- <v-card-title class="text-h5 text-center">
         워크스페이스 회원 정보 수정     
         </v-card-title>
       <v-card-text>
-        <!-- 나중에 사진 넣을 수 있게 만들기 -->
          <v-icon size="50">mdi-account-circle</v-icon> 
          <v-list>
           <v-text-field v-model="editedMemberName" placeholder="이름"></v-text-field>
@@ -31,16 +40,116 @@
          </v-list>      
       </v-card-text>
       <v-btn text="수정" color="blue" @click="saveWorkspaceMemberInfo(workspaceMemberInfo.workspaceMemberId)"></v-btn>
-      <v-btn text="취소" color="grey" @click="cancelEditing"></v-btn>
-    </v-card>
+      <v-btn text="취소" color="grey" @click="cancelEditing"></v-btn> -->
+    <!-- </v-card> -->
 
-      <v-card v-else>
-      <v-card-title class="text-h5 text-center">
-        워크스페이스 회원      
-        <v-icon v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)">mdi-cog</v-icon>
+      <!-- <v-card v-else> -->
+        <v-card-title class="text-h5">
+          프로필      
+          <v-icon color="grey" v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)" size="20">mdi-cog</v-icon>
         </v-card-title>
-      <v-card-text>
-         <v-img height="200px"></v-img>
+        <v-card-text>
+            <v-row justify="center">
+              <v-col cols="12">
+                <div class="member-detail-container">
+                  <v-row>
+                    <v-col>
+                      <img :src="getProfileImage && getProfileImage !== 'null' ? getProfileImage : require('@/assets/images/profileImage.png')" alt="Profile Image" height="200px"/>
+                    </v-col>
+                    <v-col>
+                      <div class="member-info-container">
+                        <h4 class="member-info">닉네임</h4>
+                        <h2 class="member-title">이름</h2>
+
+                        <v-divider class="my-3"></v-divider>
+                        
+                        <div class="member-details">
+
+
+                          <div class="info-item">
+                            <v-row>
+                              <v-col cols="3">
+                                <v-icon>mdi-email-outline</v-icon>
+                                <div class="member-info" style="margin-top: 5px;">이메일</div>
+                              </v-col>
+                              <v-col cols="9">
+                                <div style="margin-top: 10px;">test@naver.com</div>
+                              </v-col>
+                            </v-row>
+                          </div>
+               
+                        <v-divider class="my-3"></v-divider>
+   
+                        <div>
+                        
+                          <div class="info-item">
+                            <v-row>
+                              <v-col cols="3">
+                                <v-icon>mdi-domain</v-icon>
+                                <div class="member-info" style="margin-top: 5px;">소속</div>
+                              </v-col>
+                              <v-col cols="9">
+                                <div style="margin-top: 10px;">{{ workspaceMemberInfo.field }}</div>
+                              </v-col>
+                            </v-row>
+                          </div>
+
+
+                        <br>
+
+
+                          <div class="info-item">
+                            <v-row>
+                              <v-col cols="3">
+                                <v-icon>mdi-briefcase-outline</v-icon>
+                                <div class="member-info" style="margin-top: 5px;">직급</div>
+                              </v-col>
+                              <v-col cols="9">
+                                <div style="margin-top: 10px;">{{ workspaceMemberInfo.position }}</div>
+                              </v-col>
+                            </v-row>
+                          </div>
+
+
+                          <br>
+
+
+                          <div class="info-item">
+                            <v-row>
+                              <v-col cols="3">
+                                <v-icon>mdi-crown</v-icon>
+                                <div class="member-info" style="margin-top: 5px;">등급</div>
+                              </v-col>
+                              <v-col cols="9">
+                                <div style="margin-top: 10px;">{{ workspaceMemberInfo.wsRole }}</div>
+                              </v-col>
+                            </v-row>
+                          </div>
+
+
+                        </div>
+                      </div>
+                     </div>
+                  </v-col>
+                </v-row>
+                </div>
+            </v-col>
+        </v-row>
+        </v-card-text>
+
+
+      
+      <!-- <v-card-text>
+         <img
+          :src="
+            getProfileImage && getProfileImage !== 'null'
+              ? getProfileImage
+              : require('@/assets/images/profileImage.png')
+          "
+          alt="Profile Image"
+          class="avatar-image"
+          height="200px"
+        />
          <v-list>
           <v-list-item>이름    {{ workspaceMemberInfo.memberName }}</v-list-item>
           <v-list-item>닉네임    {{ workspaceMemberInfo.nickname }}</v-list-item>
@@ -48,13 +157,19 @@
           <v-list-item>직급    {{ workspaceMemberInfo.position }}</v-list-item>
           <v-list-item>권한    {{ workspaceMemberInfo.wsRole }}</v-list-item>
          </v-list>
-      </v-card-text>
+      </v-card-text> -->
+
+
       <div v-if="this.getWsRole !== 'USER' && this.workspaceMemberInfo.wsRole !== 'PMANAGER'">
         <v-icon v-if="this.workspaceMemberInfo.wsRole === 'USER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-up</v-icon>
         <v-icon v-if="this.workspaceMemberInfo.wsRole === 'SMANAGER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-down</v-icon>
         <v-icon @click="removeMember(workspaceMemberInfo.workspaceMemberId)">mdi-account-remove</v-icon>
       </div>
+
+
       <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn>
+    
+    
     </v-card>
    
     </v-dialog>
@@ -87,7 +202,7 @@ export default {
     this.fetchMyInfo();
   },
   computed: {
-    ...mapGetters(["getWorkspaceId", "getWorkspaceMemberId", "getWorkspaceName", "getWsRole",]),
+    ...mapGetters(["getWorkspaceId", "getWorkspaceMemberId", "getWorkspaceName", "getWsRole", "getProfileImage"]),
   },
   data() {
     return {
@@ -238,16 +353,16 @@ export default {
     padding-bottom: 2px;
 }
 
-.member-name {
+.member-title {
     font-size: 17px;
+    text-align: left;
 }
 
-.member-position {
+.member-info {
     color: #919191;
     padding-bottom: 0px;
     font-size: 12px;
 }
-
 
 
 </style>

@@ -1,9 +1,12 @@
 <template>
+
+
   <div v-if="isModalOpen" class="modal" @click="closeModal">
     <div class="modal-content" @click.stop>
       <header>
+        <h2># {{ getChannelName }}</h2>
         <h2>#멤버 초대</h2>
-        <button @click="closeModal" class="close-button">X</button>
+        <v-icon @click="closeModal" class="close-button">mdi-close</v-icon>
       </header>
       <div class="search-bar">
         <input type="text" v-model="searchKeyword" placeholder="멤버 찾기" @input="debouncedSearchMembers" />
@@ -15,16 +18,16 @@
         <div v-else>
           <div v-for="member in channelMembers" :key="member.id" class="member-item">
             <img :src="member.memberInfo.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
-            <div class="member-info">
-              <v-list-item-title>{{ member.memberInfo.nickname || '별명 없음' }}</v-list-item-title>
-              <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}</v-list-item-title>
-              <v-list-item-title>{{ member.memberInfo.workspaceMemberId }}</v-list-item-title>
-              <v-list-item-title>역할: {{ member.channelRole }}</v-list-item-title>
+            <div class="member-title">
+              <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}<v-icon v-if="member.channelRole === 'MANAGER'" color="#ffbb00">mdi-crown</v-icon></v-list-item-title>
             </div>
             <div v-if="getChannelRole === 'MANAGER'">
-        <v-icon v-if="member.channelRole === 'USER'" @click="changeRole(member.id)">mdi-account-arrow-up</v-icon>
-        <v-icon v-if="member.channelRole === 'MANAGER'" @click="changeRole(member.id)">mdi-account-arrow-down</v-icon>
-        <v-icon @click="removeMember(member.id)">mdi-account-remove</v-icon>
+                        <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown">
+            <span @click="console.log('dots clicked')"></span>
+          </v-icon>
+        <!-- <v-icon v-if="member.channelRole === 'USER'" @click="changeRole(member.id)">mdi-account-arrow-up</v-icon> -->
+        <!-- <v-icon v-if="member.channelRole === 'MANAGER'" @click="changeRole(member.id)">mdi-account-arrow-down</v-icon> -->
+        <!-- <v-icon @click="removeMember(member.id)">mdi-account-remove</v-icon> -->
             </div>
           </div>
         </div>    
@@ -35,11 +38,9 @@
         <div v-else>
           <div v-for="member in filteredSearchResults" :key="member.workspaceMemberId" class="member-item">
             <img :src="member.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
-            <div class="member-info">
-              <v-list-item-title>{{ member.nickname || '별명 없음' }}</v-list-item-title>
+            <div class="member-title">
               <v-list-item-title>{{ member.memberName || '이름 없음' }}</v-list-item-title>
               <v-list-item-title>{{ member.email }}</v-list-item-title>
-              <v-list-item-title>{{ member.workspaceMemberId }}</v-list-item-title>
             </div>
             <div class="invite-button-wrap">
               <button v-if="!isMemberInChannel(member)" @click="inviteMember(member.workspaceMemberId)" class="invite-button">
@@ -73,7 +74,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["getChannelId", "getChannelRole"]),
+    ...mapGetters(["getChannelId", "getChannelRole", "getChannelName"]),
     filteredSearchResults() {
       // 현재 채널에 속하지 않은 멤버만 필터링
       return this.searchResults.filter(member =>
@@ -241,14 +242,14 @@ export default {
   border-radius: 50%;
 }
 
-.member-info {
+/* .member-info {
   flex-grow: 1;
   margin-left: 10px;
 }
 
 .member-info p {
   margin: 0;
-}
+} */
 
 /* 초대 버튼과 가입됨 표시 스타일 */
 .invite-button-wrap {
