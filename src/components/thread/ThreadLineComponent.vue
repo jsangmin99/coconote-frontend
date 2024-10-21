@@ -19,7 +19,7 @@
         <div v-if="isDifferentMember" class="tag-group">
           <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
             <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
-            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)"><strong>x</strong></button>
           </div>
           <button @click="toggleTagMenu">#</button>
           <div class="tag-toggle">
@@ -92,7 +92,7 @@
       <!-- 파일 -->
       <div class="image-group">
         <div class="file-group" v-for="(file, index) in thread.files" :key="index">
-          <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover;">
+          <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover; border-radius:10px;">
           <p class="custom-contents">{{file.fileName}}</p>
           <div class="more-btn-file2">
             <button @click="downloadFile(file.fileId,file.fileName)">다운</button>

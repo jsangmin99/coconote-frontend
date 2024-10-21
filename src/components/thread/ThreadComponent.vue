@@ -31,10 +31,10 @@
     <!-- 입력 그룹 -->
     <div class="input-group" @dragover.prevent @drop="handleDrop">
       <div class="image-group">
-        <div v-for="(file, index) in fileList" :key="index">
-          <button type="button" @click="deleteImage(index)">삭제</button>
+        <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
+          <button class="more-btn-file" type="button" @click="deleteImage(index)">삭제</button>
           <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
-            style="height: 120px; width: 120px; object-fit: cover;">
+            style="height: 120px; width: 120px; object-fit: cover; border-radius:5px;">
           <p class="custom-contents">{{ file.name }}</p>
         </div>
       </div>
@@ -44,7 +44,7 @@
         <textarea rows="1" type="text" class="form-control" v-model="message" @input="adjustHeight()" v-on:keypress.enter="sendMessage"
           @keydown="handleKeydown" ref="textarea"/>
         <div class="input-group-append">
-          <button class="btn btn-primary" type="button" @click="sendMessage"
+          <button class="send-btn" type="button" @click="sendMessage"
             :disabled="!message && fileList && fileList.length === 0">
             <img :src="require('@/assets/images/send_icon.png')" alt="보내기" style="height: 20px; width: 20px;">
           </button>
@@ -579,11 +579,12 @@ export default {
             this.dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
             console.log("드롭된 파일 ID:", this.dragedFile.fileId);
             // 파일 업로드나 추가 작업을 수행할 로직 작성
-            this.fileList.push({
-              fileId: this.dragedFile.fileId,
-              name: this.dragedFile.fileName,
-              imageUrl: this.dragedFile.fileUrl
-            });
+            parsedData.map(dragedFile =>this.fileList.push({
+              fileId: dragedFile.fileId,
+              name: dragedFile.fileName,
+              imageUrl: dragedFile.fileUrl
+            }));
+            
           } else {
             console.log("드래그된 파일이 없습니다.");
           }
@@ -859,14 +860,16 @@ export default {
   border-radius: 5px;
   margin-right: 24px;
   margin-bottom: 10px;
+  max-height: 70vh;
+  overflow-y: auto;
   width: 80%;
+  z-index: 5;
 }
 
 .image-group {
   display: flex;
-  flex-direction: row;
-  width: 120px;
-  max-height: 180px;
+  flex-wrap: wrap;
+  overflow-y: auto;
 }
 
 .custom-contents {
@@ -885,6 +888,7 @@ export default {
   flex-direction: row;
   align-items: center;
   width: 100%;
+  padding: 5px 3px;
 }
 
 .form-control {
@@ -936,5 +940,19 @@ textarea:focus {
 .fade-out {
   background-color: transparent;
   /* 투명 상태 */
+}
+.input-group-append{
+  display: flex;
+}
+.send-btn{
+  width: 20px;
+  height: 20px;
+}
+.more-btn-file{
+  background: #f8f8f8;
+  position: absolute;
+  top: 0;
+  right: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  z-index: 2;
 }
 </style>

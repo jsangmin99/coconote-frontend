@@ -850,10 +850,11 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .drive-container {
   padding: 20px;
-  overflow: auto;
+  overflow-y: auto;
+  height: 63vh;
 }
 
 .breadcrumb {
