@@ -162,6 +162,7 @@ import Image from "@tiptap/extension-image"; // 이미지 추가용
 // import { NodePos } from '@tiptap/core';
 
 import Placeholder from "@tiptap/extension-placeholder";
+import Focus from '@tiptap/extension-focus'
 
 // 코드 내 들여쓰기 용
 import { Indent } from "@/components/tiptab/indent";
@@ -196,7 +197,7 @@ export default {
       editor: null,
       localJSON: "",
       localHTML: "",
-      defaultContent: (this.initialContent ? this.initialContent : "<p></p>"), // 부모로부터 받은 데이터를 초기값으로 설정
+      defaultContent: this.initialContent, // 부모로부터 받은 데이터를 초기값으로 설정
       updateEditorContent: this.parentUpdateEditorContent,
 
       dragCheckEditorJson: null,
@@ -215,6 +216,9 @@ export default {
 
       // 삭제체크용
       nodeLength: null,
+
+      // router용 쿼리파라미터
+      routeQueryBlockFeId: null,
     };
   },
   watch: {
@@ -335,7 +339,12 @@ export default {
           //   return 'Can you add some further context?'
           // },
         }),
+        Focus.configure({
+          className: 'has-focus',
+          mode: 'all',
+        }),
       ],
+      autofocus: true,
       onUpdate: () => {
         if (this.isRecvUpdate) {
           this.isRecvUpdate = false;
@@ -451,7 +460,12 @@ export default {
           parentId
         );
       },
-      content: (this.defaultContent == "" ? "<p></p>" : this.defaultContent),
+      content:
+        this.defaultContent == "" ||
+        this.defaultContent?.content?.length <= 0 ||
+        this.defaultContent == undefined
+          ? "<p class='is-empty is-editor-empty' data-placeholder='내용을 작성하세요.'></p>"
+          : this.defaultContent,
     });
 
     this.editor.on("create", ({ editor }) => {
@@ -460,6 +474,10 @@ export default {
         editor.view.state.selection.$anchor.path[0].content.content.length;
       this.localHTML = editor.getHTML();
       this.localJSON = editor.getJSON();
+      if (this.$route?.query?.blockFeId) {
+        this.routeQueryBlockFeId = this.$route.query.blockFeId;
+        this.focusBlockFromBlockFeId();
+      }
     });
   },
   methods: {
@@ -805,6 +823,23 @@ export default {
     triggerFileInput() {
       this.$refs.fileInput.click();
     },
+
+    focusBlockFromBlockFeId() {
+      const el = document.querySelector(
+        `[data-id="${this.routeQueryBlockFeId}"]`
+      );
+      // const $el = this.editor.$node(`[data-id="${this.routeQueryBlockFeId}"]`)
+      const $p = this.editor.$node('paragraph')
+
+      console.error("@@@@@@@@@@@@@@@@@", $p);
+      if (el) {
+        el.classList.add("has-focus")
+        el.setAttribute("tabindex", "-1");
+        this.editor.commands.focus(50)
+        el.focus();
+        // el.removeAttribute("tabindex");
+      }
+    },
   },
   beforeUnmount() {
     // 컴포넌트 제거 시 이벤트 리스너 제거
@@ -946,6 +981,10 @@ export default {
     height: 0;
     pointer-events: none;
   } */
+  .has-focus {
+    border-radius: 3px;
+    background-color: #d0e0ff;
+  }
 }
 
 ::selection {

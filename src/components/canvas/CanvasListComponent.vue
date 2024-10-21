@@ -12,7 +12,7 @@
       {{ item.title }}
     </v-list-item>
     <v-list-item class="canvasListItem list-create">
-      <v-btn 
+      <v-btn
         v-if="!isVisibleCreateTextarea"
         density="compact"
         class="create-btn"
@@ -160,7 +160,7 @@ export default {
 
           this.$store.dispatch("setInfoMultiTargetAction", setInfoObj);
           this.isVisibleCreateTextarea = false;
-          this.canvasName = ""
+          this.canvasName = "";
           // this.findAllRoom();
         } catch (error) {
           alert("채팅방 개설에 실패하였습니다.");
@@ -176,9 +176,16 @@ export default {
           this.$route.name == "CanvasView" ||
           this.$route.name == "CanvasEmptyView"
         ) {
-          this.$router.push(
-            `/channel/${this.getChannelId}/canvas/view/${canvasId}`
-          );
+          if (this.$route?.query?.blockFeId) {
+            this.$router.push({
+              path: `/channel/${this.getChannelId}/canvas/view/${canvasId}`,
+              query: { blockFeId: this.$route?.query?.blockFeId },
+            });
+          } else {
+            this.$router.push(
+              `/channel/${this.getChannelId}/canvas/view/${canvasId}`
+            );
+          }
         }
       }
     },
@@ -218,27 +225,26 @@ export default {
   .active {
     background-color: #ffffff !important;
   }
-  .canvasListItem{
+  .canvasListItem {
     min-height: auto !important;
     grid-template-columns: 28px 1fr auto;
     padding: 8px 8px !important;
     border-radius: 8px !important;
   }
-  .list-create{
+  .list-create {
     display: block !important;
     padding: 0 !important;
     margin-top: 10px;
 
-    .list-create input::placeholder{
+    .list-create input::placeholder {
       font-size: 10px !important;
     }
 
-    .create-btn{
+    .create-btn {
       font-size: 10px;
-      background: #E5E5E5 !important;
+      background: #e5e5e5 !important;
       color: #494949;
     }
-    
   }
 }
 </style>

@@ -116,6 +116,10 @@ export default {
       activeBlockId: null,
       editorContent: null,
       parentUpdateEditorContent: "초기 값",
+
+      // router용 쿼리파라미터
+      routeQueryBlockFeId : null,
+      
     };
   },
   mounted() {
@@ -124,6 +128,10 @@ export default {
       this.beforeRouteLeave();
     };
     this.handleCanvasIdChange(this.canvasId);
+    if(this.$route?.query?.blockFeId){
+      this.routeQueryBlockFeId =  this.$route.query.blockFeId;
+    }
+    
   },
   methods: {
     ...mapActions([
@@ -348,6 +356,7 @@ export default {
     },
     async deleteCanvas() {
       const pageSetObj = {
+        workspaceId: this.getWorkspaceId,
         postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
         page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
         postEventPage: "DETAIL", // 이 이벤트를 호출한 페이지
@@ -361,7 +370,7 @@ export default {
   beforeUnmount() {},
 };
 </script>
-zz
+
 <style lang="scss">
 .canvasDetailComponentContainer {
   display: flex;
