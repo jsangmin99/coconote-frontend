@@ -136,9 +136,18 @@ function showNotificationToast(data) {
                 borderRadius: '8px',
                 boxShadow: 'none',
             },
+             // 클릭 시 쓰레드로 이동하는 핸들러 추가
+             onClick: () => {
+                moveToThread(data.channelId, data.threadId, data.parentThreadId);
+            },
         };
         toast.info(toastMessage, toastOptions);
     }
+}
+function moveToThread(channelId, threadId, parentThreadId) {
+    console.log("parentThreadId: ", parentThreadId);
+    // 쓰레드로 이동
+    window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}&parentThreadId=${parentThreadId}`;
 }
 
 export default {
