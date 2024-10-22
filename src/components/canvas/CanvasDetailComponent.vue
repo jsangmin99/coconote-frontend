@@ -36,7 +36,7 @@ import TipTabEditor from "@/components/tiptab/TipTabEditor.vue";
 import axios from "axios";
 
 import { mapGetters, mapActions } from "vuex";
-import { debounce } from "lodash";
+// import { debounce } from "lodash";
 
 export default {
   name: "CanvasDetailComponent",
@@ -65,13 +65,14 @@ export default {
           } else if (
             this.getCanvasAllInfo_inDetail.method == "CREATE_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "UPDATE_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method == "UPDATE_INDENT_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "DELETE_BLOCK"
           ) {
             this.recvMessage();
           } else {
-            console.error("detail 에서는 사용 X 혹은 잘못된 method");
+            console.error("detail 에서는 사용 X 혹은 잘못된 method", this.getCanvasAllInfo_inDetail.method);
           }
         }
       },
@@ -83,6 +84,8 @@ export default {
   },
   computed: {
     ...mapGetters([
+      "getWorkspaceId",
+      "getWorkspaceMemberId",
       "getChannelId",
       "getBlockFeId",
       "getBlockFeIdIndex",
@@ -100,6 +103,8 @@ export default {
       sender: "",
       member: "",
       message: "",
+      debounceMessage: "", // timer 걸고 보낼 메시지 용 (업데이트 용)
+      timeoutSendFun: null, // timer function 담을 용
       messages: [],
 
       getCanvasAllInfo_inDetail: null,
@@ -113,7 +118,9 @@ export default {
       editorContent: null,
       parentUpdateEditorContent: "초기 값",
 
-      debounceMap: {}, // 각 blockFeId별 debounce 함수를 저장할 객체
+      // router용 쿼리파라미터
+      routeQueryBlockFeId : null,
+      
     };
   },
   mounted() {
@@ -122,6 +129,10 @@ export default {
       this.beforeRouteLeave();
     };
     this.handleCanvasIdChange(this.canvasId);
+    if(this.$route?.query?.blockFeId){
+      this.routeQueryBlockFeId =  this.$route.query.blockFeId;
+    }
+    
   },
   methods: {
     ...mapActions([
@@ -169,6 +180,7 @@ export default {
           type: block.type,
           attrs: {
             id: block.feId,
+            indent: block.indent,
           },
         };
         if (block.content != null) {
@@ -192,85 +204,67 @@ export default {
         content: blockToEditorContentArr,
       };
     },
-    sendMessage() {
+    async sendMessage() {
       const blockFeId = this.message.blockFeId;
       const method = this.message.method;
-
-      // 이전에 저장된 정보가 있는지 확인
-      const existingEntry = this.debounceMap[blockFeId];
-
-      if (existingEntry) {
-        // 만약 기존에 저장된 method와 현재 method가 다르면 기존 이벤트를 보냄
-        if (existingEntry.method !== method) {
-          // 기존에 있는 이벤트를 즉시 호출
-          existingEntry.debounceFunction.flush();
-
-          // 기존 내용을 보내고, 새로운 debounce를 설정
-          this.setupDebounce(blockFeId, method);
-        }
+      if (
+        method == "CREATE_BLOCK" ||
+        method == "CHANGE_ORDER_BLOCK" ||
+        method == "DELETE_BLOCK"
+      ) {
+        console.error("✖️✖️✖️✖️ type 1");
+        await this.clearTimeDebounceFun();
+        await this.postSendMessage();
+        this.debounceMessage = { ...this.message };
+        await this.postSendMessage();
+      } else if (blockFeId != this.debounceMessage.blockFeId) {
+        console.error("✖️✖️✖️✖️ type 2");
+        await this.postSendMessage();
+        await this.clearTimeDebounceFun();
+        await this.timerSendMessage();
+      } else if (
+        this.timeoutSendFun &&
+        blockFeId == this.debounceMessage.blockFeId &&
+        method == this.debounceMessage.method
+      ) {
+        console.error("✖️✖️✖️✖️ type 3");
+        this.debounceMessage = { ...this.message };
       } else {
-        // blockFeId에 해당하는 debounce가 없을 때 새로 설정
-        this.setupDebounce(blockFeId, method);
+        console.error("✖️✖️✖️✖️ type 4");
+        await this.clearTimeDebounceFun();
+        await this.timerSendMessage();
       }
-
-      // debounce 함수를 호출
-      this.debounceMap[blockFeId].debounceFunction();
     },
-
-    setupDebounce(blockFeId, method) {
-      // debounce 함수 생성 및 저장
-      const debounceFunction = debounce(() => {
-        const pageSetObj = {
-          postMessageType: "BLOCK",
-          page: "VIEW",
-          postEventPage: "DETAIL",
-          ...this.message,
-        };
-
-        // Vuex action 호출
-        this.$store
-          .dispatch("setInfoMultiTargetAction", pageSetObj)
-          .then(() => {
-            // 메시지를 보낸 후 debounceMap에서 해당 blockFeId를 삭제
-            delete this.debounceMap[blockFeId];
-          });
-      }, 500);
-
-      // debounceMap에 blockFeId, method, debounceFunction 저장
-      this.debounceMap[blockFeId] = {
-        method, // 현재 method 저장
-        debounceFunction, // debounce 함수 저장
+    timerSendMessage() {
+      this.debounceMessage = { ...this.message };
+      this.timeoutSendFun = setTimeout(() => {
+        this.postSendMessage();
+        this.clearTimeDebounceFun();
+        // 원하는 작업을 수행
+      }, 500); // 0.5초 후에 실행
+    },
+    postSendMessage() {
+      const pageSetObj = {
+        workspaceId: this.getWorkspaceId,
+        postMessageType: "BLOCK", // 현 이벤트가 canvas 인지 block인지 구분
+        page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
+        postEventPage: "DETAIL", // 이 이벤트를 호출한 페이지
+        ...this.debounceMessage,
       };
+      this.$store.dispatch("setInfoMultiTargetAction", pageSetObj);
     },
-
-    clearDebounceForBlockFeId(newBlockFeId) {
-      // 새로운 blockFeId가 들어오면 기존에 있던 다른 blockFeId의 debounce를 제거
-      Object.keys(this.debounceMap).forEach((id) => {
-        if (id !== newBlockFeId) {
-          // 새로운 blockFeId가 아닐 경우 이전 debounce를 취소함
-          delete this.debounceMap[id];
-        }
-      });
+    clearTimeDebounceFun() {
+      clearTimeout(this.timeoutSendFun);
+      this.timeoutSendFun = null;
     },
     recvMessage() {
       const blockJson = this.getCanvasAllInfo_inDetail;
-      if (
-        this.activeBlockId == blockJson.blockFeId &&
-        blockJson.method === "UPDATE_BLOCK"
-      ) {
+      if (this.getWorkspaceMemberId == blockJson.workspaceMemberId) {
         console.error("수정 X");
       } else {
+        blockJson.isRecvMessage = true;
         this.parentUpdateEditorContent = Object.assign({}, blockJson);
-        // this.parentUpdateEditorContent = blockJson;
       }
-      // if (recv.type === "CANVAS") {
-      // } else {
-      //   this.messages.unshift({
-      //     type: recv.type,
-      //     member: recv.type === "ENTER" ? "[알림]" : recv.member,
-      //     message: recv.message,
-      //   });
-      // }
     },
     // tiptabEditor method
     deleteBlock(blockFeId) {
@@ -326,8 +320,17 @@ export default {
         return "CREATE_BLOCK";
       }
     },
+    updateIndentBlock(nodeDataId, nodeIndent){
+      console.error("⭐⭐⭐⭐⭐", nodeDataId, nodeIndent)
+      this.message = {
+        canvasId: this.canvasId,
+        method: "UPDATE_INDENT_BLOCK",
+        blockFeId: nodeDataId,
+        blockIndent: nodeIndent,
+      };
+      this.sendMessage();
+    },
     changeOrderBlock(changeOrderObj) {
-
       this.activeBlockId = changeOrderObj.feId;
 
       this.message = {
@@ -365,6 +368,7 @@ export default {
     },
     async deleteCanvas() {
       const pageSetObj = {
+        workspaceId: this.getWorkspaceId,
         postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
         page: "VIEW", // 이 이벤트를 받아야하는 타겟 페이지
         postEventPage: "DETAIL", // 이 이벤트를 호출한 페이지
@@ -378,7 +382,7 @@ export default {
   beforeUnmount() {},
 };
 </script>
-zz
+
 <style lang="scss">
 .canvasDetailComponentContainer {
   display: flex;
