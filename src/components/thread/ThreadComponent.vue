@@ -54,11 +54,11 @@
   </div>
   <!-- 댓글 부분 -->
   <div v-if="isComment" class="container">
-    <div class="thread-title">
-      <button @click="commentOut">back</button>
-      <h2>스레드</h2>
-    </div>
     <div class="comment-group">
+      <div class="thread-title">
+        <button @click="commentOut">back</button>
+        <h2>스레드</h2>
+      </div>
       <ThreadLineComponent :thread="parentThread" :createdTime="this.getTime(parentThread.createdTime)"
         :updateMessage="updateMessage" :deleteMessage="deleteMessage" :deleteFile="deleteFile"
         :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
@@ -77,23 +77,24 @@
     </div>
     <!-- 입력 그룹 -->
     <div class="input-group" @dragover.prevent @drop="handleDrop">
-      <!-- 파일 올리기 -->
       <div class="image-group">
-        <div v-for="(file, index) in fileList" :key="index">
-          <button type="button" @click="deleteImage(index)">삭제</button>
+        <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
+          <button class="more-btn-file" type="button" @click="deleteImage(index)">삭제</button>
           <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
-            style="height: 120px; width: 120px; object-fit: cover;">
+            style="height: 120px; width: 120px; object-fit: cover; border-radius:5px;">
           <p class="custom-contents">{{ file.name }}</p>
         </div>
       </div>
-      <!-- 내용 작성란 -->
+
       <div class="text-group">
         <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
-        <textarea type="text" class="form-control" v-model="message" v-on:keypress.enter="sendMessage"
-          @keydown="handleKeydown" />
+        <textarea rows="1" type="text" class="form-control" v-model="message" @input="adjustHeight()" v-on:keypress.enter="sendMessage"
+          @keydown="handleKeydown" ref="textarea"/>
         <div class="input-group-append">
-          <button class="btn btn-primary" type="button" @click="sendMessage"
-            :disabled="!message && fileList.length === 0">보내기</button>
+          <button class="send-btn" type="button" @click="sendMessage"
+            :disabled="!message && fileList && fileList.length === 0">
+            <img :src="require('@/assets/images/send_icon.png')" alt="보내기" style="height: 20px; width: 20px;">
+          </button>
         </div>
       </div>
     </div>
@@ -147,7 +148,7 @@ export default {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
     if (this.threadId && this.threadId !== "null") {
-      if (this.parentThreadId !== "null") {
+      if (this.parentThreadId && this.parentThreadId !== "null") {
         this.getThreadPage(this.parentThreadId);
       }
       
