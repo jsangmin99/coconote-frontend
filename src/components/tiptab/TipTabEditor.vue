@@ -162,7 +162,7 @@ import Image from "@tiptap/extension-image"; // 이미지 추가용
 // import { NodePos } from '@tiptap/core';
 
 import Placeholder from "@tiptap/extension-placeholder";
-import Focus from '@tiptap/extension-focus'
+import Focus from "@tiptap/extension-focus";
 
 // 코드 내 들여쓰기 용
 import { Indent } from "@/components/tiptab/indent";
@@ -286,31 +286,6 @@ export default {
               this.$parent.changeOrderBlock(recentSelectorJson);
               this.dragCheckEditorJson = null;
               this.dragCheckSelectionNode = null;
-
-              // const result = this.compareIdOrders(
-              //   this.dragCheckEditorJson,
-              //   prevJson
-              // );
-
-              // const tempBlock = [
-              //   result.currentId,
-              //   "paragraph",
-              //   result.currentContent[0].text == ""
-              //     ? ""
-              //     : result.currentContent[0].text,
-              //   result.previousOfCurrentId,
-              //   null,
-              // ];
-              // console.log("tempBlock", tempBlock, result);
-
-              // this.$parent.changeOrderBlock(
-              //   result.currentId,
-              //   result.previousOfCurrentId,
-              //   result.nextBlockId,
-              //   null
-              // );
-              // this.dragCheckEditorJson = null;
-              // this.dragCheckSelectionNode = null;
             });
 
             return element;
@@ -327,7 +302,20 @@ export default {
             // Do something with the node
           },
         }),
-        Indent,
+        Indent.configure({
+          onNodeChange: async (options) => {
+            this.isRecvUpdate = false;
+
+            const node = options?.nodes[0];
+            const nodeDataId = node?.node?.attrs?.id;
+            const nodeIndent = node?.node?.attrs?.indent;
+
+            if (nodeDataId && nodeIndent >= 0) {
+              await this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
+              this.isRecvUpdate = true;
+            }
+          },
+        }),
         Placeholder.configure({
           placeholder: "내용을 작성하세요.",
           // Use different placeholders depending on the node type:
@@ -340,8 +328,8 @@ export default {
           // },
         }),
         Focus.configure({
-          className: 'has-focus',
-          mode: 'all',
+          className: "has-focus",
+          mode: "all",
         }),
       ],
       autofocus: true,
@@ -438,7 +426,6 @@ export default {
           updateBlockID
         );
 
-        console.log("444", searchElAndPrevEl);
 
         if (searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0) {
           return false;
@@ -551,6 +538,27 @@ export default {
             );
           }
         );
+      } else if (newContent.method == "UPDATE_INDENT_BLOCK") {
+        const indentNode = document.querySelector(
+          `[data-id="${newContent.blockFeId}"]`
+        );
+        if (!indentNode) {
+          return false;
+        }
+        // 새로운 요소 생성
+        const newElement = indentNode.cloneNode(true); // 기존 요소를 복사
+
+        // margin-left 스타일만 새롭게 추가
+        newElement.style.marginLeft = `${newContent.blockIndent}px`;
+
+        // 기존 요소를 교체
+        indentNode.parentNode.replaceChild(newElement, indentNode);
+        // console.error("indent recv >>> ", indentNode, newContent.blockIndent);
+        // indentNode.style.setProperty('margin-left', `${newContent.blockIndent}px`, 'important');
+        // indentNode.setAttribute(
+        //   "style",
+        //   `margin-left: ${newContent.blockIndent}px !important;`
+        // );
       } else if (newContent.method == "CHANGE_ORDER_BLOCK") {
         // 순서변경의 경우
         console.log("부모로부터 순서변경 감지!!! ");
@@ -829,13 +837,13 @@ export default {
         `[data-id="${this.routeQueryBlockFeId}"]`
       );
       // const $el = this.editor.$node(`[data-id="${this.routeQueryBlockFeId}"]`)
-      const $p = this.editor.$node('paragraph')
+      const $p = this.editor.$node("paragraph");
 
       console.error("@@@@@@@@@@@@@@@@@", $p);
       if (el) {
-        el.classList.add("has-focus")
+        el.classList.add("has-focus");
         el.setAttribute("tabindex", "-1");
-        this.editor.commands.focus(50)
+        this.editor.commands.focus(50);
         el.focus();
         // el.removeAttribute("tabindex");
       }
@@ -872,8 +880,9 @@ export default {
   img {
     display: block;
     height: auto;
-    margin: 1.5rem 0;
+    margin: 0;
     max-width: 100%;
+    padding-right: 10%;
 
     &.ProseMirror-selectednode {
       outline: 3px solid var(--purple);
@@ -983,7 +992,7 @@ export default {
   } */
   .has-focus {
     border-radius: 3px;
-    background-color: #d0e0ff;
+    background-color: #eef0f5;
   }
 }
 
@@ -997,7 +1006,8 @@ export default {
     outline: none;
   }
   * {
-    margin-top: 0.75em;
+    padding: 8px 4px;
+    //margin-top: 0.25em;
   }
 
   > * {

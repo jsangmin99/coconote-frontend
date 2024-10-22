@@ -1,5 +1,3 @@
-// tabindex 넣는부분 추가하기.
-
 import { Extension } from "@tiptap/core";
 // import { Node } from "prosemirror-model";
 import { TextSelection, AllSelection } from "prosemirror-state";
@@ -14,11 +12,11 @@ export function clamp(val, min, max) {
   return val;
 }
 
-export const IndentProps = {
-  min: 0,
-  max: 210,
-  more: 30,
-  less: -30,
+export const TapIndexProps = {
+  min: -1,
+  max: 30,
+  more: 1,
+  less: -1,
 };
 
 export function isBulletListNode(node) {
@@ -37,28 +35,28 @@ export function isListNode(node) {
   return isBulletListNode(node) || isOrderedListNode(node) || isTodoListNode(node);
 }
 
-function setNodeIndentMarkup(tr, pos, delta) {
+function setNodeTapIndexMarkup(tr, pos, delta) {
   if (!tr.doc) return tr;
 
   const node = tr.doc.nodeAt(pos);
   if (!node) return tr;
 
-  const minIndent = IndentProps.min;
-  const maxIndent = IndentProps.max;
+  const minTapIndex = TapIndexProps.min;
+  const maxTapIndex = TapIndexProps.max;
 
-  const indent = clamp((node.attrs.indent || 0) + delta, minIndent, maxIndent);
+  const tapIndex = clamp((node.attrs.tapIndex || 0) + delta, minTapIndex, maxTapIndex);
 
-  if (indent === node.attrs.indent) return tr;
+  if (tapIndex === node.attrs.tapIndex) return tr;
 
   const nodeAttrs = {
     ...node.attrs,
-    indent,
+    tapIndex,
   };
 
   return tr.setNodeMarkup(pos, node.type, nodeAttrs, node.marks);
 }
 
-function updateTapIndextLevel(tr, delta) {
+function updateTapIndexLevel(tr, delta) {
   const { doc, selection } = tr;
 
   if (!doc || !selection) return tr;
@@ -73,7 +71,8 @@ function updateTapIndextLevel(tr, delta) {
     const nodeType = node.type;
 
     if (nodeType.name === "paragraph" || nodeType.name === "heading") {
-      tr = setNodeIndentMarkup(tr, pos, delta);
+      tr = setNodeTapIndexMarkup(tr, pos, delta);
+      console.log(node,"tapIndex update!!!!!")
       return false;
     }
     if (isListNode(node)) {
@@ -105,11 +104,11 @@ export const tabIndex = Extension.create({
             default: this.options.defaultTabIndexLevel,
             renderHTML: (attributes) => {
               return {
-                style: `margin-left: ${attributes.indent}px !important`,
+                attr: `tabindex= ${attributes.tapIndex}px !important`,
               };
             },
             parseHTML: (element) => {
-              return parseInt(element.style.marginLeft) || this.options.defaultTabIndexLevel;
+              return parseInt(element.setAttribute('tabindex')) || this.options.defaultTabIndexLevel;
             },
           },
         },
@@ -119,12 +118,12 @@ export const tabIndex = Extension.create({
 
   addCommands() {
     return {
-      indent:
+      tapIndex:
         () =>
         ({ tr, state, dispatch }) => {
           const { selection } = state;
           tr = tr.setSelection(selection);
-          tr = updateTapIndextLevel(tr, IndentProps.more);
+          tr = updateTapIndexLevel(tr, TapIndexProps.more);
 
           if (tr.docChanged) {
             dispatch && dispatch(tr);
@@ -138,7 +137,7 @@ export const tabIndex = Extension.create({
         ({ tr, state, dispatch }) => {
           const { selection } = state;
           tr = tr.setSelection(selection);
-          tr = updateTapIndextLevel(tr, IndentProps.less);
+          tr = updateTapIndexLevel(tr, TapIndexProps.less);
 
           if (tr.docChanged) {
             dispatch && dispatch(tr);
@@ -150,10 +149,10 @@ export const tabIndex = Extension.create({
     };
   },
 
-  // addKeyboardShortcuts() {
-  //   return {
-  //     Tab: () => this.editor.commands.indent(),
-  //     "Shift-Tab": () => this.editor.commands.outdent(),
-  //   };
-  // },
+  addKeyboardShortcuts() {
+    return {
+      Tab: () => this.editor.commands.tapIndex(),
+      "Shift-Tab": () => this.editor.commands.outdent(),
+    };
+  },
 });

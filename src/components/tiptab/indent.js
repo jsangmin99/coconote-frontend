@@ -1,6 +1,7 @@
 import { Extension } from "@tiptap/core";
 // import { Node } from "prosemirror-model";
 import { TextSelection, AllSelection } from "prosemirror-state";
+import { Plugin } from "prosemirror-state";
 
 export function clamp(val, min, max) {
   if (val < min) {
@@ -91,6 +92,12 @@ export const Indent = Extension.create({
       types: ["heading", "paragraph"],
       indentLevels: [0, 30, 60, 90, 120, 150, 180, 210],
       defaultIndentLevel: 0,
+      onNodeChange: (options) => {
+        const node = options?.nodes[0];
+        const event = new CustomEvent('nodeChange', { detail: node });
+        window.dispatchEvent(event);
+
+      },
     };
   },
 
@@ -146,6 +153,31 @@ export const Indent = Extension.create({
           return false;
         },
     };
+  },
+
+  addProseMirrorPlugins() {
+    const onNodeChange = this.options.onNodeChange;
+
+    return [
+      new Plugin({
+        view: () => {
+          return {
+            update: (view, prevState) => {
+              if (view.state.doc !== prevState.doc) {
+                const { from, to } = view.state.selection;
+                const nodes = [];
+                view.state.doc.nodesBetween(from, to, (node, pos) => {
+                  nodes.push({ node, pos });
+                });
+
+                // `onNodeChange` 호출
+                onNodeChange({ nodes, editor: this.editor });
+              }
+            },
+          };
+        },
+      }),
+    ];
   },
 
   addKeyboardShortcuts() {

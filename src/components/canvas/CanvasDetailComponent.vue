@@ -65,13 +65,14 @@ export default {
           } else if (
             this.getCanvasAllInfo_inDetail.method == "CREATE_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "UPDATE_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method == "UPDATE_INDENT_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "DELETE_BLOCK"
           ) {
             this.recvMessage();
           } else {
-            console.error("detail 에서는 사용 X 혹은 잘못된 method");
+            console.error("detail 에서는 사용 X 혹은 잘못된 method", this.getCanvasAllInfo_inDetail.method);
           }
         }
       },
@@ -179,6 +180,7 @@ export default {
           type: block.type,
           attrs: {
             id: block.feId,
+            indent: block.indent,
           },
         };
         if (block.content != null) {
@@ -317,6 +319,16 @@ export default {
         this.pushBlockFeIdsActions(targetBlockFeId);
         return "CREATE_BLOCK";
       }
+    },
+    updateIndentBlock(nodeDataId, nodeIndent){
+      console.error("⭐⭐⭐⭐⭐", nodeDataId, nodeIndent)
+      this.message = {
+        canvasId: this.canvasId,
+        method: "UPDATE_INDENT_BLOCK",
+        blockFeId: nodeDataId,
+        blockIndent: nodeIndent,
+      };
+      this.sendMessage();
     },
     changeOrderBlock(changeOrderObj) {
       this.activeBlockId = changeOrderObj.feId;
