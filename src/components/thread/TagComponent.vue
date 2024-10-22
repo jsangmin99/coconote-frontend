@@ -1,34 +1,22 @@
 <template>
-  <div>
-    <h2>태그 전체보기</h2>
+  <div class="container">
+    <div :style="{margin: 5+'px'}">
+      <h2>Tags</h2>
+    </div>
     <hr>
     <h4>태그 리스트</h4>
     <div class="tag-list">
       <div class="tag-container" v-for="(tag, index) in tagList" :key="index" @contextmenu.prevent="showContextMenu(tag, $event)">
-        <div>
-          <strong v-if="!isUpdateTagName || selectedTag.id !== tag.id" class="tag"
-            :style="{ backgroundColor: tag.color }" @click="selectTag(tag)">
-            {{ tag.name }}
-          </strong>
-          <input v-if="isUpdateTagName && selectedTag.id === tag.id" type="text" class="tag"
-            :style="{ backgroundColor: tag.color }" v-on:keypress.enter="updateTagName" :ref="'tagInput' + tag.id"
-            v-model="tagName">
-          <button class="menu-btn" @click="toggleTagMenu(tag, $event)">⚙️</button>
-        </div>
+        <strong v-if="!isUpdateTagName || selectedTag.id !== tag.id" class="tag"
+          :style="{ backgroundColor: tag.color }" @click="selectTag(tag)" :class="{ highlight: selectedTags.some(selectedTag => selectedTag.id === tag.id) }">
+          {{ tag.name }}
+        </strong>
+        <input v-if="isUpdateTagName && selectedTag.id === tag.id" type="text" class="tag"
+          :style="{ backgroundColor: tag.color }" v-on:keypress.enter="updateTagName" :ref="'tagInput' + tag.id"
+          v-model="tagName">
+        <button class="menu-btn" @click="toggleTagMenu(tag, $event)">⚙️</button>
       </div>
     </div>
-
-    <hr>
-    <h4>선택된 태그</h4>
-    <div class="selected-tags">
-      <div v-if="selectedTags.length === 0" class="no-tags">선택된 태그가 없습니다.</div>
-      <div v-else class="selected-tag" v-for="(tag, index) in selectedTags" :key="index">
-        <span :style="{ backgroundColor: tag.color }">{{ tag.name }}</span>
-        <button @click="removeTag(tag)">x</button>
-      </div>
-    </div>
-
-    <button v-if="selectedTags.length > 0" class="search-btn" @click="searchBySelectedTags">선택된 태그로 검색</button>
 
     <hr>
     <h4>검색 결과</h4>
@@ -138,17 +126,25 @@ export default {
     selectTag(tag) {
       if (!this.selectedTags.includes(tag)) {
         this.selectedTags.push(tag);
+      }else{
+        this.selectedTags = this.selectedTags.filter(selectedTag => selectedTag.id !== tag.id);
       }
+      this.searchBySelectedTags();
     },
 
     removeTag(tag) {
       this.selectedTags = this.selectedTags.filter(selectedTag => selectedTag.id !== tag.id);
+      this.searchBySelectedTags();
     },
 
     async searchBySelectedTags() {
+      if(this.selectedTags.length==0){
+        this.searchResults = []
+        return
+      }
       try {
         const params = new URLSearchParams();
-        params.append('workspaceId', this.id);
+        params.append('workspaceId', localStorage.getItem('workspaceId'));
         params.append('page', 0);
         params.append('size', 20);
         this.selectedTags.forEach(tag => params.append('tags', tag.name));
@@ -165,10 +161,14 @@ export default {
 
 <style scoped>
 /* 태그 리스트 스타일 */
+.container{
+  overflow-y: auto;
+  padding: 0 20px;
+}
 .tag-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 15px;
   margin-bottom: 15px;
 }
 
@@ -183,29 +183,30 @@ export default {
 
 /* 태그 스타일 */
 .tag {
-  border-radius: 16px;
-  padding: 8px 14px;
+  display: inline-block; 
+  border-radius: 5px;
+  padding: 2px 7px 3px 7px;
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s;
 }
 
 .tag:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
 /* 메뉴 버튼 스타일 */
 .menu-btn {
   display: none;
   position: absolute;
-  top: 0;
-  right: 0;
+  top: -7px;
+  right: -14px;
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 12px;
   color: #666;
 }
 
@@ -292,7 +293,7 @@ export default {
 }
 
 .filter-result li:hover {
-  transform: translateY(-2px);
+  transform: translateY(-5px) scale(1.02);
 }
 
 /* 검색 결과 내용 스타일 */
@@ -363,5 +364,48 @@ export default {
 
 .context-menu button:hover {
   background-color: #f0f0f0;
+}
+@keyframes rainbow-border {
+  0% { border-color: red; }
+  14% { border-color: orange; }
+  28% { border-color: yellow; }
+  42% { border-color: green; }
+  57% { border-color: blue; }
+  71% { border-color: indigo; }
+  85% { border-color: violet; }
+  100% { border-color: red; }
+}
+@keyframes rainbow-shadow {
+  0% { box-shadow: 0 10px 10px red; }
+  14% { box-shadow: 0 -10px 10px orange; }
+  28% { box-shadow: 0 10px 10px yellow; }
+  42% { box-shadow: 0 -10px 10px green; }
+  57% { box-shadow: 0 10px 10px blue; }
+  71% { box-shadow: 0 -10px 10px indigo; }
+  85% { box-shadow: 0 10px 10px violet; }
+  100% { box-shadow: 0 -10px 10px red; }
+}
+@keyframes circle-motion {
+  0% {
+    transform: translate(0, 0) rotate(0deg) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+  }
+  25% {
+    transform: translate(50px, 0) rotate(90deg) matrix3d(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1);
+  }
+  50% {
+    transform: translate(50px, 500px) rotate(180deg) matrix3d(3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 1);
+  }
+  75% {
+    transform: translate(0, 50px) rotate(270deg) matrix3d(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1);
+  }
+  100% {
+    transform: translate(0, 0) rotate(360deg) matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+  }
+}
+.highlight {
+  border: 2px solid; /* 두께 설정 */
+  animation: rainbow-border 1.5s linear infinite, rainbow-shadow 1.5s linear infinite, circle-motion 3s linear infinite; /* 애니메이션 설정 */
+  /* box-shadow: 0 0 10px rgba(255, 255, 0, 0.8); /* 반짝임 효과 */
+  transform: scale(1.1);
 }
 </style>

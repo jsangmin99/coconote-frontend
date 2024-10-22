@@ -161,7 +161,10 @@ import DraggableItem from "@/components/tiptab/DraggableItem";
 import Image from "@tiptap/extension-image"; // 이미지 추가용
 // import { NodePos } from '@tiptap/core';
 
-// 코드 내 들여쓰기 용 
+import Placeholder from "@tiptap/extension-placeholder";
+import Focus from "@tiptap/extension-focus";
+
+// 코드 내 들여쓰기 용
 import { Indent } from "@/components/tiptab/indent";
 
 import { mapGetters, mapActions } from "vuex";
@@ -205,12 +208,17 @@ export default {
       // 처음로딩 + 내용없음
       isFirstAndNullContent: false,
 
+      isRecvUpdate: false, // socket 메시지인지 아닌지 확인 용
+
       // image 업로드 용
       fileList: [], // 업로드할 파일 리스트
       tempFilesRes: null, // 서버에 저장된 파일 메타데이터 응답
 
       // 삭제체크용
       nodeLength: null,
+
+      // router용 쿼리파라미터
+      routeQueryBlockFeId: null,
     };
   },
   watch: {
@@ -278,31 +286,6 @@ export default {
               this.$parent.changeOrderBlock(recentSelectorJson);
               this.dragCheckEditorJson = null;
               this.dragCheckSelectionNode = null;
-
-              // const result = this.compareIdOrders(
-              //   this.dragCheckEditorJson,
-              //   prevJson
-              // );
-
-              // const tempBlock = [
-              //   result.currentId,
-              //   "paragraph",
-              //   result.currentContent[0].text == ""
-              //     ? ""
-              //     : result.currentContent[0].text,
-              //   result.previousOfCurrentId,
-              //   null,
-              // ];
-              // console.log("tempBlock", tempBlock, result);
-
-              // this.$parent.changeOrderBlock(
-              //   result.currentId,
-              //   result.previousOfCurrentId,
-              //   result.nextBlockId,
-              //   null
-              // );
-              // this.dragCheckEditorJson = null;
-              // this.dragCheckSelectionNode = null;
             });
 
             return element;
@@ -319,9 +302,42 @@ export default {
             // Do something with the node
           },
         }),
-        Indent
+        Indent.configure({
+          onNodeChange: async (options) => {
+            this.isRecvUpdate = false;
+
+            const node = options?.nodes[0];
+            const nodeDataId = node?.node?.attrs?.id;
+            const nodeIndent = node?.node?.attrs?.indent;
+
+            if (nodeDataId && nodeIndent >= 0) {
+              await this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
+              this.isRecvUpdate = true;
+            }
+          },
+        }),
+        Placeholder.configure({
+          placeholder: "내용을 작성하세요.",
+          // Use different placeholders depending on the node type:
+          // placeholder: ({ node }) => {
+          //   if (node.type.name === 'heading') {
+          //     return 'What’s the title?'
+          //   }
+
+          //   return 'Can you add some further context?'
+          // },
+        }),
+        Focus.configure({
+          className: "has-focus",
+          mode: "all",
+        }),
       ],
+      autofocus: true,
       onUpdate: () => {
+        if (this.isRecvUpdate) {
+          this.isRecvUpdate = false;
+          return false;
+        }
         const selectedNode = this.editor.state.selection;
         let isReturn = true;
 
@@ -349,12 +365,11 @@ export default {
             const removedIds = originAllFeIds.filter(
               (id) => !updateAllFeIds.includes(id)
             );
-
-            // return removedIds; // 사라진 ID 반환
-            this.$parent.deleteBlock(removedIds[0]);
-            return false;
-
-            // this.nodeLength = updateAllFeIds.length;
+            console.error("removedIds >> ", removedIds);
+            if (removedIds.length > 0) {
+              this.$parent.deleteBlock(removedIds[0]);
+              return false;
+            }
           }
         }
 
@@ -411,7 +426,6 @@ export default {
           updateBlockID
         );
 
-        console.log("444", searchElAndPrevEl);
 
         if (searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0) {
           return false;
@@ -433,7 +447,12 @@ export default {
           parentId
         );
       },
-      content: this.defaultContent,
+      content:
+        this.defaultContent == "" ||
+        this.defaultContent?.content?.length <= 0 ||
+        this.defaultContent == undefined
+          ? "<p class='is-empty is-editor-empty' data-placeholder='내용을 작성하세요.'></p>"
+          : this.defaultContent,
     });
 
     this.editor.on("create", ({ editor }) => {
@@ -442,6 +461,10 @@ export default {
         editor.view.state.selection.$anchor.path[0].content.content.length;
       this.localHTML = editor.getHTML();
       this.localJSON = editor.getJSON();
+      if (this.$route?.query?.blockFeId) {
+        this.routeQueryBlockFeId = this.$route.query.blockFeId;
+        this.focusBlockFromBlockFeId();
+      }
     });
   },
   methods: {
@@ -488,6 +511,7 @@ export default {
         "부모 컴포넌트로부터 새로운 content를 받았습니다:",
         newContent
       );
+      this.isRecvUpdate = newContent.isRecvMessage;
 
       let targetElement = document.querySelector(
         `#editorArea [data-id="${newContent.blockFeId}"]`
@@ -503,9 +527,38 @@ export default {
         this.deleteBlockTargetFeIdActions(newContent.blockFeId).then(
           (isDeleteBlock) => {
             console.log("isDeleteBlock newContent.feId :: ", isDeleteBlock);
-            this.nodeLength = this.nodeLength - 1;
+            console.error(
+              "이전 nodeLength :: DELETE_BLOCK ::",
+              this.nodeLength
+            );
+            this.nodeLength = this.localJSON.content.length;
+            console.error(
+              "이후 nodeLength :: DELETE_BLOCK ::",
+              this.nodeLength
+            );
           }
         );
+      } else if (newContent.method == "UPDATE_INDENT_BLOCK") {
+        const indentNode = document.querySelector(
+          `[data-id="${newContent.blockFeId}"]`
+        );
+        if (!indentNode) {
+          return false;
+        }
+        // 새로운 요소 생성
+        const newElement = indentNode.cloneNode(true); // 기존 요소를 복사
+
+        // margin-left 스타일만 새롭게 추가
+        newElement.style.marginLeft = `${newContent.blockIndent}px`;
+
+        // 기존 요소를 교체
+        indentNode.parentNode.replaceChild(newElement, indentNode);
+        // console.error("indent recv >>> ", indentNode, newContent.blockIndent);
+        // indentNode.style.setProperty('margin-left', `${newContent.blockIndent}px`, 'important');
+        // indentNode.setAttribute(
+        //   "style",
+        //   `margin-left: ${newContent.blockIndent}px !important;`
+        // );
       } else if (newContent.method == "CHANGE_ORDER_BLOCK") {
         // 순서변경의 경우
         console.log("부모로부터 순서변경 감지!!! ");
@@ -581,7 +634,9 @@ export default {
               newContent.blockFeId,
               newContent.prevBlockId
             );
-            this.nodeLength = this.nodeLength + 1;
+            console.error("이전 nodeLength", this.nodeLength);
+            this.nodeLength = this.localJSON.content.length;
+            console.error("이후 nodeLength", this.nodeLength);
             console.log("zzz>> ", newContent.method, this.nodeLength);
           }
 
@@ -776,6 +831,23 @@ export default {
     triggerFileInput() {
       this.$refs.fileInput.click();
     },
+
+    focusBlockFromBlockFeId() {
+      const el = document.querySelector(
+        `[data-id="${this.routeQueryBlockFeId}"]`
+      );
+      // const $el = this.editor.$node(`[data-id="${this.routeQueryBlockFeId}"]`)
+      const $p = this.editor.$node("paragraph");
+
+      console.error("@@@@@@@@@@@@@@@@@", $p);
+      if (el) {
+        el.classList.add("has-focus");
+        el.setAttribute("tabindex", "-1");
+        this.editor.commands.focus(50);
+        el.focus();
+        // el.removeAttribute("tabindex");
+      }
+    },
   },
   beforeUnmount() {
     // 컴포넌트 제거 시 이벤트 리스너 제거
@@ -808,8 +880,9 @@ export default {
   img {
     display: block;
     height: auto;
-    margin: 1.5rem 0;
+    margin: 0;
     max-width: 100%;
+    padding-right: 10%;
 
     &.ProseMirror-selectednode {
       outline: 3px solid var(--purple);
@@ -900,6 +973,27 @@ export default {
     border-top: 1px solid var(--gray-2);
     margin: 2rem 0;
   }
+  /* Placeholder (at the top) */
+  p.is-editor-empty:first-child::before {
+    color: var(--gray-4);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  /* Placeholder (on every new line) */
+  /* .is-empty::before {
+    color: var(--gray-4);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  } */
+  .has-focus {
+    border-radius: 3px;
+    background-color: #eef0f5;
+  }
 }
 
 ::selection {
@@ -912,7 +1006,8 @@ export default {
     outline: none;
   }
   * {
-    margin-top: 0.75em;
+    padding: 8px 4px;
+    //margin-top: 0.25em;
   }
 
   > * {
@@ -971,5 +1066,46 @@ export default {
     color: #0d0d0d50;
     border-radius: 0.25rem;
   }
+}
+</style>
+
+<style lang="scss">
+/* Basic editor styles */
+.tiptap {
+  :first-child {
+    margin-top: 0;
+  }
+
+  /* Placeholder (at the top) 
+  p.is-editor-empty:first-child::before {
+    color: var(--gray-4);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }*/
+  p.is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+  p.is-empty::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  /* Placeholder (on every new line) */
+  /* .is-empty::before {
+    color: var(--gray-4);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  } */
 }
 </style>

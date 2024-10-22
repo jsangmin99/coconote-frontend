@@ -1,7 +1,6 @@
 import { Extension } from "@tiptap/core";
 // import { Node } from "prosemirror-model";
 import { TextSelection, AllSelection } from "prosemirror-state";
-import { Plugin } from "prosemirror-state";
 
 export function clamp(val, min, max) {
   if (val < min) {
@@ -13,11 +12,11 @@ export function clamp(val, min, max) {
   return val;
 }
 
-export const IndentProps = {
-  min: 0,
-  max: 210,
-  more: 30,
-  less: -30,
+export const TapIndexProps = {
+  min: -1,
+  max: 30,
+  more: 1,
+  less: -1,
 };
 
 export function isBulletListNode(node) {
@@ -36,28 +35,28 @@ export function isListNode(node) {
   return isBulletListNode(node) || isOrderedListNode(node) || isTodoListNode(node);
 }
 
-function setNodeIndentMarkup(tr, pos, delta) {
+function setNodeTapIndexMarkup(tr, pos, delta) {
   if (!tr.doc) return tr;
 
   const node = tr.doc.nodeAt(pos);
   if (!node) return tr;
 
-  const minIndent = IndentProps.min;
-  const maxIndent = IndentProps.max;
+  const minTapIndex = TapIndexProps.min;
+  const maxTapIndex = TapIndexProps.max;
 
-  const indent = clamp((node.attrs.indent || 0) + delta, minIndent, maxIndent);
+  const tapIndex = clamp((node.attrs.tapIndex || 0) + delta, minTapIndex, maxTapIndex);
 
-  if (indent === node.attrs.indent) return tr;
+  if (tapIndex === node.attrs.tapIndex) return tr;
 
   const nodeAttrs = {
     ...node.attrs,
-    indent,
+    tapIndex,
   };
 
   return tr.setNodeMarkup(pos, node.type, nodeAttrs, node.marks);
 }
 
-function updateIndentLevel(tr, delta) {
+function updateTapIndexLevel(tr, delta) {
   const { doc, selection } = tr;
 
   if (!doc || !selection) return tr;
@@ -72,7 +71,8 @@ function updateIndentLevel(tr, delta) {
     const nodeType = node.type;
 
     if (nodeType.name === "paragraph" || nodeType.name === "heading") {
-      tr = setNodeIndentMarkup(tr, pos, delta);
+      tr = setNodeTapIndexMarkup(tr, pos, delta);
+      console.log(node,"tapIndex update!!!!!")
       return false;
     }
     if (isListNode(node)) {
@@ -84,20 +84,14 @@ function updateIndentLevel(tr, delta) {
   return tr;
 }
 
-export const Indent = Extension.create({
-  name: "indent",
+export const tabIndex = Extension.create({
+  name: "tabIndex",
 
   addOptions() {
     return {
       types: ["heading", "paragraph"],
-      indentLevels: [0, 30, 60, 90, 120, 150, 180, 210],
-      defaultIndentLevel: 0,
-      onNodeChange: (options) => {
-        const node = options?.nodes[0];
-        const event = new CustomEvent('nodeChange', { detail: node });
-        window.dispatchEvent(event);
-
-      },
+      tabIndexLevel: [-1, 0, 1, 2, 3, 4, 5, 5],
+      defaultTabIndexLevel: 0,
     };
   },
 
@@ -106,15 +100,15 @@ export const Indent = Extension.create({
       {
         types: this.options.types,
         attributes: {
-          indent: {
-            default: this.options.defaultIndentLevel,
+          tabIndex: {
+            default: this.options.defaultTabIndexLevel,
             renderHTML: (attributes) => {
               return {
-                style: `margin-left: ${attributes.indent}px !important`,
+                attr: `tabindex= ${attributes.tapIndex}px !important`,
               };
             },
             parseHTML: (element) => {
-              return parseInt(element.style.marginLeft) || this.options.defaultIndentLevel;
+              return parseInt(element.setAttribute('tabindex')) || this.options.defaultTabIndexLevel;
             },
           },
         },
@@ -124,12 +118,12 @@ export const Indent = Extension.create({
 
   addCommands() {
     return {
-      indent:
+      tapIndex:
         () =>
         ({ tr, state, dispatch }) => {
           const { selection } = state;
           tr = tr.setSelection(selection);
-          tr = updateIndentLevel(tr, IndentProps.more);
+          tr = updateTapIndexLevel(tr, TapIndexProps.more);
 
           if (tr.docChanged) {
             dispatch && dispatch(tr);
@@ -143,7 +137,7 @@ export const Indent = Extension.create({
         ({ tr, state, dispatch }) => {
           const { selection } = state;
           tr = tr.setSelection(selection);
-          tr = updateIndentLevel(tr, IndentProps.less);
+          tr = updateTapIndexLevel(tr, TapIndexProps.less);
 
           if (tr.docChanged) {
             dispatch && dispatch(tr);
@@ -155,34 +149,9 @@ export const Indent = Extension.create({
     };
   },
 
-  addProseMirrorPlugins() {
-    const onNodeChange = this.options.onNodeChange;
-
-    return [
-      new Plugin({
-        view: () => {
-          return {
-            update: (view, prevState) => {
-              if (view.state.doc !== prevState.doc) {
-                const { from, to } = view.state.selection;
-                const nodes = [];
-                view.state.doc.nodesBetween(from, to, (node, pos) => {
-                  nodes.push({ node, pos });
-                });
-
-                // `onNodeChange` 호출
-                onNodeChange({ nodes, editor: this.editor });
-              }
-            },
-          };
-        },
-      }),
-    ];
-  },
-
   addKeyboardShortcuts() {
     return {
-      Tab: () => this.editor.commands.indent(),
+      Tab: () => this.editor.commands.tapIndex(),
       "Shift-Tab": () => this.editor.commands.outdent(),
     };
   },

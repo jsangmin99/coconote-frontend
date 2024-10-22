@@ -2,8 +2,9 @@
   <div v-if="isModalOpen" class="modal" @click="closeModal">
     <div class="modal-content" @click.stop>
       <header>
+        <h2># {{ getChannelName }}</h2>
         <h2>#멤버 초대</h2>
-        <button @click="closeModal" class="close-button">X</button>
+        <v-icon @click="closeModal" class="close-button">mdi-close</v-icon>
       </header>
       <div class="search-bar">
         <input type="text" v-model="searchKeyword" placeholder="멤버 찾기" @input="debouncedSearchMembers" />
@@ -15,16 +16,13 @@
         <div v-else>
           <div v-for="member in channelMembers" :key="member.id" class="member-item">
             <img :src="member.memberInfo.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
-            <div class="member-info">
-              <v-list-item-title>{{ member.memberInfo.nickname || '별명 없음' }}</v-list-item-title>
-              <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}</v-list-item-title>
-              <v-list-item-title>{{ member.memberInfo.workspaceMemberId }}</v-list-item-title>
-              <v-list-item-title>역할: {{ member.channelRole }}</v-list-item-title>
+            <div class="member-title">
+              <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}<v-icon v-if="member.channelRole === 'MANAGER'" color="#ffbb00">mdi-crown</v-icon></v-list-item-title>
             </div>
-            <div v-if="getChannelRole === 'MANAGER'">
-              <v-icon v-if="member.channelRole === 'USER'" @click="changeRole(member.id)">mdi-account-arrow-up</v-icon>
-              <v-icon v-if="member.channelRole === 'MANAGER'" @click="changeRole(member.id)">mdi-account-arrow-down</v-icon>
-              <v-icon @click="removeMember(member.id)">mdi-account-remove</v-icon>
+            <div>
+              <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown(member.id)">
+                <span @click="console.log('dots clicked')"></span>
+              </v-icon>
             </div>
           </div>
         </div>    
@@ -35,11 +33,9 @@
         <div v-else>
           <div v-for="member in filteredSearchResults" :key="member.workspaceMemberId" class="member-item">
             <img :src="member.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
-            <div class="member-info">
-              <v-list-item-title>{{ member.nickname || '별명 없음' }}</v-list-item-title>
+            <div class="member-title">
               <v-list-item-title>{{ member.memberName || '이름 없음' }}</v-list-item-title>
               <v-list-item-title>{{ member.email }}</v-list-item-title>
-              <v-list-item-title>{{ member.workspaceMemberId }}</v-list-item-title>
             </div>
             <div class="invite-button-wrap">
               <button v-if="!isMemberInChannel(member)" @click="inviteMember(member.workspaceMemberId)" class="invite-button">
@@ -49,6 +45,35 @@
             </div>
           </div>
         </div>
+
+    <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
+      <ul>
+        <li @click="(channelRoleDialog = true)">권한 변경하기</li>
+        <li @click="removeMember()">회원 내보내기</li>
+      </ul>
+    </div>
+
+  <v-dialog v-model="channelRoleDialog" width="auto" class="channelRoleDialog">
+  <v-card max-width="400">
+    <v-card-title>채널 회원 관리</v-card-title>
+    <v-card-text>
+      <v-form @submit.prevent="changeRole">
+              <v-select
+                v-model="currentMemberRole"
+                :items="roleOptions"
+                item-title="text"
+                item-value="value"
+                dense
+                outlined
+                label="선택"
+              ></v-select>
+      <v-btn color="#3a8bcd" text="변경" type="submit"></v-btn>
+      <v-btn text="닫기" @click="(channelRoleDialog = false)"></v-btn>
+    </v-form>
+      </v-card-text>
+  </v-card>
+</v-dialog>
+
 
       </div>
     </div>
@@ -70,10 +95,18 @@ export default {
       isLoading: false,
       isLoadingMembers: false, // 채널 멤버 로딩 상태
       defaultProfileImage: require('@/assets/images/profileImage.png'), // 프로필 이미지 없을 때 기본 이미지
+      isDropdownOpen: false, // 드롭다운 상태 관리
+      currentMemberId: null,
+      channelRoleDialog: false,
+      currentMemberRole: null,
+      roleOptions: [
+      { text: '채널 매니저', value: 'MANAGER' },
+      { text: '일반 회원', value: 'USER' },
+    ],
     };
   },
   computed: {
-    ...mapGetters(["getChannelId", "getChannelRole"]),
+    ...mapGetters(["getChannelId", "getChannelRole", "getChannelName"]),
     filteredSearchResults() {
       // 현재 채널에 속하지 않은 멤버만 필터링
       return this.searchResults.filter(member =>
@@ -82,6 +115,20 @@ export default {
     }
   },
   methods: {
+        handleClickOutside(event) {
+      // 드롭다운 버튼을 클릭한 경우는 무시
+      const dropdownToggle = this.$el.querySelector(".mdi-dots-vertical");
+      const dropdown = this.$el.querySelector(".dropdown-menu");
+
+      if (
+        (dropdownToggle && dropdownToggle.contains(event.target)) ||
+        (dropdown && dropdown.contains(event.target))
+      ) {
+        return;
+      }
+
+      this.isDropdownOpen = false;
+    },
     closeModal() {
       this.isModalOpen = false;
     },
@@ -145,23 +192,43 @@ export default {
         console.error('멤버 초대 중 오류 발생', error);
       }
     },
-    async changeRole(chMemberId) {
+    async changeRole() {
       try{
-        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/role/${chMemberId}`);
+        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/role`,
+          {
+            id: this.currentMemberId,
+            channelRole: this.currentMemberRole,
+          }
+        );
+        alert("권한이 변경되었습니다.");
+        this.isDropdownOpen = false;
+        this.channelRoleDialog = false;
+        this.currentMemberRole = null;
+        this.currentMemberId = null;
         this.fetchChannelMembers();
       } catch (e) {
         console.error("실패", e);
         alert("권한 변경에 실패했습니다.");
       }
     },
-    async removeMember(chMemberId) {
+    async removeMember() {
       try{
-        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/channel/member/delete/${chMemberId}`);
+        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/channel/member/delete/${this.currentMemberId}`);        
+        alert("회원을 강제 퇴장시켰습니다.");
+        this.currentMemberId = null;
+        this.isDropdownOpen = false;
+        this.channelRoleDialog = false;
         this.fetchChannelMembers();
       } catch (e) {
         console.error("실패", e);
         alert("회원 삭제에 실패했습니다.");
       }
+    },
+    toggleDropdown(chMemberId) {
+      // 드롭다운이 열리고 닫히는지 로그 확인
+      console.log("Dropdown toggle");
+      this.isDropdownOpen = !this.isDropdownOpen;
+      this.currentMemberId = chMemberId;
     },
   },
   created() {
@@ -239,14 +306,14 @@ export default {
   border-radius: 50%;
 }
 
-.member-info {
+/* .member-info {
   flex-grow: 1;
   margin-left: 10px;
 }
 
 .member-info p {
   margin: 0;
-}
+} */
 
 /* 초대 버튼과 가입됨 표시 스타일 */
 .invite-button-wrap {

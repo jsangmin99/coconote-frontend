@@ -35,13 +35,10 @@
       <button @click="createFolder" class="btn new-folder-btn">새 폴더</button>
     </div>
 
-    <div v-if="uploadProgress.length">
-      <h3>업로드 진행상황</h3>
-      <ul>
-        <li v-for="(progress, index) in uploadProgress" :key="index">
-          {{ files[index].name }}: {{ progress }}%
-        </li>
-      </ul>
+
+    <div v-if="uploadInProgress">
+      <h3>업로드 진행 중...</h3>
+      <CoconutLoader :size="100" loadingText="파일을 업로드 중입니다..." />
     </div>
 
     <!-- 폴더 목록 -->
@@ -146,8 +143,13 @@
 
 <script>
 import axios from "@/services/axios";
+import CoconutLoader from "@/components/basic/CoconutLoader.vue";
+
 
 export default {
+  components: {
+    CoconutLoader,
+  },
   data() {
     return {
       folderList: [], // 현재 폴더 내 폴더 목록
@@ -157,7 +159,7 @@ export default {
       // backButtonHistory: [], // 이전 폴더 기록
       parentFolderId: null, // 현재 폴더의 부모 폴더 ID
       files: [], // 업로드할 파일 배열
-      uploadProgress: [], // 파일 업로드 진행 상황
+      uploadInProgress: false, // 업로드 중인지 여부를 나타내는 상태
       breadcrumb: [], // 폴더 경로를 저장하는 배열
       draggedItem: null, // 드래그 중인 아이템
       draggedType: null, // 드래그 중인 타입 ('folder' 또는 'file')
@@ -315,7 +317,7 @@ export default {
           await this.moveFolder(folder.folderId, targetFolderId);
         }
 
-        alert("항목이 성공적으로 이동되었습니다.");
+        // alert("항목이 성공적으로 이동되었습니다.");
       } catch (error) {
         console.error("항목 이동 실패:", error);
         alert("항목 이동 중 오류가 발생했습니다.");
@@ -395,7 +397,7 @@ export default {
     // 파일 선택 처리
     onFileChange(event) {
       this.files = Array.from(event.target.files);
-      this.uploadProgress = Array(this.files.length).fill(0); // 업로드 진행상황 초기화
+      this.uploadInProgress = this.files.length > 0; // 파일이 있을 때 업로드 상태로 전환
 
       if (this.files.length > 0) {
         // 파일이 선택되면 즉시 업로드 실행
@@ -414,6 +416,7 @@ export default {
       if (!this.files.length) return;
 
       try {
+        this.uploadInProgress = true; // 업로드 시작 시 true로 설정
         // 서버에 presigned URLs 요청
         const presignedUrlResponse = await axios.post(
           `${process.env.VUE_APP_API_BASE_URL}/files/presigned-urls`,
@@ -436,14 +439,14 @@ export default {
         // 성공적으로 업로드된 파일만 메타데이터 저장
         if (successfulUploads.length) {
           await this.saveFileMetadata(successfulUploads);
-          alert("파일이 성공적으로 업로드되었습니다.");
+          // alert("파일이 성공적으로 업로드되었습니다.");
         } else {
           alert("모든 파일 업로드에 실패했습니다.");
         }
 
         // 업로드 후 상태 초기화
         this.files = [];
-        this.uploadProgress = [];
+        this.uploadInProgress = false; // 업로드 완료 후 상태 초기화
         this.refreshFolderList();
       } catch (error) {
         console.error("Upload failed:", error);
@@ -458,12 +461,12 @@ export default {
           headers: {
             "Content-Type": file.type, // 파일 타입 지정
           },
-          onUploadProgress: (progressEvent) => {
-            const index = this.files.indexOf(file); // 인덱스 찾기
-            this.uploadProgress[index] = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            ); // 업로드 진행상황 업데이트
-          },
+          // onUploadProgress: (progressEvent) => {
+          //   const index = this.files.indexOf(file); // 인덱스 찾기
+          //   this.uploadProgress[index] = Math.round(
+          //     (progressEvent.loaded * 100) / progressEvent.total
+          //   ); // 업로드 진행상황 업데이트
+          // },
         };
 
         await axios.put(presignedUrl, file, config);
@@ -569,7 +572,7 @@ export default {
         if (!confirmed) return;
 
         await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/files/${fileId}`);
-        alert("파일이 성공적으로 삭제되었습니다.");
+        // alert("파일이 성공적으로 삭제되었습니다.");
         this.refreshFolderList();
       } catch (error) {
         console.error("파일 삭제 실패:", error);
@@ -620,7 +623,7 @@ export default {
           }
         );
         console.log(response.data.result.message);
-        alert("폴더가 성공적으로 이동되었습니다.");
+        // alert("폴더가 성공적으로 이동되었습니다.");
         this.refreshFolderList();
       } catch (error) {
         console.error("폴더 이동 실패:", error);
@@ -721,7 +724,7 @@ export default {
         await axios.delete(
           `${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}`
         );
-        alert("폴더가 성공적으로 삭제되었습니다.");
+        // alert("폴더가 성공적으로 삭제되었습니다.");
         this.refreshFolderList();
       } catch (error) {
         console.error("폴더 삭제 실패:", error);
@@ -748,7 +751,7 @@ export default {
             },
           }
         );
-        alert("폴더 이름이 성공적으로 변경되었습니다.");
+        // alert("폴더 이름이 성공적으로 변경되었습니다.");
         this.refreshFolderList(); // 목록 갱신
       } catch (error) {
         console.error("폴더 이름 변경 실패:", error);
@@ -807,7 +810,7 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/files/${fileId}/rename`,
           { newFileName }
         );
-        alert("파일 이름이 성공적으로 변경되었습니다.");
+        // alert("파일 이름이 성공적으로 변경되었습니다.");
         this.refreshFolderList(); // 목록 갱신
       } catch (error) {
         console.error("파일 이름 변경 실패:", error);
@@ -850,10 +853,11 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .drive-container {
   padding: 20px;
-  overflow: auto;
+  overflow-y: auto;
+  height: calc(100vh - 240px); /* 뷰포트 전체 높이에서 60px을 뺀 값 */
 }
 
 .breadcrumb {

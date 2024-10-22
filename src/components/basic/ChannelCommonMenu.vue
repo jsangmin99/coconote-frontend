@@ -41,12 +41,15 @@
     </div>
 
     <!-- 드롭다운 메뉴 -->
-    <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
-      <ul>
-        <li @click="changeChannelAccessLevel">채널 공개 범위 수정</li>
-        <li @click="deleteChannel">채널 삭제</li>
-      </ul>
+    <div class="modal-content" @click.stop>
+      <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
+        <ul>
+          <li @click="changeChannelAccessLevel">채널 공개 범위 수정</li>
+          <li @click="deleteChannel">채널 삭제</li>
+        </ul>
+      </div>
     </div>
+
 
     <!-- 화면 전환 버튼 -->
     <div class="menuBtns" v-if="menu !== 'split'">
@@ -167,7 +170,7 @@ export default {
   },
   methods: {
     ...mapActions(["setWorkspaceInfoActions"]),
-    handleClickOutside(event) {
+            handleClickOutside(event) {
       // 드롭다운 버튼을 클릭한 경우는 무시
       const dropdownToggle = this.$el.querySelector(".mdi-dots-vertical");
       const dropdown = this.$el.querySelector(".dropdown-menu");

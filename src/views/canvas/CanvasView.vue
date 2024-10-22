@@ -158,20 +158,39 @@ export default {
             this.latestWatchBlockMsg.method == newVal.method &&
             this.latestWatchBlockMsg.blockContents == newVal.blockContents
           ) {
-            isReturn = false;
+            if (
+              newVal.method == "UPDATE_INDENT_BLOCK" &&
+              this.latestWatchBlockMsg.blockIndent == newVal.blockIndent
+            ) {
+              console.error("🤔🤔🤔🤔🤔", this.latestWatchBlockMsg, newVal);
+              isReturn = false;
+            }
           }
 
           this.latestWatchBlockMsg.blockFeId = newVal.blockFeId;
           this.latestWatchBlockMsg.method = newVal.method;
           this.latestWatchBlockMsg.blockContents = newVal.blockContents;
 
+          console.error(
+            "🤔🤔🤔🤔🤔22222",
+            this.latestWatchBlockMsg,
+            newVal,
+            isReturn
+          );
+
           if (!isReturn) {
+            return false;
+          }
+
+          if (!newVal.blockFeId) {
             return false;
           }
 
           if (newVal.method == "CREATE_BLOCK") {
             this.sendMessageCanvas();
           } else if (newVal.method == "UPDATE_BLOCK") {
+            this.sendMessageCanvas();
+          } else if (newVal.method == "UPDATE_INDENT_BLOCK") {
             this.sendMessageCanvas();
           } else if (newVal.method == "CHANGE_ORDER_BLOCK") {
             console.log("CHANGE_ORDER_BLOCK 예정");
@@ -317,11 +336,14 @@ export default {
       } else if (
         recv.method == "CREATE_BLOCK" ||
         recv.method == "UPDATE_BLOCK" ||
-        recv.method == "CHANGE_ORDER_BLOCK" ||
+        recv.method == "UPDATE_INDENT_BLOCK" ||
         recv.method == "CHANGE_ORDER_BLOCK" ||
         recv.method == "DELETE_BLOCK"
       ) {
         if (recv.canvasId != this.canvasId) {
+          return false;
+        }
+        if (!recv.blockFeId) {
           return false;
         }
         setInfoObj = {
@@ -330,6 +352,7 @@ export default {
           postEventPage: "VIEW", // 이 이벤트를 호출한 페이지
           method: recv.method,
 
+          workspaceMemberId: recv.workspaceMemberId,
           channelId: recv.channelId,
           canvasId: recv.canvasId,
 
@@ -340,6 +363,7 @@ export default {
           parentBlockId: recv.parentBlockId,
           blockContents: recv.blockContents,
           blockType: recv.blockType,
+          blockIndent: recv.blockIndent,
         };
       } else {
         return false;
@@ -371,8 +395,7 @@ export default {
         this.sock = null;
       }
       if (this.ws) {
-        this.ws.disconnect(() => {
-        });
+        this.ws.disconnect(() => {});
         this.ws = null;
       }
     },

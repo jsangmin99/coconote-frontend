@@ -228,14 +228,15 @@ export default {
   components: {},
   computed: {
     ...mapGetters("notifications", {
-      notifications: "notifications", // 'notifications' 모듈의 'notifications' getter 참조
+      notifications: "notifications",
+      notificationCounts: "notificationCounts", // Vuex 상태에서 가져옴
     }),
     ...mapGetters([
       "getWorkspaceId",
       "getWorkspaceName",
       "getWsRole",
       "getChannelId",
-    ]), // 글로벌 getter 사용
+    ]),
     notificationCounts() {
       const counts = {};
       if (this.notifications) {
@@ -293,13 +294,14 @@ export default {
     this.getMyBookmarks();
     window.addEventListener("click", this.hideContextMenu);
     this.$store.dispatch("notifications/subscribeToNotifications");
+    // 알림 구독
     if (this.getWorkspaceId) {
       this.$store.dispatch(
         "notifications/subscribeToNotifications",
         this.getWorkspaceId
       );
     }
-    this.fetchNotificationCounts();
+    this.fetchNotificationCounts(); // 알림 수를 불러옵니다.
   },
   beforeUnmount() {
     window.removeEventListener("click", this.hideContextMenu);
