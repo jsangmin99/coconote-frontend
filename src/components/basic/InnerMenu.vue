@@ -35,17 +35,7 @@
       <!-- Spacer로 나머지 공간 확보 -->
       <div style="flex-grow: 2"></div>
 
-      <!-- 드롭다운 메뉴 -->
-      <div v-if="isDropdownOpen" class="workspace-dropdown-menu" @click.stop>
-        <ul v-for="workspace in workspaceList" :key="workspace.workspaceId">
-          <li @click="selectWorkspace(workspace.workspaceId)">
-            {{ workspace.name }}
-          </li>
-        </ul>
-        <ul>
-          <li @click="showWorkspaceModal">+</li>
-        </ul>
-      </div>
+
 
       <!-- 프로필 및 로그아웃 버튼을 하단에 배치 -->
       <div
@@ -72,6 +62,19 @@
       @update:dialog="dialog = $event"
       :modalPosition="modalPosition"
     />
+
+            <!-- 드롭다운 메뉴 -->
+      <div v-if="isDropdownOpen" class="workspace-dropdown-menu" @click.stop>
+        <ul v-for="workspace in workspaceList" :key="workspace.workspaceId">
+          <li @click="selectWorkspace(workspace.workspaceId)">
+            {{ workspace.name }}
+          </li>
+        </ul>
+        <ul>
+          <li @click="showWorkspaceModal">+</li>
+        </ul>
+      </div>
+
   </v-navigation-drawer>
   <CreateWorkspaceModal
     v-model="createWorkspace"
@@ -88,6 +91,9 @@
     v-if="selectedMenu === 'member'"
     :selectedValue="selectedValue"
   /> -->
+
+
+
 </template>
 
 <script>
@@ -134,6 +140,7 @@ export default {
     };
   },
   mounted() {
+
     const routeName = this.$route.name;
     const nameSelectMenuObj = {
       MemberView: "member",
@@ -142,12 +149,13 @@ export default {
     if (nameSelectMenuObj[routeName]) {
       this.selectedMenu = nameSelectMenuObj[routeName];
     } else {
+
       this.selectedMenu = "home";
     }
     // this.changeSelectedMenu(this.selectedMenu);
 
     this.fetchMyWorkspaceList();
-    
+
     const profileImage = this.$store.getters.getProfileImage;
     // const nickname = this.$store.getters.getNickname;
 
@@ -186,7 +194,9 @@ export default {
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/workspace/list`
         );
+      
         this.workspaceList = response.data.result; // 내 워크스페이스 목록 가져오기
+        console.log(this.workspaceList);
       } catch (e) {
         console.log(e);
       }
@@ -210,6 +220,7 @@ export default {
       }
       switch (name) {
         case "home":
+          console.log("###### home")
           this.locationHome();
           break;
         case "member":
@@ -219,6 +230,7 @@ export default {
           window.location.href = `/workspace/${this.getWorkspaceId}/search`;
           break;
       }
+      // this.selectedMenu = name;
     },
     async locationHome() {
       window.location.href = `/channel/view`;
