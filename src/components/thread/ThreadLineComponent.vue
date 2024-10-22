@@ -116,7 +116,9 @@
 
   <!-- 더보기 메뉴 -->
   <div class="more-btn" @click="toggleContextMenu">
-      <button>더보기</button>
+      <button>
+        <img :src="require('@/assets/images/menu-icon.png')" alt="더보기" style="height: 20px; width: 20px;">
+      </button>
   </div>
   <div v-if="isContextMenuVisible || isTagMenuVisible" class="overlay"></div>
   <div v-if="isContextMenuVisible" class="context-menu" :style="{ top: [contextMenuPosition]+'px' }">
@@ -423,7 +425,7 @@ import axios from '@/services/axios';
 }
 .context-menu {
   position: absolute;
-  right: 70px;
+  right: 50px;
   background-color: white;
   border: 1px solid #ccc;
   z-index: 10;
