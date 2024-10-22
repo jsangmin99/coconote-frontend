@@ -119,7 +119,7 @@
       <button>더보기</button>
   </div>
   <div v-if="isContextMenuVisible || isTagMenuVisible" class="overlay"></div>
-  <div v-if="isContextMenuVisible" class="context-menu">
+  <div v-if="isContextMenuVisible" class="context-menu" :style="{ top: [contextMenuPosition]+'px' }">
     <button @click="commentIn(thread)">댓글 쓰기</button>
     <button @click="toggleTagMenu">태그 추가</button>
     <button @click="editMessage">수정</button>
@@ -240,6 +240,11 @@ import axios from '@/services/axios';
       toggleContextMenu(event) {
         event.stopPropagation(); // 클릭 이벤트 전파 방지
         this.isContextMenuVisible = !this.isContextMenuVisible;
+
+        const screenHeight = window.innerHeight;
+        const buttonPosition = event.target.getBoundingClientRect().bottom;
+
+        this.contextMenuPosition = (screenHeight / 1.7 > buttonPosition) ? '10' : '-120';
       },
       toggleTagMenu(event) {
         event.stopPropagation(); // 클릭 이벤트 전파 방지
@@ -418,11 +423,10 @@ import axios from '@/services/axios';
 }
 .context-menu {
   position: absolute;
-  top: 10px;
   right: 70px;
   background-color: white;
   border: 1px solid #ccc;
-  z-index: 3;
+  z-index: 10;
   padding: 10px;
   display: flex;
   flex-direction: column;
