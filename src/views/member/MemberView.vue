@@ -58,6 +58,12 @@
                   <v-row>
                     <v-col>
                       <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? getProfileImage : require('@/assets/images/profileImage.png')" alt="Profile Image" height="200px"/>
+                      <div v-if="workspaceMemberInfo.wsRole !== 'USER'">
+                      <v-btn color="#3a8bcd" text="권한" @click="(workspaceRoleDialog = true)">
+                      </v-btn>
+                      <v-btn color="red" text="강퇴" @click="removeMember">
+                      </v-btn>
+                      </div>
                     </v-col>
                     <v-col>
                       <div class="member-info-container">
@@ -159,23 +165,7 @@
       <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn>
     </v-card>
 
-    <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
-      <ul>
-        <li @click="(workspaceRoleDialog = true)">권한 변경하기</li>
-        <li @click="removeMember()">회원 내보내기</li>
-      </ul>
-    </div>
-
-
-
     </v-dialog>
-
-    <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
-      <ul>
-        <li @click="(workspaceRoleDialog = true)">권한 변경하기</li>
-        <li @click="removeMember">회원 내보내기</li>
-      </ul>
-    </div>
 
   <v-dialog v-model="workspaceRoleDialog" width="auto" class="workspaceRoleDialog">
   <v-card max-width="400">
