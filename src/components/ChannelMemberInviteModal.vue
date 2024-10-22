@@ -22,9 +22,9 @@
               <v-list-item-title>역할: {{ member.channelRole }}</v-list-item-title>
             </div>
             <div v-if="getChannelRole === 'MANAGER'">
-        <v-icon v-if="member.channelRole === 'USER'" @click="changeRole(member.id)">mdi-account-arrow-up</v-icon>
-        <v-icon v-if="member.channelRole === 'MANAGER'" @click="changeRole(member.id)">mdi-account-arrow-down</v-icon>
-        <v-icon @click="removeMember(member.id)">mdi-account-remove</v-icon>
+              <v-icon v-if="member.channelRole === 'USER'" @click="changeRole(member.id)">mdi-account-arrow-up</v-icon>
+              <v-icon v-if="member.channelRole === 'MANAGER'" @click="changeRole(member.id)">mdi-account-arrow-down</v-icon>
+              <v-icon @click="removeMember(member.id)">mdi-account-remove</v-icon>
             </div>
           </div>
         </div>    
@@ -148,18 +148,16 @@ export default {
     async changeRole(chMemberId) {
       try{
         await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/channel/member/role/${chMemberId}`);
-        alert("권한이 변경되었습니다.");
+        this.fetchChannelMembers();
       } catch (e) {
         console.error("실패", e);
         alert("권한 변경에 실패했습니다.");
       }
-      
     },
     async removeMember(chMemberId) {
       try{
-        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/channel/member/delete/${chMemberId}`);        
-        alert("회원을 강제 퇴장시켰습니다.");
-
+        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/channel/member/delete/${chMemberId}`);
+        this.fetchChannelMembers();
       } catch (e) {
         console.error("실패", e);
         alert("회원 삭제에 실패했습니다.");

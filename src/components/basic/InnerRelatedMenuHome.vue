@@ -95,10 +95,12 @@
 
         <!-- 채널 목록 -->
         <v-list v-show="visibleSections.includes(section.sectionId)">
-          <v-list-item 
-            v-for="channel in section.channelList" 
-            :key="channel.channelId" 
-            :class="{'selected-item': selectedChannelMenuId == channel.channelId,}" class="channel-item" @click="handleChannelClick(channel.channelId, channel.channelName, channel.channelInfo)" 
+          <v-list-item
+            v-for="channel in filteredChannelList(section)"
+            :key="channel.channelId"
+            :class="{'selected-item': selectedChannelMenuId == channel.channelId,}"
+            class="channel-item"
+            @click="handleChannelClick(channel.channelId, channel.channelName, channel.channelInfo)"
             @contextmenu.prevent="showContextMenu($event, 'channel', channel)"
           >
             <!-- 공개 여부 아이콘 -->
@@ -122,10 +124,10 @@
 
           </v-list-item>
 
-          <v-list-item class="channelCreate" @click="
-            (channelDialog = true),
-            (createChannelInfo.sectionId = section.sectionId)
-            ">
+          <v-list-item 
+            class="channelCreate" 
+            @click="(channelDialog = true), (createChannelInfo.sectionId = section.sectionId)"
+          >
             <v-icon class="icon-plus" icon="mdi-plus" />
             채널생성
           </v-list-item>
@@ -138,6 +140,7 @@
     </v-list>
   </v-navigation-drawer>
 
+  <!-- 채널 생성 모달 -->
   <v-dialog v-model="channelDialog" width="auto" class="channelDialog">
     <v-card max-width="400">
       <v-card-title> 채널 관리 </v-card-title>
@@ -161,6 +164,7 @@
     </v-card>
   </v-dialog>
 
+  <!-- 섹션 생성 모달 -->
   <v-dialog v-model="sectionDialog" width="auto" class="sectionDialog">
     <v-card max-width="400">
       <v-card-title> 섹션 생성 </v-card-title>
@@ -176,6 +180,7 @@
     </v-card>
   </v-dialog>
 
+  <!-- 워크스페이스 수정 모달 -->
   <v-dialog v-model="workspaceEditModal" max-width="500px" class="workspaceEditModal">
     <v-card>
       <v-card-title class="text-h5 text-center">워크스페이스 정보 수정</v-card-title>
@@ -189,10 +194,12 @@
     </v-card>
   </v-dialog>
 
-  <div v-if="contextMenuVisible" class="context-menu-leave" :style="{
-    top: `${contextMenuPosition.y}px`,
-    left: `${contextMenuPosition.x}px`,
-  }">
+  <!-- 우클릭 메뉴 -->
+  <div 
+    v-if="contextMenuVisible" 
+    class="context-menu-leave" 
+    :style="{top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px`,}"
+  >
     <ul>
       <li v-if="selectedItemType === 'workspace'" @click="leaveWorkspace(this.getWorkspaceId)">
         워크스페이스 나가기
@@ -207,7 +214,7 @@
 <script>
 import axios from "axios";
 import { mapGetters, mapActions } from "vuex";
-import { fetchChannelMemberInfo } from "@/services/channelService"; // 모듈 import
+import { fetchChannelMemberInfo } from "@/services/channelService";
 // import { first } from '@tiptap/core/dist/packages/core/src/commands';
 
 export default {
@@ -350,6 +357,10 @@ export default {
       "setWorkspaceInfoActions",
       "setWorkspaceNameInfoActions",
     ]),
+    filteredChannelList(section) {
+      // 해당 section의 채널 목록을 필터링하여 반환
+      return section.channelList.filter(channel => channel.isPublic || this.isMember(channel.channelId));
+    },
     async fetchNotificationCounts() {
       for (const section of this.sections) {
         for (const channel of section.channelList) {
@@ -509,12 +520,22 @@ export default {
         return false;
       }
       try {
-        await axios.post(
+        const response1 = await axios.post(
           `${process.env.VUE_APP_API_BASE_URL}/channel/create`,
           data
         );
+        const createdChannel = response1.data.result;
         this.channelDialog = false;
-        this.getSectionData();
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
+        );
+        this.sections = response.data.result;
+        this.changeChannel(
+            createdChannel.channelId,
+            createdChannel.channelName,
+            createdChannel.channelInfo
+          );
+        // this.getSectionData();
       } catch (error) {
         console.log(error);
       }
