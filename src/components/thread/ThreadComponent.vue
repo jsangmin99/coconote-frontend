@@ -146,9 +146,11 @@ export default {
   async created() {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
-    if (this.threadId) {
-      console.log("*****this.parentThreadId: ", this.parentThreadId);
-      if (this.parentThreadId) this.getThreadPage(this.parentThreadId);
+    if (this.threadId && this.threadId !== "null") {
+      if (this.parentThreadId !== "null") {
+        this.getThreadPage(this.parentThreadId);
+      }
+      
       else this.getThreadPage(this.threadId);
     } else {
       await this.getTopMessageList();
@@ -195,6 +197,8 @@ export default {
   methods: {
     moveToThread(threadId) {
       // threadId가 제공된 경우에만 실행
+      console.log("@@@threadId: ",threadId);
+      
       if (threadId) {
         console.log("threadId 찾음: ", threadId);
         // 스레드 요소를 찾기
