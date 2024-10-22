@@ -370,6 +370,7 @@ export default {
             image: recv.image,
             createdTime: recv.createdTime,
             files: recv.files,
+            memberId: recv.memberId,
           });
         }
 
