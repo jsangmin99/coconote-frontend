@@ -9,6 +9,9 @@
     </div>
     <!-- 스레드 그룹 -->
     <div class="list-group" ref="messageList" id="list-group">
+      <div v-if="isLastPage" class="enter-title">
+        <h1>#채널의 시작이에요</h1>
+      </div>
       <v-skeleton-loader v-if="!isLastPage" type="list-item-avatar, paragraph"></v-skeleton-loader>
       <div class="list-group-item" v-for="(message, index) in filteredMessages.slice().reverse()" :key="message.id">
         <div
@@ -840,6 +843,9 @@ export default {
 </script>
 
 <style scoped>
+.enter-title{
+  margin-top: 40px;
+}
 .container {
   padding: 0 0 0 24px;
   height: 100%;
