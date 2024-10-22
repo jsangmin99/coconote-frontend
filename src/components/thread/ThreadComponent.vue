@@ -9,6 +9,9 @@
     </div>
     <!-- 스레드 그룹 -->
     <div class="list-group" ref="messageList" id="list-group">
+      <div v-if="isLastPage" class="enter-title">
+        <h1>#채널의 시작이에요</h1>
+      </div>
       <v-skeleton-loader v-if="!isLastPage" type="list-item-avatar, paragraph"></v-skeleton-loader>
       <div class="list-group-item" v-for="(message, index) in filteredMessages.slice().reverse()" :key="message.id">
         <div
@@ -23,7 +26,7 @@
           :deleteFile="deleteFile" :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag"
           :removeTag="removeTag" :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
           :commentIn="commentIn"
-          :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index - 1].memberId" />
+          :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index - 1].memberId || (index > 0 && this.isDifferentDay(message.createdTime, filteredMessages.slice().reverse()[index - 1].createdTime))" />
       </div>
       <v-skeleton-loader v-if="currentBottomPage > 0" type="list-item-avatar, paragraph"></v-skeleton-loader>
     </div>
@@ -54,11 +57,13 @@
   </div>
   <!-- 댓글 부분 -->
   <div v-if="isComment" class="container">
-    <div class="thread-title">
-      <button @click="commentOut">back</button>
-      <h2>스레드</h2>
-    </div>
     <div class="comment-group">
+      <div class="thread-title">
+        <button @click="commentOut">
+          <img :src="require('@/assets/images/left-icon.png')" alt="back" style="height: 30px; width: 30px; margin-top: 2px;">
+        </button>
+        <h2>스레드</h2>
+      </div>
       <ThreadLineComponent :thread="parentThread" :createdTime="this.getTime(parentThread.createdTime)"
         :updateMessage="updateMessage" :deleteMessage="deleteMessage" :deleteFile="deleteFile"
         :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
@@ -77,23 +82,24 @@
     </div>
     <!-- 입력 그룹 -->
     <div class="input-group" @dragover.prevent @drop="handleDrop">
-      <!-- 파일 올리기 -->
       <div class="image-group">
-        <div v-for="(file, index) in fileList" :key="index">
-          <button type="button" @click="deleteImage(index)">삭제</button>
+        <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
+          <button class="more-btn-file" type="button" @click="deleteImage(index)">삭제</button>
           <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
-            style="height: 120px; width: 120px; object-fit: cover;">
+            style="height: 120px; width: 120px; object-fit: cover; border-radius:5px;">
           <p class="custom-contents">{{ file.name }}</p>
         </div>
       </div>
-      <!-- 내용 작성란 -->
+
       <div class="text-group">
         <v-file-input v-model="files" @change="fileUpdate" multiple hide-input></v-file-input>
-        <textarea type="text" class="form-control" v-model="message" v-on:keypress.enter="sendMessage"
-          @keydown="handleKeydown" />
+        <textarea rows="1" type="text" class="form-control" v-model="message" @input="adjustHeight()" v-on:keypress.enter="sendMessage"
+          @keydown="handleKeydown" ref="textarea"/>
         <div class="input-group-append">
-          <button class="btn btn-primary" type="button" @click="sendMessage"
-            :disabled="!message && fileList.length === 0">보내기</button>
+          <button class="send-btn" type="button" @click="sendMessage"
+            :disabled="!message && fileList && fileList.length === 0">
+            <img :src="require('@/assets/images/send_icon.png')" alt="보내기" style="height: 20px; width: 20px;">
+          </button>
         </div>
       </div>
     </div>
@@ -146,9 +152,11 @@ export default {
   async created() {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
-    if (this.threadId) {
-      console.log("*****this.parentThreadId: ", this.parentThreadId);
-      if (this.parentThreadId) this.getThreadPage(this.parentThreadId);
+    if (this.threadId && this.threadId !== "null") {
+      if (this.parentThreadId && this.parentThreadId !== "null") {
+        this.getThreadPage(this.parentThreadId);
+      }
+      
       else this.getThreadPage(this.threadId);
     } else {
       await this.getTopMessageList();
@@ -195,6 +203,8 @@ export default {
   methods: {
     moveToThread(threadId) {
       // threadId가 제공된 경우에만 실행
+      console.log("@@@threadId: ",threadId);
+      
       if (threadId) {
         console.log("threadId 찾음: ", threadId);
         // 스레드 요소를 찾기
@@ -833,6 +843,9 @@ export default {
 </script>
 
 <style scoped>
+.enter-title{
+  margin-top: 40px;
+}
 .container {
   padding: 0 0 0 24px;
   height: 100%;
