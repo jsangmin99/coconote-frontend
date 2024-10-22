@@ -1,5 +1,5 @@
 <template>
-  <v-list class="canvasLists h-100" v-if="this.canvasIdInList > 0">
+  <v-list class="canvasLists h-100">
     <v-list-item
       class="canvasListItem"
       prepend-icon="mdi-note-text-outline"
