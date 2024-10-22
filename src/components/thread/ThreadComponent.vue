@@ -57,7 +57,7 @@
     <div class="comment-group">
       <div class="thread-title">
         <button @click="commentOut">
-          <img :src="require('@/assets/images/left-icon.png')" alt="back" style="height: 30px; width: 30px;">
+          <img :src="require('@/assets/images/left-icon.png')" alt="back" style="height: 30px; width: 30px; margin-top: 2px;">
         </button>
         <h2>스레드</h2>
       </div>
