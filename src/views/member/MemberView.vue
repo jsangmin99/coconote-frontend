@@ -44,7 +44,7 @@
 
       <!-- <v-card v-else> -->
         <v-card-title class="text-h5">
-                  <v-icon v-if="getWsRole !== 'USER'" icon="mdi-dots-vertical" @click="toggleDropdown()" style="position: absolute; right: 0;">
+                  <v-icon v-if="getWsRole !== 'USER'" icon="mdi-dots-vertical" @click="toggleDropdown" style="position: absolute; right: 0;">
             <span @click="console.log('dots clicked')"></span>
           </v-icon>
           <h2>프로필 
@@ -57,7 +57,7 @@
                 <div class="member-detail-container">
                   <v-row>
                     <v-col>
-                      <img :src="getProfileImage && getProfileImage !== 'null' ? getProfileImage : require('@/assets/images/profileImage.png')" alt="Profile Image" height="200px"/>
+                      <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? getProfileImage : require('@/assets/images/profileImage.png')" alt="Profile Image" height="200px"/>
                     </v-col>
                     <v-col>
                       <div class="member-info-container">
@@ -83,7 +83,6 @@
                         <v-divider class="my-3"></v-divider>
                         
                         <div class="member-details">
-
 
                           <div class="info-item">
                             <v-row>
@@ -140,11 +139,12 @@
                                 <div class="member-info" style="margin-top: 5px;">등급</div>
                               </v-col>
                               <v-col cols="9">
-                                <div style="margin-top: 10px;">{{ workspaceMemberInfo.wsRole }}</div>
+                                <div v-if="workspaceMemberInfo.wsRole === 'PMANAGER'" style="margin-top: 10px;">워크스페이스 최고 관리자</div>
+                                <div v-if="workspaceMemberInfo.wsRole === 'SMANAGER'" style="margin-top: 10px;">워크스페이스 관리자</div>
+                                <div v-if="workspaceMemberInfo.wsRole === 'USER'" style="margin-top: 10px;">일반 회원</div>
                               </v-col>
                             </v-row>
                           </div>
-
 
                         </div>
                       </div>
@@ -156,20 +156,8 @@
         </v-row>
         </v-card-text>
 
-
-      <div v-if="this.getWsRole !== 'USER' && this.workspaceMemberInfo.wsRole !== 'PMANAGER'">
-        <v-icon v-if="this.workspaceMemberInfo.wsRole === 'USER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-up</v-icon>
-        <v-icon v-if="this.workspaceMemberInfo.wsRole === 'SMANAGER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-down</v-icon>
-        <v-icon @click="removeMember(workspaceMemberInfo.workspaceMemberId)">mdi-account-remove</v-icon>
-      </div>
-
-
       <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn>
-    
-    
     </v-card>
-   
-    </v-dialog>
 
     <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
       <ul>
@@ -178,9 +166,20 @@
       </ul>
     </div>
 
+
+
+    </v-dialog>
+
+    <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
+      <ul>
+        <li @click="(workspaceRoleDialog = true)">권한 변경하기</li>
+        <li @click="removeMember">회원 내보내기</li>
+      </ul>
+    </div>
+
   <v-dialog v-model="workspaceRoleDialog" width="auto" class="workspaceRoleDialog">
   <v-card max-width="400">
-    <v-card-title>채널 회원 관리</v-card-title>
+    <v-card-title>워크스페이스 회원 관리</v-card-title>
     <v-card-text>
       <v-form @submit.prevent="changeRole">
               <v-select
@@ -254,6 +253,20 @@ export default {
     ...mapActions([
       "setMemberInfoActions",
     ]),
+        handleClickOutside(event) {
+      // 드롭다운 버튼을 클릭한 경우는 무시
+      const dropdownToggle = this.$el.querySelector(".mdi-dots-vertical");
+      const dropdown = this.$el.querySelector(".dropdown-menu");
+
+      if (
+        (dropdownToggle && dropdownToggle.contains(event.target)) ||
+        (dropdown && dropdown.contains(event.target))
+      ) {
+        return;
+      }
+
+      this.isDropdownOpen = false;
+    },
     async fetchMyInfo() {
       try {
         if(!this.workspaceId || this.workspaceId == undefined || this.workspaceId == ""){
@@ -329,21 +342,27 @@ export default {
     cancelEditing() {
       this.editingMemberId = null;
     },
-    async changeRole(wsMemberId) {
+    async changeRole() {
       try{
-        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/changerole/${wsMemberId}`);
+        await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/role`,
+          {
+            id: this.workspaceMemberInfo.workspaceMemberId,
+            wsRole: this.currentMemberRole,
+          }
+        );
         alert("권한이 변경되었습니다.");
-        this.workspaceMemberModal = false;
-        window.location.href = `/member/${this.getWorkspaceId}`;
+        this.isDropdownOpen = false;
+        this.workspaceRoleDialog = false;
+        this.currentMemberRole = null;
+        window.location.reload();
       } catch (e) {
         console.error("실패", e);
         alert("권한 변경에 실패했습니다.");
       }
-      
     },
-    async removeMember(wsMemberId) {
+    async removeMember() {
       try{
-        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/delete/${wsMemberId}`);        
+        await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/delete/${this.workspaceMemberInfo.workspaceMemberId}`);        
         alert("회원을 강제 퇴장시켰습니다.");
         window.location.href = `/member/${this.getWorkspaceId}`;
 
@@ -352,7 +371,7 @@ export default {
         alert("회원 삭제에 실패했습니다.");
       }
     },
-    toggleDropdown() {
+        toggleDropdown() {
       // 드롭다운이 열리고 닫히는지 로그 확인
       console.log("Dropdown toggle");
       this.isDropdownOpen = !this.isDropdownOpen;
