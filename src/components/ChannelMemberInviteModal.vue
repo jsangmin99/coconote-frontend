@@ -49,7 +49,7 @@
     <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
       <ul>
         <li @click="(channelRoleDialog = true)">권한 변경하기</li>
-        <li @click="removeMember()">회원 내보내기</li>
+        <li @click="removeMember">회원 내보내기</li>
       </ul>
     </div>
 
