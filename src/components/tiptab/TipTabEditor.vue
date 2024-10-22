@@ -137,13 +137,14 @@
     </div>
     <div id="editorArea">
       <editor-content :editor="editor" />
+      <div class="placeholder">내용을 입력하세요.</div>
     </div>
-    <!-- <div style="width: 100%; margin-top: 30px">
+    <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
-    </div> -->
+    </div>
   </div>
 </template>
 
@@ -161,7 +162,7 @@ import DraggableItem from "@/components/tiptab/DraggableItem";
 import Image from "@tiptap/extension-image"; // 이미지 추가용
 // import { NodePos } from '@tiptap/core';
 
-import Placeholder from "@tiptap/extension-placeholder";
+// import Placeholder from "@tiptap/extension-placeholder";
 import Focus from "@tiptap/extension-focus";
 
 // 코드 내 들여쓰기 용
@@ -219,6 +220,15 @@ export default {
 
       // router용 쿼리파라미터
       routeQueryBlockFeId: null,
+
+      // 마지막으로 보냈던 obj..
+      lastSendMsgObj: {
+        blockFeId: null,
+        blockIndent: null,
+      },
+
+      // 현재 보내는 이벤트 구분용
+      currentEvent : null,
     };
   },
   watch: {
@@ -304,29 +314,28 @@ export default {
         }),
         Indent.configure({
           onNodeChange: async (options) => {
-            this.isRecvUpdate = false;
-
+            this.currentEvent = "indent";
             const node = options?.nodes[0];
             const nodeDataId = node?.node?.attrs?.id;
             const nodeIndent = node?.node?.attrs?.indent;
+            console.error("indent update >>> ", options);
 
             if (nodeDataId && nodeIndent >= 0) {
               await this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
-              this.isRecvUpdate = true;
             }
           },
         }),
-        Placeholder.configure({
-          placeholder: "내용을 작성하세요.",
-          // Use different placeholders depending on the node type:
-          // placeholder: ({ node }) => {
-          //   if (node.type.name === 'heading') {
-          //     return 'What’s the title?'
-          //   }
+        // Placeholder.configure({
+        //   placeholder: "내용을 작성하세요.",
+        //   // Use different placeholders depending on the node type:
+        //   // placeholder: ({ node }) => {
+        //   //   if (node.type.name === 'heading') {
+        //   //     return 'What’s the title?'
+        //   //   }
 
-          //   return 'Can you add some further context?'
-          // },
-        }),
+        //   //   return 'Can you add some further context?'
+        //   // },
+        // }),
         Focus.configure({
           className: "has-focus",
           mode: "all",
@@ -335,9 +344,16 @@ export default {
       autofocus: true,
       onUpdate: () => {
         if (this.isRecvUpdate) {
+          console.error("흠...........................2222222222");
           this.isRecvUpdate = false;
           return false;
         }
+        if(this.currentEvent != null){
+          this.currentEvent = null
+          console.error("흠...........................3333333");
+          return false;
+        }
+        console.error("흠...........................");
         const selectedNode = this.editor.state.selection;
         let isReturn = true;
 
@@ -368,6 +384,14 @@ export default {
             console.error("removedIds >> ", removedIds);
             if (removedIds.length > 0) {
               this.$parent.deleteBlock(removedIds[0]);
+              if (updateAfterNodes == 0) {
+                const plel = document.querySelector(".placeholder");
+                if (plel) {
+                  if (plel.classList.contains("hidden")) {
+                    plel.classList.remove("hidden");
+                  }
+                }
+              }
               return false;
             }
           }
@@ -377,8 +401,16 @@ export default {
         if (!updateBlockID) {
           return false;
         }
+        const updateBlockIndent = selectedNode?.$head?.path[3]?.attrs?.indent;
         const updateContent =
           selectedNode?.$head?.path[3]?.content?.content[0]?.text;
+
+        if (
+          this.lastSendMsgObj.updateContent == updateContent &&
+          this.lastSendMsgObj.blockFeId == updateBlockID
+        ) {
+          return false;
+        }
 
         console.log(
           "⭐ Node:",
@@ -387,7 +419,8 @@ export default {
           this.editor.view?.trackWrites?.dataset?.id,
           updateContent == "",
           this.editor.view?.trackWrites?.data,
-          updateContent == undefined
+          updateContent == undefined,
+          updateBlockIndent
         );
 
         if (this.localJSON.content == undefined) {
@@ -426,7 +459,6 @@ export default {
           updateBlockID
         );
 
-
         if (searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0) {
           return false;
         }
@@ -444,14 +476,19 @@ export default {
           targetElType,
           updateContent == "" ? "" : updateContent,
           previousId,
-          parentId
+          parentId,
+          updateBlockIndent
         );
+
+        this.lastSendMsgObj.blockFeId = updateBlockID;
+        this.lastSendMsgObj.blockIndent = updateBlockIndent;
+        this.lastSendMsgObj.blockContents = updateContent;
       },
       content:
         this.defaultContent == "" ||
         this.defaultContent?.content?.length <= 0 ||
         this.defaultContent == undefined
-          ? "<p class='is-empty is-editor-empty' data-placeholder='내용을 작성하세요.'></p>"
+          ? ""
           : this.defaultContent,
     });
 
@@ -466,6 +503,15 @@ export default {
         this.focusBlockFromBlockFeId();
       }
     });
+
+    console.error("@@@@@@@@@@@@@@@", this.defaultContent);
+    if (this.defaultContent?.content?.length > 0) {
+      const plel = document.querySelector(".placeholder");
+      console.log(plel);
+      if (plel) {
+        plel.classList.add("hidden");
+      }
+    }
   },
   methods: {
     ...mapActions([
@@ -536,6 +582,14 @@ export default {
               "이후 nodeLength :: DELETE_BLOCK ::",
               this.nodeLength
             );
+            if (this.nodeLength <= 0) {
+              const plel = document.querySelector(".placeholder");
+              if (plel) {
+                if (plel.classList.contains("hidden")) {
+                  plel.classList.remove("hidden");
+                }
+              }
+            }
           }
         );
       } else if (newContent.method == "UPDATE_INDENT_BLOCK") {
@@ -848,6 +902,27 @@ export default {
         // el.removeAttribute("tabindex");
       }
     },
+    noneContentFunc() {
+      const thisuuId = this.generateUUID();
+      this.$parent.updateBlock(
+        thisuuId,
+        "paragraph",
+        "", // updateContent
+        null,
+        null
+      );
+      return `<p class='is-empty is-editor-empty' data-placeholder='내용을 작성하세요.' data-id='${thisuuId}'></p>`;
+    },
+    generateUUID() {
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+        /[xy]/g,
+        function (c) {
+          var r = (Math.random() * 16) | 0,
+            v = c === "x" ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        }
+      );
+    },
   },
   beforeUnmount() {
     // 컴포넌트 제거 시 이벤트 리스너 제거
@@ -864,8 +939,26 @@ export default {
   flex-direction: column;
   #editorArea {
     min-height: 100%;
+    position: relative;
     > div {
       min-height: 100%;
+    }
+    .placeholder {
+      font-size: 14px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      color: #aaa;
+    }
+    .placeholder.hidden {
+      display: none !important;
+    }
+    &:hover {
+      .placeholder {
+        display: none !important;
+      }
     }
   }
 }

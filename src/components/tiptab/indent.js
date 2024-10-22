@@ -3,6 +3,8 @@ import { Extension } from "@tiptap/core";
 import { TextSelection, AllSelection } from "prosemirror-state";
 import { Plugin } from "prosemirror-state";
 
+let isAddKeyTriggered = false;
+
 export function clamp(val, min, max) {
   if (val < min) {
     return min;
@@ -93,10 +95,13 @@ export const Indent = Extension.create({
       indentLevels: [0, 30, 60, 90, 120, 150, 180, 210],
       defaultIndentLevel: 0,
       onNodeChange: (options) => {
-        const node = options?.nodes[0];
-        const event = new CustomEvent('nodeChange', { detail: node });
-        window.dispatchEvent(event);
-
+        if (isAddKeyTriggered) {
+          const node = options?.nodes[0];
+          // node.isAddKeyTriggered = isAddKeyTriggered
+          const event = new CustomEvent("nodeChange", { detail: node });
+          isAddKeyTriggered = false; // Reset the flag after dispatch
+          window.dispatchEvent(event);
+        }
       },
     };
   },
@@ -126,32 +131,34 @@ export const Indent = Extension.create({
     return {
       indent:
         () =>
-        ({ tr, state, dispatch }) => {
-          const { selection } = state;
-          tr = tr.setSelection(selection);
-          tr = updateIndentLevel(tr, IndentProps.more);
+          ({ tr, state, dispatch }) => {
+            const { selection } = state;
+            tr = tr.setSelection(selection);
+            tr = updateIndentLevel(tr, IndentProps.more);
+            console.error("indent 진행")
+            if (tr.docChanged) {
+              dispatch && dispatch(tr);
+              isAddKeyTriggered = true;
+              return true;
+            }
 
-          if (tr.docChanged) {
-            dispatch && dispatch(tr);
-            return true;
-          }
-
-          return false;
-        },
+            return false;
+          },
       outdent:
         () =>
-        ({ tr, state, dispatch }) => {
-          const { selection } = state;
-          tr = tr.setSelection(selection);
-          tr = updateIndentLevel(tr, IndentProps.less);
+          ({ tr, state, dispatch }) => {
+            const { selection } = state;
+            tr = tr.setSelection(selection);
+            tr = updateIndentLevel(tr, IndentProps.less);
+            console.error("outdent 진행")
+            if (tr.docChanged) {
+              dispatch && dispatch(tr);
+              isAddKeyTriggered = true;
+              return true;
+            }
 
-          if (tr.docChanged) {
-            dispatch && dispatch(tr);
-            return true;
-          }
-
-          return false;
-        },
+            return false;
+          },
     };
   },
 
@@ -163,7 +170,8 @@ export const Indent = Extension.create({
         view: () => {
           return {
             update: (view, prevState) => {
-              if (view.state.doc !== prevState.doc) {
+              if (view.state.doc !== prevState.doc && isAddKeyTriggered) {
+                console.error("🕶️🕶️🕶️🕶️",isAddKeyTriggered)
                 const { from, to } = view.state.selection;
                 const nodes = [];
                 view.state.doc.nodesBetween(from, to, (node, pos) => {
