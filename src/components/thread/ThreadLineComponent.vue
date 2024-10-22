@@ -122,10 +122,10 @@
   </div>
   <div v-if="isContextMenuVisible || isTagMenuVisible" class="overlay"></div>
   <div v-if="isContextMenuVisible" class="context-menu" :style="{ top: [contextMenuPosition]+'px' }">
-    <button @click="commentIn(thread)">댓글 쓰기</button>
-    <button @click="toggleTagMenu">태그 추가</button>
-    <button @click="editMessage">수정</button>
-    <button @click="deleteM">삭제</button>
+    <button class="context-btn" @click="commentIn(thread)" v-if="!isComment">댓글 쓰기</button>
+    <button class="context-btn" @click="toggleTagMenu">태그 추가</button>
+    <button class="context-btn" @click="editMessage">수정</button>
+    <button class="context-btn" @click="deleteM">삭제</button>
   </div>
 </div>
 </template>
@@ -321,6 +321,13 @@ import axios from '@/services/axios';
   right: 20px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
   z-index: 2;
 }
+.context-btn{
+  padding: 2px;
+  border-radius: 5px;
+}
+.context-btn:hover {
+  background-color: #f8f8f8;
+}
 .thread-wrapper:hover {
   background-color: #f8f8f8;
 }
@@ -428,8 +435,9 @@ import axios from '@/services/axios';
   right: 50px;
   background-color: white;
   border: 1px solid #ccc;
+  border-radius: 5px;
   z-index: 10;
-  padding: 10px;
+  padding: 5px;
   display: flex;
   flex-direction: column;
   gap: 5px;
