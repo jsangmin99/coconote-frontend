@@ -16,7 +16,6 @@
           <v-card-title class="member-title">{{ member.memberName || '이름 없음' }}</v-card-title>
           <v-icon v-if="member.wsRole === 'PMANAGER'"  color='#ffbb00'>mdi-crown</v-icon>
           <v-icon v-if="member.wsRole === 'SMANAGER'"  color='#C0C0C0'>mdi-crown</v-icon>
-          <!-- <v-chip small :color="getChipColor(member.wsRole)">{{ member.wsRole }}</v-chip> -->
         </v-card>
       </v-col>
     </v-row>
@@ -45,8 +44,12 @@
 
       <!-- <v-card v-else> -->
         <v-card-title class="text-h5">
-          프로필      
-          <v-icon color="grey" v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)" size="20">mdi-cog</v-icon>
+                  <v-icon v-if="getWsRole !== 'USER'" icon="mdi-dots-vertical" @click="toggleDropdown()" style="position: absolute; right: 0;">
+            <span @click="console.log('dots clicked')"></span>
+          </v-icon>
+          <h2>프로필 
+          <v-icon color="grey" v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)" size="20">mdi-cog</v-icon></h2>
+
         </v-card-title>
         <v-card-text>
             <v-row justify="center">
@@ -58,8 +61,24 @@
                     </v-col>
                     <v-col>
                       <div class="member-info-container">
-                        <h4 class="member-info">닉네임</h4>
-                        <h2 class="member-title">이름</h2>
+                        <v-row>
+                              <v-col cols="3">
+                                <h4 class="member-info">닉네임</h4>
+                              </v-col>
+                              <v-col cols="9">
+                                {{ workspaceMemberInfo.nickname }}
+                              </v-col>
+                            </v-row>
+                            <v-row>
+                              <v-col cols="3">
+                                <h2 class="member-title">이름</h2>
+                              </v-col>
+                              <v-col cols="9">
+                                {{ workspaceMemberInfo.memberName }}
+                              </v-col>
+                            </v-row>
+                        
+                        
 
                         <v-divider class="my-3"></v-divider>
                         
@@ -73,7 +92,7 @@
                                 <div class="member-info" style="margin-top: 5px;">이메일</div>
                               </v-col>
                               <v-col cols="9">
-                                <div style="margin-top: 10px;">test@naver.com</div>
+                                <div style="margin-top: 10px;">{{ workspaceMemberInfo.email }}</div>
                               </v-col>
                             </v-row>
                           </div>
@@ -138,28 +157,6 @@
         </v-card-text>
 
 
-      
-      <!-- <v-card-text>
-         <img
-          :src="
-            getProfileImage && getProfileImage !== 'null'
-              ? getProfileImage
-              : require('@/assets/images/profileImage.png')
-          "
-          alt="Profile Image"
-          class="avatar-image"
-          height="200px"
-        />
-         <v-list>
-          <v-list-item>이름    {{ workspaceMemberInfo.memberName }}</v-list-item>
-          <v-list-item>닉네임    {{ workspaceMemberInfo.nickname }}</v-list-item>
-          <v-list-item>소속    {{ workspaceMemberInfo.field }}</v-list-item>
-          <v-list-item>직급    {{ workspaceMemberInfo.position }}</v-list-item>
-          <v-list-item>권한    {{ workspaceMemberInfo.wsRole }}</v-list-item>
-         </v-list>
-      </v-card-text> -->
-
-
       <div v-if="this.getWsRole !== 'USER' && this.workspaceMemberInfo.wsRole !== 'PMANAGER'">
         <v-icon v-if="this.workspaceMemberInfo.wsRole === 'USER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-up</v-icon>
         <v-icon v-if="this.workspaceMemberInfo.wsRole === 'SMANAGER'" @click="changeRole(workspaceMemberInfo.workspaceMemberId)">mdi-account-arrow-down</v-icon>
@@ -173,6 +170,34 @@
     </v-card>
    
     </v-dialog>
+
+    <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
+      <ul>
+        <li @click="(workspaceRoleDialog = true)">권한 변경하기</li>
+        <li @click="removeMember()">회원 내보내기</li>
+      </ul>
+    </div>
+
+  <v-dialog v-model="workspaceRoleDialog" width="auto" class="workspaceRoleDialog">
+  <v-card max-width="400">
+    <v-card-title>채널 회원 관리</v-card-title>
+    <v-card-text>
+      <v-form @submit.prevent="changeRole">
+              <v-select
+                v-model="currentMemberRole"
+                :items="roleOptions"
+                item-title="text"
+                item-value="value"
+                dense
+                outlined
+                label="선택"
+              ></v-select>
+      <v-btn color="#3a8bcd" text="변경" type="submit"></v-btn>
+      <v-btn text="닫기" @click="(workspaceRoleDialog = false)"></v-btn>
+    </v-form>
+      </v-card-text>
+  </v-card>
+</v-dialog>
 
 
     <CreateWorkspaceMemberModal 
@@ -216,6 +241,13 @@ export default {
       editedNickname: "",
       editedField: "",
       editedPosition: "",
+      isDropdownOpen: false, // 드롭다운 상태 관리
+      workspaceRoleDialog: false,
+      currentMemberRole: null,
+      roleOptions: [
+      { text: '워크스페이스 관리자', value: 'SMANAGER' },
+      { text: '일반 회원', value: 'USER' },
+    ],
     };
   },
   methods: {
@@ -244,16 +276,6 @@ export default {
       this.workspaceMemberInfo = [];
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/${workspaceMemberId}`);
       this.workspaceMemberInfo = response.data.result;
-    },
-    getChipColor(credentials) {
-      switch (credentials) {
-        case "PMANAGER":
-          return "red";
-        case "SMANAGER":
-          return "blue";
-        default:
-          return "grey";
-      }
     },
     showMailSender() {
       this.sendMail = true;
@@ -329,6 +351,11 @@ export default {
         console.error("실패", e);
         alert("회원 삭제에 실패했습니다.");
       }
+    },
+    toggleDropdown() {
+      // 드롭다운이 열리고 닫히는지 로그 확인
+      console.log("Dropdown toggle");
+      this.isDropdownOpen = !this.isDropdownOpen;
     },
   },
 };
