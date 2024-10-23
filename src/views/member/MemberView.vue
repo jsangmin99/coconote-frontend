@@ -1,22 +1,31 @@
 <template>
-<v-container>
-  <div>
+<v-container class="memberview-container" style="margin: 0 0 0 0; padding: 0 0 0 0">
+
+  <div class="memberview-header" style="margin: 20px; padding-left: 30px;">
     <h1>모든 회원</h1>
-    <v-btn @click="showMailSender" color="#3a8bcd" text="회원 초대"></v-btn>
   </div>
-  <br>
-  <br>
-  <br>
-  <div>
-  <v-row>
-    <v-col v-for="member in workspaceMemberList" :key="member.workspaceMemberId" cols="2" md="2">
-      <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card">
-        <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require('@/assets/images/profileImage.png')" alt="Profile Image" style="width: 100%;"/>
+  
+  <div class="memberview-banner" style="background-color: #000435; color: white; padding: 50px; margin-top: 20px;">
+    <br>
+    <br>
+    <p>팀 멤버를 COCONOTE에 참여시켜 더 나은 환경에서 작업할 수 있습니다. 이메일로 초대장을 보내거나 간단한 링크를 보내 공유할 수 있습니다.</p>
+    <br>
+    <v-btn @click="showMailSender" color="#3a8bcd" text="회원 초대"></v-btn>
+    <br>
+    <br>
+  </div>
+  
+  <div class="memberview-memberlist" style="padding: 50px;">
+    <v-row>
+      <v-col v-for="member in workspaceMemberList" :key="member.workspaceMemberId" cols="2" md="2">
+        <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card">
+          <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" alt="Profile Image" style="height: 169px; width: 100%"/>
           <v-card-text class="member-info">{{ member.nickname || '별명 없음' }}</v-card-text>
           <v-card-title class="member-title">{{ member.memberName || '이름 없음' }}</v-card-title>
           <v-icon v-if="member.wsRole === 'PMANAGER'"  color='#ffbb00'>mdi-crown</v-icon>
           <v-icon v-if="member.wsRole === 'SMANAGER'"  color='#C0C0C0'>mdi-crown</v-icon>
-        </v-card>
+            <v-icon v-if="member.wsRole === 'USER'" style="visibility: hidden;">mdi-crown</v-icon>
+          </v-card>
       </v-col>
     </v-row>
   </div>
@@ -24,29 +33,8 @@
   
 
     <v-dialog v-model="workspaceMemberModal" max-width="600px" class="workspaceMemberModal">
-       <!-- <v-card v-if="editingMemberId === workspaceMemberInfo.workspaceMemberId"> -->
        <v-card>
-      <!-- <v-card-title class="text-h5 text-center">
-        워크스페이스 회원 정보 수정     
-        </v-card-title>
-      <v-card-text>
-         <v-icon size="50">mdi-account-circle</v-icon> 
-         <v-list>
-          <v-text-field v-model="editedMemberName" placeholder="이름"></v-text-field>
-          <v-text-field v-model="editedNickname" placeholder="닉네임"></v-text-field>
-          <v-text-field v-model="editedField" placeholder="소속"></v-text-field>
-          <v-text-field v-model="editedPosition" placeholder="직급"></v-text-field>
-         </v-list>      
-      </v-card-text>
-      <v-btn text="수정" color="blue" @click="saveWorkspaceMemberInfo(workspaceMemberInfo.workspaceMemberId)"></v-btn>
-      <v-btn text="취소" color="grey" @click="cancelEditing"></v-btn> -->
-    <!-- </v-card> -->
-
-      <!-- <v-card v-else> -->
         <v-card-title class="text-h5">
-                  <v-icon v-if="getWsRole !== 'USER'" icon="mdi-dots-vertical" @click="toggleDropdown" style="position: absolute; right: 0;">
-            <span @click="console.log('dots clicked')"></span>
-          </v-icon>
           <h2>프로필 
           <v-icon color="grey" v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)" size="20">mdi-cog</v-icon></h2>
 
@@ -57,7 +45,8 @@
                 <div class="member-detail-container">
                   <v-row>
                     <v-col>
-                      <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? getProfileImage : require('@/assets/images/profileImage.png')" alt="Profile Image" height="200px"/>
+                      <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${this.memberImageId}.jpg`)" alt="Profile Image" height="200px"/>
+                      
                       <div v-if="getWsRole !== 'USER' && workspaceMemberInfo.wsRole !== 'PMANAGER'">
                       <v-btn color="#3a8bcd" text="권한" @click="(workspaceRoleDialog = true)">
                       </v-btn>
@@ -145,9 +134,9 @@
                                 <div class="member-info" style="margin-top: 5px;">등급</div>
                               </v-col>
                               <v-col cols="9">
-                                <div v-if="workspaceMemberInfo.wsRole === 'PMANAGER'" style="margin-top: 10px;">워크스페이스 최고 관리자</div>
-                                <div v-if="workspaceMemberInfo.wsRole === 'SMANAGER'" style="margin-top: 10px;">워크스페이스 관리자</div>
-                                <div v-if="workspaceMemberInfo.wsRole === 'USER'" style="margin-top: 10px;">일반 회원</div>
+                                <div  v-if="workspaceMemberInfo.wsRole === 'PMANAGER'" style="margin-top: 10px;">워크스페이스 최고 관리자</div>
+                                <div  v-if="workspaceMemberInfo.wsRole === 'SMANAGER'" style="margin-top: 10px;">워크스페이스 관리자</div>
+                                <div  v-if="workspaceMemberInfo.wsRole === 'USER'" style="margin-top: 10px;">일반 회원</div>
                               </v-col>
                             </v-row>
                           </div>
@@ -222,7 +211,7 @@ export default {
     return {
       myInfo: [],
       workspaceMemberList: [],
-      workspaceMemberInfo: [],
+      workspaceMemberInfo: {},
       workspaceMemberModal: false,
       sendMail: false,
       editingMemberId: null,
@@ -236,13 +225,20 @@ export default {
       roleOptions: [
       { text: '워크스페이스 관리자', value: 'SMANAGER' },
       { text: '일반 회원', value: 'USER' },
-    ],
+      ],
+      memberImageId : 0,
+    profileNumber: null,
     };
   },
   methods: {
     ...mapActions([
       "setMemberInfoActions",
     ]),
+    makeProfileNumber() {
+      const getRandom = (min, max) => Math.floor(Math.random() * (max - min) + min);
+      this.profileNumber = getRandom(1, 10);
+
+    },
         handleClickOutside(event) {
       // 드롭다운 버튼을 클릭한 경우는 무시
       const dropdownToggle = this.$el.querySelector(".mdi-dots-vertical");
@@ -272,18 +268,24 @@ export default {
     },
     async fetchWorkspaceMemberList() {
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/${this.workspaceId}/member/list`);
-        this.workspaceMemberList = response.data.result; 
+      this.workspaceMemberList = response.data.result; 
+      console.log(this.workspaceMemberList);
     },
     async fetchWorkspaceMemberDetail(workspaceMemberId) {
+  
       this.workspaceMemberModal = true;
-      this.workspaceMemberInfo = [];
+      this.workspaceMemberInfo = {};
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/${workspaceMemberId}`);
       this.workspaceMemberInfo = response.data.result;
+      this.memberImageId = this.workspaceMemberInfo.workspaceMemberId % 10;
+      console.log("workspaceMemberInfo.workspaceMemberId 확인 >>>", workspaceMemberId);
+      console.log("this.memberImageId >>>", this.memberImageId);
     },
     showMailSender() {
       this.sendMail = true;
     },
     isMe(workspaceMemberId) {
+      console.log("is Me workspaceMemberInfo : ", this.workspaceMemberInfo)
       return this.myInfo.workspaceMemberId === workspaceMemberId;
     },
     startEditing(workspaceMember) {
@@ -371,9 +373,16 @@ export default {
 </script>
 
 <style lang="scss">
+.memberview-container {
+  overflow-y: auto;
+  height: 90vh;
+  width: 100%;
+}
 .hover-card {
     transition: transform 0.2s ease;
     border-radius: 15px;
+    width: 100%;
+    display: flex;
 }
 
 .hover-card:hover {

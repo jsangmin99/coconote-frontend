@@ -20,11 +20,11 @@
             <v-icon icon="mdi-plus" class="plus-icon" @click="openChannelMemberInviteModal"></v-icon>
             <!-- 첫 번째 프로필 이미지 -->
             <div v-if="channelMembers.length > 0" class="circle blue-circle">
-              <img :src="channelMembers[0].memberInfo.profileImage || defaultProfileImage" alt="Profile" />
+              <img :src="channelMembers[0].memberInfo.profileImage || require(`@/assets/images/profile/profile${channelMembers[0].memberInfo.workspaceMemberId % 10}.jpg`)" alt="Profile" />
             </div>
             <!-- 두 번째 프로필 이미지 (있을 경우) -->
             <div v-if="channelMembers.length > 1" class="circle green-circle">
-              <img :src="channelMembers[1].memberInfo.profileImage || defaultProfileImage" alt="Profile" />
+              <img :src="channelMembers[1].memberInfo.profileImage || require(`@/assets/images/profile/profile${channelMembers[1].memberInfo.workspaceMemberId % 10}.jpg`)" alt="Profile" />
             </div>
           </div>
           <!-- 클릭 이벤트로 드롭다운 토글 -->
@@ -134,7 +134,6 @@ export default {
       isChannelMemberModalOpen: false,
       isDropdownOpen: false, // 드롭다운 상태 관리
       toggleBookmarkIsLoading: false,
-      defaultProfileImage: require("@/assets/images/profileImage.png"), // 기본 프로필 이미지 설정,
       isBookmarked: false,
       channelDialog: false,
       updateChannelInfo: {
