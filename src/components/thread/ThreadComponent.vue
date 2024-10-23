@@ -55,6 +55,7 @@
       </div>
     </div>
   </div>
+  
   <!-- 댓글 부분 -->
   <div v-if="isComment" class="container">
     <div class="comment-group">
@@ -747,12 +748,24 @@ export default {
       this.fileList.splice(index, 1);
     },
     handleKeydown(event) {
-      // IME 입력 중이면 아무 동작도 하지 않음
       if (event.isComposing) return;
+
       if (event.key === 'Enter') {
         if (event.shiftKey) {
           // Shift + Enter일 경우 개행 추가
-          this.message += '\n';
+          const textarea = this.$refs.textarea;
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+
+          // 개행 문자를 현재 커서 위치에 삽입
+          this.message = this.message.substring(0, start) + '\n' + this.message.substring(end);
+          
+          // 커서 위치를 개행 뒤로 이동
+          this.$nextTick(() => {
+            textarea.selectionStart = textarea.selectionEnd = start + 1;
+            textarea.focus();
+          });
+
           event.preventDefault(); // 기본 동작 방지
         } else {
           // Enter만 누를 경우 메시지 전송

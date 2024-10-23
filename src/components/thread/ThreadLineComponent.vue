@@ -23,7 +23,6 @@
           </div>
           <button @click="toggleTagMenu">#</button>
           <div class="tag-toggle">
-            
             <input
               v-if="isTagMenuVisible"
               type="text"
@@ -47,7 +46,6 @@
 
       <!-- 내용 -->
       <div class="content-group">
-        <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
         <div v-if="isUpdate" class="update-group">
           <textarea
             type="text"
@@ -55,36 +53,39 @@
             v-model="message"
             v-on:keypress.enter="update"
             @keydown="handleKeydown"
+            ref="textarea"
           />
         </div>
-        <!-- 내용 태그 -->
-        <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
-          <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
-            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
-            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
-          </div>
-          <button class="tagButton" @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
-          <div class="tag-toggle">
-            <div class="tag-input-group">
-              <input
-                v-if="isTagMenuVisible"
-                type="text"
-                class="tag-input"
-                placeholder="tags"
-                v-model="tagName"
-                v-on:keypress.enter="createTag"
-                v-on:input="adjustWidth"
-                ref="tagInput"
-                :style="{ width: inputWidth + 'px'}"
-              >
-              <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
-                <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
-                  <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+        <div v-if="!isUpdate">
+          <div class="content" v-html="formattedContent"></div>
+          <!-- 내용 태그 -->
+          <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
+            <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
+              <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+              <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+            </div>
+            <button class="tagButton" @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
+            <div class="tag-toggle">
+              <div class="tag-input-group">
+                <input
+                  v-if="isTagMenuVisible"
+                  type="text"
+                  class="tag-input"
+                  placeholder="tags"
+                  v-model="tagName"
+                  v-on:keypress.enter="createTag"
+                  v-on:input="adjustWidth"
+                  ref="tagInput"
+                  :style="{ width: inputWidth + 'px'}"
+                >
+                <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
+                  <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
+                    <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+                  </div>
+                  <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
                 </div>
-                <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
               </div>
             </div>
-            
           </div>
         </div>
       </div>
@@ -214,10 +215,24 @@ import axios from '@/services/axios';
         return color;
       },
       handleKeydown(event) {
+        if (event.isComposing) return;
+
         if (event.key === 'Enter') {
           if (event.shiftKey) {
             // Shift + Enter일 경우 개행 추가
-            this.message += '\n';
+            const textarea = this.$refs.textarea;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+
+            // 개행 문자를 현재 커서 위치에 삽입
+            this.message = this.message.substring(0, start) + '\n' + this.message.substring(end);
+            
+            // 커서 위치를 개행 뒤로 이동
+            this.$nextTick(() => {
+              textarea.selectionStart = textarea.selectionEnd = start + 1;
+              textarea.focus();
+            });
+
             event.preventDefault(); // 기본 동작 방지
           } else {
             // Enter만 누를 경우 메시지 전송
@@ -301,6 +316,20 @@ import axios from '@/services/axios';
         } catch (error) {
           console.error("파일 다운로드에 실패했습니다.", error);
           alert("파일 다운로드 중 오류가 발생했습니다.");
+        }
+      },
+      adjustHeight() {
+        const textarea = this.$refs.textarea;
+        setTimeout(() => {
+          textarea.style.height = 'auto'; // 이전 높이를 초기화
+          textarea.style.height = `${textarea.scrollHeight}px`; // 내용에 맞게 높이 조정
+        }, 0);
+
+          // max-height에 따라 스크롤바 보이기
+        if (textarea.scrollHeight > parseInt(getComputedStyle(textarea).maxHeight)) {
+          textarea.style.overflowY = 'auto'; // 스크롤바 보이기
+        } else {
+          textarea.style.overflowY = 'hidden'; // 스크롤바 숨기기
         }
       },
     },
@@ -491,10 +520,18 @@ import axios from '@/services/axios';
   color: blue;
 }
 .update-group{
+  background-color: white;
+  /* 배경색 설정 */
   border: 1px solid;
+  border-radius: 5px;
+  width: 90%;
 }
 .form-control {
-  width: 80%;
+  resize: none;
+  width: 99%;
+  height: 20vh;
+  overflow-y: auto;
+  margin-left: 5px;
 }
 .tagButton{
   height: fit-content;
@@ -503,6 +540,9 @@ import axios from '@/services/axios';
   position: relative;
 }
 input:focus {
+  outline: none;
+}
+textarea:focus {
   outline: none;
 }
 </style>
