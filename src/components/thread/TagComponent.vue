@@ -194,7 +194,7 @@ export default {
 /* 태그 스타일 */
 .tag {
   display: inline-block; 
-  border-radius: 5px;
+  border-radius: 6px;
   padding: 2px 7px 3px 7px;
   color: white;
   font-size: 12px;

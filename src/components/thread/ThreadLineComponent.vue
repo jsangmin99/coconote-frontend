@@ -414,7 +414,7 @@ import axios from '@/services/axios';
   position: relative;
 }
 .tag {
-  border-radius: 5px;
+  border-radius: 6px;
   padding: 0 5px 1px 5px;
   color: white;
   font-size: 11px;
