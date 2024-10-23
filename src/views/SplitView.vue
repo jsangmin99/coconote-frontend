@@ -204,9 +204,9 @@ export default {
 <style scoped>
 /* ::v-deep를 사용하여 .input-group 스타일 덮어씌우기 */
 ::v-deep .input-group {
-  width: 35% !important;
+  width: 37% !important;
 }
 ::v-deep .list-group {
-  max-height: calc(100vh - 330px);
+  max-height: calc(100vh - 280px);
 }
 </style>

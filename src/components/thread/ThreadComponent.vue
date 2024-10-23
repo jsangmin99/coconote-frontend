@@ -55,7 +55,7 @@
       </div>
     </div>
   </div>
-  
+
   <!-- 댓글 부분 -->
   <div v-if="isComment" class="container">
     <div class="comment-group">
@@ -869,7 +869,7 @@ export default {
   overflow-y: auto;
   /* 세로 스크롤 가능 */
   height: 100%;
-  max-height: calc(100vh - 240px);
+  max-height: calc(100vh - 230px);
 }
 
 .list-group-item {
