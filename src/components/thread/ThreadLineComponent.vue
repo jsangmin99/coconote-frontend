@@ -61,7 +61,6 @@
           </div>
         </div>
         <div v-if="!isUpdate">
-          <div class="content" v-html="formattedContent"></div>
           <!-- 내용 태그 -->
           <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
             <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
@@ -91,6 +90,7 @@
               </div>
             </div>
           </div>
+          <div class="content" v-html="formattedContent"></div>
         </div>
       </div>
       
@@ -275,7 +275,7 @@ import axios from '@/services/axios';
         const screenHeight = window.innerHeight;
         const buttonPosition = event.target.getBoundingClientRect().bottom;
 
-        this.tagMenuPosition = (screenHeight / 1.7 > buttonPosition) ? 'top' : 'bottom';
+        this.tagMenuPosition = (screenHeight / 1.9 > buttonPosition) ? 'top' : 'bottom';
 
         this.$nextTick(() => {
           if (this.isTagMenuVisible) {
@@ -452,7 +452,7 @@ import axios from '@/services/axios';
   display: flex;
   flex-direction: column;
   width: 200px;
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
 }
 .content-group{
