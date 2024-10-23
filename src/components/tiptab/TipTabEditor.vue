@@ -935,7 +935,8 @@ export default {
       const node = event.detail.selection.$anchor.path[3];
       // const node = options?.nodes[0];
       const nodeDataId = node.attrs?.id;
-      const nodeIndent = node.attrs?.indent;
+      let nodeIndent = node.attrs?.indent;
+      nodeIndent = (nodeIndent < 210) ? nodeIndent + 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
       
 
       if (nodeDataId && nodeIndent >= 0) {
@@ -944,7 +945,16 @@ export default {
     },
     onOutdentExecuted(event) {
       console.log("Outdent 실행됨:", event);
-      this.onIndentExecuted(event);
+      const node = event.detail.selection.$anchor.path[3];
+      // const node = options?.nodes[0];
+      const nodeDataId = node.attrs?.id;
+      let nodeIndent = node.attrs?.indent;
+      nodeIndent = (nodeIndent > 0) ? nodeIndent - 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
+      
+
+      if (nodeDataId && nodeIndent >= 0) {
+        this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
+      }
     },
   },
   beforeUnmount() {

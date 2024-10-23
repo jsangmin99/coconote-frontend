@@ -159,9 +159,12 @@ export default {
             this.latestWatchBlockMsg.method == newVal.method &&
             this.latestWatchBlockMsg.blockContents == newVal.blockContents
           ) {
-            if(newVal.method == "UPDATE_INDENT_BLOCK" &&
-              newVal.blockIndent == this.latestWatchBlockMsg.blockIndent
-            ){
+            if(newVal.method == "UPDATE_INDENT_BLOCK"){
+              if(newVal.blockIndent == this.latestWatchBlockMsg.blockIndent){
+                console.error("🤔🤔🤔🤔🤔 3333", this.latestWatchBlockMsg, newVal);
+                isReturn = false;
+              }
+            }else{
               console.error("🤔🤔🤔🤔🤔", this.latestWatchBlockMsg, newVal);
               isReturn = false;
             }
