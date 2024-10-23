@@ -70,7 +70,9 @@
               <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
               <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
             </div>
-            <button class="tagButton" @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
+            <div class="hash-btn">
+              <button @click="toggleTagMenu">#</button>
+            </div>
             <div class="tag-toggle">
               <div class="tag-input-group">
                 <input
@@ -413,6 +415,8 @@ import axios from '@/services/axios';
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
   gap: 5px;
 }
 .tag-container {

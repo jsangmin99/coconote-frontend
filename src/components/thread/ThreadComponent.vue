@@ -35,7 +35,9 @@
     <div class="input-group" @dragover.prevent @drop="handleDrop">
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
-          <button class="more-btn-file" type="button" @click="deleteImage(index)">삭제</button>
+          <button class="more-btn-file" type="button" @click="deleteImage(index)">
+            <v-icon>mdi-trash-can</v-icon>
+          </button>
           <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
             style="height: 120px; width: 120px; object-fit: cover; border-radius:5px;">
           <p class="custom-contents">{{ file.name }}</p>
@@ -983,8 +985,12 @@ textarea:focus {
 .more-btn-file{
   background: #f8f8f8;
   position: absolute;
-  top: 0;
-  right: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  top: 5px;
+  right: 5px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
   z-index: 2;
+  border-radius: 5px;
+}
+.more-btn-file:hover{
+  background: red;
 }
 </style>
