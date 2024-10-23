@@ -21,7 +21,10 @@
             <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
             <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)"><strong>x</strong></button>
           </div>
-          <button @click="toggleTagMenu">#</button>
+          <div class="hash-btn">
+            <button @click="toggleTagMenu">#</button>
+          </div>
+          
           <div class="tag-toggle">
             <input
               v-if="isTagMenuVisible"
@@ -99,11 +102,13 @@
         <div class="file-group" v-for="(file, index) in thread.files" :key="index">
           <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover; border-radius:10px;">
           <p class="custom-contents">{{file.fileName}}</p>
-          <div class="more-btn-file2">
-            <button @click="downloadFile(file.fileId,file.fileName)">다운</button>
-          </div>
           <div class="more-btn-file">
-            <button @click="deleteF(file.fileId)">삭제</button>
+            <button class="btn1" @click="downloadFile(file.fileId,file.fileName)">
+              <v-icon>mdi-download</v-icon>
+            </button>
+            <button class="btn2" @click="deleteF(file.fileId)">
+              <v-icon>mdi-trash-can</v-icon>
+            </button>
           </div>
         </div>
       </div>
@@ -505,9 +510,33 @@ import axios from '@/services/axios';
   background: #f8f8f8;
   display: none;
   position: absolute;
-  top: 0;
-  right: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  top: 5px;
+  right: 5px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
   z-index: 2;
+  border-radius: 5px;
+}
+.btn1:hover {
+  border-radius: 5px;
+  background-color: #d6d6d6;
+}
+.btn2:hover {
+  border-radius: 5px;
+  background-color: red;
+}
+
+.hash-btn{
+  display: flex;
+  border: 0.5px solid;
+  border-radius: 5px;
+  border-color: #f0f0f0;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+}
+.hash-btn:hover {
+  border-radius: 5px;
+  background-color: #d6d6d6;
 }
 .more-btn-file2{
   background: #f8f8f8;
