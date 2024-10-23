@@ -136,8 +136,8 @@
       <v-btn @click="triggerFileInput" color="primary">이미지 업로드</v-btn>
     </div>
     <div id="editorArea">
+      <div class="placeholder" id="placeholder">내용을 입력하세요.</div>
       <editor-content :editor="editor" />
-      <div class="placeholder">내용을 입력하세요.</div>
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
@@ -228,7 +228,7 @@ export default {
       },
 
       // 현재 보내는 이벤트 구분용
-      currentEvent : null,
+      currentEvent: null,
     };
   },
   watch: {
@@ -313,17 +313,17 @@ export default {
           },
         }),
         Indent.configure({
-          onNodeChange: async (options) => {
-            this.currentEvent = "indent";
-            const node = options?.nodes[0];
-            const nodeDataId = node?.node?.attrs?.id;
-            const nodeIndent = node?.node?.attrs?.indent;
-            console.error("indent update >>> ", options);
+          // onNodeChange: async (options) => {
+          //   this.currentEvent = "indent";
+          //   const node = options?.nodes[0];
+          //   const nodeDataId = node?.node?.attrs?.id;
+          //   const nodeIndent = node?.node?.attrs?.indent;
+          //   console.error("indent update >>> ", options);
 
-            if (nodeDataId && nodeIndent >= 0) {
-              await this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
-            }
-          },
+          //   if (nodeDataId && nodeIndent >= 0) {
+          //     await this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
+          //   }
+          // },
         }),
         // Placeholder.configure({
         //   placeholder: "내용을 작성하세요.",
@@ -348,8 +348,8 @@ export default {
           this.isRecvUpdate = false;
           return false;
         }
-        if(this.currentEvent != null){
-          this.currentEvent = null
+        if (this.currentEvent != null) {
+          this.currentEvent = null;
           console.error("흠...........................3333333");
           return false;
         }
@@ -504,13 +504,20 @@ export default {
       }
     });
 
+    // if (typeof window !== "undefined") {
+    //   }
+    window.addEventListener("indentExecuted", this.onIndentExecuted);
+    window.addEventListener("outdentExecuted", this.onOutdentExecuted);
+
     console.error("@@@@@@@@@@@@@@@", this.defaultContent);
     if (this.defaultContent?.content?.length > 0) {
+      // const plel = document.getElementsByClassName("placeholder");
       const plel = document.querySelector(".placeholder");
-      console.log(plel);
-      if (plel) {
-        plel.classList.add("hidden");
-      }
+      // const plel2 = document.getElementById("placeholder");
+      console.log("plel >>> ",plel);
+      // if (plel) {
+      //   plel.classList.add("hidden");
+      // }
     }
   },
   methods: {
@@ -923,282 +930,36 @@ export default {
         }
       );
     },
+    onIndentExecuted(event) {
+      console.log("Indent 실행됨:", event.detail);
+      const node = event.detail.selection.$anchor.path[3];
+      // const node = options?.nodes[0];
+      const nodeDataId = node.attrs?.id;
+      const nodeIndent = node.attrs?.indent;
+      
+
+      if (nodeDataId && nodeIndent >= 0) {
+        this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
+      }
+    },
+    onOutdentExecuted(event) {
+      console.log("Outdent 실행됨:", event);
+      this.onIndentExecuted(event);
+    },
   },
   beforeUnmount() {
     // 컴포넌트 제거 시 이벤트 리스너 제거
     this.editor.destroy();
+    // indent 용 이벤트 추가
+    window.removeEventListener("indentExecuted", this.onIndentExecuted);
+    window.removeEventListener("outdentExecuted", this.onOutdentExecuted);
+    // if (typeof window !== "undefined") {
+      
+    // }
   },
 };
 </script>
 
 <style lang="scss">
-/* Basic editor styles */
-.container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  #editorArea {
-    min-height: 100%;
-    position: relative;
-    > div {
-      min-height: 100%;
-    }
-    .placeholder {
-      font-size: 14px;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      color: #aaa;
-    }
-    .placeholder.hidden {
-      display: none !important;
-    }
-    &:hover {
-      .placeholder {
-        display: none !important;
-      }
-    }
-  }
-}
-.tiptap {
-  height: 100%;
-  min-height: 40vh;
-  :first-child {
-    margin-top: 0;
-  }
-
-  /* image styles */
-  img {
-    display: block;
-    height: auto;
-    margin: 0;
-    max-width: 100%;
-    padding-right: 10%;
-
-    &.ProseMirror-selectednode {
-      outline: 3px solid var(--purple);
-    }
-  }
-
-  /* List styles */
-  ul,
-  ol {
-    padding: 0 1rem;
-    margin: 1.25rem 1rem 1.25rem 0.4rem;
-
-    li p {
-      margin-top: 0.25em;
-      margin-bottom: 0.25em;
-    }
-  }
-
-  /* Heading styles */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    line-height: 1.1;
-    margin-top: 2.5rem;
-    text-wrap: pretty;
-  }
-
-  h1,
-  h2 {
-    margin-top: 3.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  h1 {
-    font-size: 1.4rem;
-  }
-
-  h2 {
-    font-size: 1.2rem;
-  }
-
-  h3 {
-    font-size: 1.1rem;
-  }
-
-  h4,
-  h5,
-  h6 {
-    font-size: 1rem;
-  }
-
-  /* Code and preformatted text styles */
-  code {
-    background-color: var(--purple-light);
-    border-radius: 0.4rem;
-    color: var(--black);
-    font-size: 0.85rem;
-    padding: 0.25em 0.3em;
-  }
-
-  pre {
-    background: var(--black);
-    border-radius: 0.5rem;
-    color: var(--white);
-    font-family: "JetBrainsMono", monospace;
-    margin: 1.5rem 0;
-    padding: 0.75rem 1rem;
-
-    code {
-      background: none;
-      color: inherit;
-      font-size: 0.8rem;
-      padding: 0;
-    }
-  }
-
-  blockquote {
-    border-left: 3px solid var(--gray-3);
-    margin: 1.5rem 0;
-    padding-left: 1rem;
-  }
-
-  hr {
-    border: none;
-    border-top: 1px solid var(--gray-2);
-    margin: 2rem 0;
-  }
-  /* Placeholder (at the top) */
-  p.is-editor-empty:first-child::before {
-    color: var(--gray-4);
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }
-
-  /* Placeholder (on every new line) */
-  /* .is-empty::before {
-    color: var(--gray-4);
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  } */
-  .has-focus {
-    border-radius: 3px;
-    background-color: #eef0f5;
-  }
-}
-
-::selection {
-  background-color: #70cff850;
-}
-
-.ProseMirror {
-  padding: 1rem 3rem 1rem 3rem;
-  &:focus {
-    outline: none;
-  }
-  * {
-    padding: 8px 4px;
-    //margin-top: 0.25em;
-  }
-
-  > * {
-    margin-left: 1rem;
-  }
-
-  .ProseMirror-widget * {
-    margin-top: auto;
-  }
-
-  ul,
-  ol {
-    padding: 0 1rem;
-  }
-}
-
-.ProseMirror-noderangeselection {
-  *::selection {
-    background: transparent;
-  }
-
-  * {
-    caret-color: transparent;
-  }
-}
-
-.ProseMirror-selectednode,
-.ProseMirror-selectednoderange {
-  position: relative;
-
-  &::before {
-    position: absolute;
-    pointer-events: none;
-    z-index: -1;
-    content: "";
-    top: -0.25rem;
-    left: -0.25rem;
-    right: -0.25rem;
-    bottom: -0.25rem;
-    background-color: #70cff850;
-    border-radius: 0.2rem;
-  }
-}
-
-.custom-drag-handle {
-  &::after {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1rem;
-    height: 1.25rem;
-    content: "⠿";
-    font-weight: 700;
-    cursor: grab;
-    background: #0d0d0d10;
-    color: #0d0d0d50;
-    border-radius: 0.25rem;
-  }
-}
-</style>
-
-<style lang="scss">
-/* Basic editor styles */
-.tiptap {
-  :first-child {
-    margin-top: 0;
-  }
-
-  /* Placeholder (at the top) 
-  p.is-editor-empty:first-child::before {
-    color: var(--gray-4);
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }*/
-  p.is-editor-empty:first-child::before {
-    color: #adb5bd;
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }
-  p.is-empty::before {
-    color: #adb5bd;
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }
-
-  /* Placeholder (on every new line) */
-  /* .is-empty::before {
-    color: var(--gray-4);
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  } */
-}
+@import "@/assets/css/tiptapCustom.scss";
 </style>

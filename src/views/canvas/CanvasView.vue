@@ -103,6 +103,7 @@ export default {
   },
   computed: {
     ...mapGetters([
+      "getWorkspaceMemberId",
       // socket용 vuex
       "getCanvasAllInfo",
       "getPageInfoForComponent",
@@ -158,10 +159,9 @@ export default {
             this.latestWatchBlockMsg.method == newVal.method &&
             this.latestWatchBlockMsg.blockContents == newVal.blockContents
           ) {
-            if (
-              newVal.method == "UPDATE_INDENT_BLOCK" &&
-              this.latestWatchBlockMsg.blockIndent == newVal.blockIndent
-            ) {
+            if(newVal.method == "UPDATE_INDENT_BLOCK" &&
+              newVal.blockIndent == this.latestWatchBlockMsg.blockIndent
+            ){
               console.error("🤔🤔🤔🤔🤔", this.latestWatchBlockMsg, newVal);
               isReturn = false;
             }
@@ -276,6 +276,9 @@ export default {
       if (this.ws && this.ws.connected) {
         const postMessage = this.getCanvasAllInfo;
         postMessage.channelId = this.channelId;
+        if(postMessage.workspaceMemberId){
+          postMessage.workspaceMemberId = this.getWorkspaceMemberId;
+        }
         this.ws.send(
           `/pub/canvas/message`,
           { Authorization: this.authToken },
