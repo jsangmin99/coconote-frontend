@@ -148,7 +148,7 @@ export default {
   border-bottom: 1px solid #e6e6e6;
 
   .menuBtns {
-    padding: 24px 24px 0 24px;
+    padding: 5px 24px 0 24px;
   }
   button {
     padding: 5px;
