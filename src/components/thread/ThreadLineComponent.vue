@@ -55,6 +55,10 @@
             @keydown="handleKeydown"
             ref="textarea"
           />
+          <div class="update-group-footer">
+            <button class="btn" @click="cancel">취소</button>
+            <button class="btn" @click="update" style="background: green; color: white;">저장</button>
+          </div>
         </div>
         <div v-if="!isUpdate">
           <div class="content" v-html="formattedContent"></div>
@@ -165,7 +169,7 @@ import axios from '@/services/axios';
       },
     },
     created() {
-        this.message=this.thread.content
+      this.message=this.thread.content
     },
     mounted() {
         // 외부 클릭 감지 이벤트 리스너 등록
@@ -287,8 +291,11 @@ import axios from '@/services/axios';
       },
       editMessage() {
         // 메시지 수정 로직
-        console.log("메시지 수정");
         this.isUpdate = true
+      },
+      cancel(){
+        this.isUpdate = false
+        this.message=this.thread.content
       },
       async downloadFile(fileId,fileName) {
         try {
@@ -544,6 +551,32 @@ input:focus {
 }
 textarea:focus {
   outline: none;
+}
+.update-group-footer{
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  padding: 5px 5px;
+}
+.btn{
+  min-width: 56px;
+  height: 28px;
+  padding: 0 12px 1px;
+  font-size: 13px;
+  background-color: white;
+  border: 1px solid black;
+  color: black;
+  font-weight: 700;
+  background-clip: padding-box;
+  transition: all 80ms linear;
+
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: center;
+  white-space: nowrap;
+  justify-content: center;
+  align-items: center;
+  margin-left: 5px;
 }
 </style>
 

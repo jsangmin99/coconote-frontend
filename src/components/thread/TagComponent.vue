@@ -404,7 +404,7 @@ export default {
 }
 .highlight {
   border: 2px solid; /* 두께 설정 */
-  animation: rainbow-border 1.5s linear infinite, rainbow-shadow 1.5s linear infinite, circle-motion 3s linear infinite; /* 애니메이션 설정 */
+  animation: rainbow-border 1.5s linear infinite, rainbow-shadow 1.5s linear infinite; /* 애니메이션 설정 */
   /* box-shadow: 0 0 10px rgba(255, 255, 0, 0.8); /* 반짝임 효과 */
   transform: scale(1.1);
 }
