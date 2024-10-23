@@ -2,14 +2,14 @@
   <v-navigation-drawer permanent class="innerSubMenu" :absolute="false">
     <div class="header-container" @contextmenu.prevent="showContextMenu($event, 'workspace', workpsace)">
       <h1>{{ this.getWorkspaceName }}</h1>
-      <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn">
+      <v-btn v-if="getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn">
         <v-icon class="icon-cog">mdi-cog</v-icon>
         <v-menu activator="parent">
           <v-list>
             <v-list-item @click="startEditing(this.getWorkspaceId)">
               수정
             </v-list-item>
-            <v-list-item @click="deleteWorkspace(this.getWorkspaceId)">
+            <v-list-item v-if="getWsRole === 'PMANAGER'" @click="deleteWorkspace(this.getWorkspaceId)">
               삭제
             </v-list-item>
           </v-list>
@@ -104,13 +104,13 @@
             @contextmenu.prevent="showContextMenu($event, 'channel', channel)"
           >
             <!-- 공개 여부 아이콘 -->
-            <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
+            <template v-slot:prepend>
               <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
               <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
             </template>
 
             <!-- 채널 이름 -->
-            <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)">
+            <v-list-item-title>
               {{ channel.channelName }}
             </v-list-item-title>
 
@@ -124,8 +124,8 @@
 
           </v-list-item>
 
-          <v-list-item 
-            class="channelCreate" 
+          <v-list-item
+            class="channelCreate"
             @click="(channelDialog = true), (createChannelInfo.sectionId = section.sectionId)"
           >
             <v-icon class="icon-plus" icon="mdi-plus" />
@@ -134,7 +134,8 @@
         </v-list>
       </template>
 
-      <v-list-subheader class="section-title sectionCreate" @click="sectionDialog = true">
+      <!-- 섹션 생성 버튼 -->
+      <v-list-subheader v-if="getWsRole !== 'USER'" class="section-title sectionCreate" @click="sectionDialog = true">
         <v-icon class="icon-plus" icon="mdi-plus" /> 섹션 생성
       </v-list-subheader>
     </v-list>
@@ -252,9 +253,6 @@ export default {
       console.log("Notification counts:", counts);
       return counts;
     },
-    getWsRole() {
-      return this.$store.getters.wsRole; // Vuex의 wsRole getter에서 값 가져오기
-    }
   },
   watch: {
     // 라우터 파라미터 channelId의 변화를 감지
@@ -360,6 +358,9 @@ export default {
       "setWorkspaceNameInfoActions",
     ]),
     filteredChannelList(section) {
+      if (this.getWsRole === 'PMANAGER' || this.getWsRole === 'SMANAGER') {
+        return section.channelList;
+      }
       // 해당 section의 채널 목록을 필터링하여 반환
       return section.channelList.filter(channel => channel.isPublic || this.isMember(channel.channelId));
     },
