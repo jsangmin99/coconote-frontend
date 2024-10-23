@@ -66,6 +66,7 @@ export default {
   },
   methods: {
     ...mapActions(["setChannelRoleInfoActions", "setMemberInfoActions"]),
+    
     // 채널 참여 메서드
     async channelMemberCreate() {
       this.loading = true;
@@ -83,7 +84,7 @@ export default {
             profileImage : result.memberInfo.profileImage,
             wsRole : result.memberInfo.wsRole
           });
-        // this.$router.push(`/channel/${this.getChannelId}/thread/view`);
+        this.$router.push(`/channel/${this.getChannelId}/thread/view`);
       } catch (error) {
         console.error("채널 가입 실패:", error);
         alert("채널 가입에 실패했습니다.");

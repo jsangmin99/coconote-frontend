@@ -148,7 +148,7 @@ export default {
   border-bottom: 1px solid #e6e6e6;
 
   .menuBtns {
-    padding: 24px 24px 0 24px;
+    padding: 5px 24px 0 24px;
   }
   button {
     padding: 5px;
@@ -204,9 +204,12 @@ export default {
 <style scoped>
 /* ::v-deep를 사용하여 .input-group 스타일 덮어씌우기 */
 ::v-deep .input-group {
-  width: 35% !important;
+  width: 37% !important;
 }
 ::v-deep .list-group {
-  max-height: calc(100vh - 330px);
+  max-height: calc(100vh - 280px);
+}
+::v-deep .drive-container {
+  height: calc(100vh - 240px); /* 뷰포트 전체 높이에서 60px을 뺀 값 */
 }
 </style>
