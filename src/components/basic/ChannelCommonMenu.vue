@@ -44,7 +44,7 @@
     <div class="modal-content" @click.stop>
       <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
         <ul>
-          <li @click="changeChannelAccessLevel">채널 공개 범위 수정</li>
+          <li @click="(channelAccessDialog = true)">채널 공개 범위 수정</li>
           <li @click="deleteChannel">채널 삭제</li>
         </ul>
       </div>
@@ -102,6 +102,25 @@
         </template>
       </v-card>
     </v-dialog>
+
+
+  <v-dialog v-model="channelAccessDialog" width="auto" class="channelAccessDialog">
+    <v-card max-width="400">
+      <v-card-title> 채널 관리 </v-card-title>
+      <v-card-text>
+        <v-radio-group inline label="채널 공개 범위" v-model="currentAccessLevel">
+          <v-radio label="공개" value="1"></v-radio>
+          <v-radio label="비공개" value="0"></v-radio>
+        </v-radio-group>
+      </v-card-text>
+      <template v-slot:actions>
+        <v-btn class="" text="저장" @click="changeChannelAccessLevel"></v-btn>
+        <v-btn class="" text="닫기" @click="channelAccessDialog = false"></v-btn>
+      </template>
+    </v-card>
+  </v-dialog>
+
+
   </div>
 </template>
 
@@ -135,6 +154,8 @@ export default {
         v => !!v || 'Name is required',
         v => (v && v.length >= 1) || 'Name must be at least 1 characters'
       ],
+      channelAccessDialog: false,
+      currentAccessLevel: null,
     };
   },
   computed: {
@@ -370,9 +391,15 @@ export default {
     async changeChannelAccessLevel() {
       try {
         await axios.patch(
-          `${process.env.VUE_APP_API_BASE_URL}/channel/access/${this.getChannelId}`
+          `${process.env.VUE_APP_API_BASE_URL}/channel/access`, {
+            channelId: this.getChannelId,
+            isPublic: Number(this.currentAccessLevel),
+          }
         );
         alert("공개범위가 변경되었습니다.");
+        this.isDropdownOpen = false;
+        this.currentAccessLevel = null;
+        this.channelAccessDialog = false;
         this.$router.push("/workspace").then(() => {
           location.reload(); // URL 변경 후 페이지 새로고침
         });

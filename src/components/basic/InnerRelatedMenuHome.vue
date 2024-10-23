@@ -17,31 +17,20 @@
       </v-btn>
     </div>
 
-    <!-- 즐겨찾기 & 섹션 -->
     <v-list>
-
-      <!-- 즐겨찾기 -->
-      <div class="header-container">
-        <v-list-subheader class="section-title" @click="visibleBookmark = !visibleBookmark">
-          <v-icon>{{
-            visibleBookmark
-              ? "mdi-menu-down"
-              : "mdi-menu-right"
-            }}</v-icon>
-          <v-icon icon="mdi-star" color="#ffbb00" />
-          즐겨찾기
-        </v-list-subheader>
-      </div>
-      <!-- 즐겨찾기에 등록된 채널 목록 -->
-      <v-list-item v-show="visibleBookmark" v-for="channel in myBookmarks" :key="channel.channelId" :class="{
+      <v-list-subheader class="section-title">
+        <v-icon icon="mdi-star" color="#ffbb00" />
+        즐겨찾기
+      </v-list-subheader>
+      <v-list-item v-for="channel in myBookmarks" :key="channel.channelId" :class="{
         'selected-item': selectedChannelMenuId == channel.channelId,
       }" class="channel-item" @click="
-          changeChannel(
-            channel.channelId,
-            channel.channelName,
-            channel.channelInfo
-          )
-          " @contextmenu.prevent="showContextMenu($event, 'channel', channel)">
+        changeChannel(
+          channel.channelId,
+          channel.channelName,
+          channel.channelInfo
+        )
+        " @contextmenu.prevent="showContextMenu($event, 'channel', channel)">
         <template v-if="channel.isPublic || isMember(channel.channelId)" v-slot:prepend>
           <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
           <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
@@ -50,8 +39,6 @@
         <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)">
           {{ channel.channelName }}</v-list-item-title>
       </v-list-item>
-
-      <!-- 섹션 -->
       <template v-for="section in sections" :key="section.sectionId">
         <div class="header-container">
           <v-list-subheader class="section-title" @click="toggleSection(section.sectionId)">
@@ -61,9 +48,8 @@
                 : "mdi-menu-right"
             }}</v-icon>
             <span class="section-name">{{ section.sectionName }}</span>
-            
-            <!-- 섹션 메뉴 -->
-            <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn"><!-- 관리자일 때만 표시 -->
+            <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon color="#32446e"
+              class="small-btn"><!-- 관리자일 때만 표시 -->
               <v-icon class="icon-cog">mdi-cog</v-icon>
               <v-menu activator="parent">
                 <v-list>
@@ -75,7 +61,7 @@
           </v-list-subheader>
         </div>
 
-        <!-- 섹션 수정 모달 -->
+        <!-- v-dialog for section name edit -->
         <v-dialog v-model="editDialog" max-width="500px">
           <v-card>
             <v-card-title>
@@ -83,8 +69,7 @@
             </v-card-title>
             <v-card-text>
               <!-- 새로운 섹션 이름 입력 -->
-              <v-text-field v-model="editedSectionName" label="New Section Name" outlined
-                :rules="nameRules"></v-text-field>
+              <v-text-field v-model="editedSectionName" label="New Section Name" outlined :rules="nameRules"></v-text-field>
             </v-card-text>
             <v-card-actions>
               <v-btn color="primary" @click="editSection">저장</v-btn>
@@ -93,7 +78,7 @@
           </v-card>
         </v-dialog>
 
-        <!-- 채널 목록 -->
+        <!-- v-show: 섹션을 클릭하면 하위 채널 목록을 토글 -->
         <v-list v-show="visibleSections.includes(section.sectionId)">
           <v-list-item
             v-for="channel in filteredChannelList(section)"
@@ -108,12 +93,10 @@
               <v-icon v-if="!channel.isPublic" icon="mdi-lock"></v-icon>
               <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
             </template>
-
             <!-- 채널 이름 -->
             <v-list-item-title>
               {{ channel.channelName }}
             </v-list-item-title>
-
             <!-- 알림 수와 삭제 버튼을 flex 컨테이너로 감쌈 -->
             <div class="notification-wrapper">
               <!-- 알림 수 표시 -->
@@ -121,7 +104,6 @@
                 color="red" overlap>
               </v-badge>
             </div>
-
           </v-list-item>
 
           <v-list-item
@@ -148,8 +130,7 @@
       <v-card-text>
         <p>채널의 이름을 입력하세요.</p>
         <v-text-field ref="channelNameInput" color="primary" density="compact" variant="underlined"
-          v-model="createChannelInfo.channelName" @keyup.enter="createChannel" placeholder="이름"
-          :rules="nameRules"></v-text-field>
+          v-model="createChannelInfo.channelName" @keyup.enter="createChannel" placeholder="이름" :rules="nameRules"></v-text-field>
         <p>채널의 설명을 입력하세요.</p>
         <v-text-field color="primary" density="compact" variant="underlined" v-model="createChannelInfo.channelInfo"
           @keyup.enter="createChannel" placeholder="설명"></v-text-field>
@@ -172,7 +153,8 @@
       <v-card-text>
         섹션의 이름을 입력하세요.
         <v-text-field color="primary" density="compact" class="canvasTitle" variant="underlined"
-          v-model="createSectionName" @keyup.enter="createSection" placeholder="이름" :rules="nameRules"></v-text-field>
+          v-model="createSectionName" @keyup.enter="createSection" placeholder="이름" :rules="nameRules"
+          ></v-text-field>
       </v-card-text>
       <template v-slot:actions>
         <v-btn class="" text="생성" @click="createSection"></v-btn>
@@ -229,15 +211,14 @@ export default {
   components: {},
   computed: {
     ...mapGetters("notifications", {
-      notifications: "notifications",
-      notificationCounts: "notificationCounts", // Vuex 상태에서 가져옴
+      notifications: "notifications", // 'notifications' 모듈의 'notifications' getter 참조
     }),
     ...mapGetters([
       "getWorkspaceId",
       "getWorkspaceName",
       "getWsRole",
       "getChannelId",
-    ]),
+    ]), // 글로벌 getter 사용
     notificationCounts() {
       const counts = {};
       if (this.notifications) {
@@ -292,14 +273,13 @@ export default {
     this.getMyBookmarks();
     window.addEventListener("click", this.hideContextMenu);
     this.$store.dispatch("notifications/subscribeToNotifications");
-    // 알림 구독
     if (this.getWorkspaceId) {
       this.$store.dispatch(
         "notifications/subscribeToNotifications",
         this.getWorkspaceId
       );
     }
-    this.fetchNotificationCounts(); // 알림 수를 불러옵니다.
+    this.fetchNotificationCounts();
   },
   beforeUnmount() {
     window.removeEventListener("click", this.hideContextMenu);
@@ -333,7 +313,7 @@ export default {
       editedSectionName: "", // 수정 중인 섹션 이름
 
       visibleSections: [], // 하위 채널을 보이는 섹션의 ID 저장
-      visibleBookmark: false,
+
       channelId: null,
       myBookmarks: [],
 
@@ -398,6 +378,7 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
         );
         this.sections = response.data.result;
+        this.visibleSections = this.sections.map(section => section.sectionId);// 섹션의 토글을 모두 열도록 초기화
 
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
         if (
@@ -405,7 +386,6 @@ export default {
           this.sections[0].channelList.length > 0
         ) {
           const firstChannel = this.sections[0].channelList[0];
-          this.visibleSections.push(this.sections[0].sectionId);
           this.channelId = firstChannel;
           this.changeChannel(
             firstChannel.channelId,
@@ -490,7 +470,7 @@ export default {
     },
     async createSection() {
       if (this.createSectionName.length == 0) {
-        return;
+        return ;
       }
       try {
         const data = {
@@ -509,7 +489,7 @@ export default {
     },
     async createChannel() {
       if (this.createChannelInfo.channelName.length == 0) {
-        return;
+        return ;
       }
       const data = {
         sectionId: this.createChannelInfo.sectionId,
@@ -557,7 +537,7 @@ export default {
     },
     async saveEditing(workspaceId) {
       if (this.editedName.length == 0) {
-        return;
+        return ;
       }
       try {
         await axios.patch(
@@ -600,8 +580,8 @@ export default {
     },
     async editSection() {
       if (this.editedSectionName.length == 0) {
-        return;
-      }
+        return ;
+      } 
       try {
         const response = await axios.patch(
           `${process.env.VUE_APP_API_BASE_URL}/section/update/${this.editedSectionId}`,
@@ -736,16 +716,6 @@ export default {
 
 <style lang="scss">
 .section-title {
-  cursor: pointer;
-}
-
-.section-title:hover {
-  background-color: rgba(255, 255, 255, 0.05); /* 검정색을 10% 투명도로 표현 */
-  border-radius: 10px; /* 모서리를 둥글게 설정 */
-  // color: rgba(0, 0, 0, 0.7); /* 텍스트 색도 약간 투명하게 설정 */
-}
-
-.section-title {
   &.sectionCreate &.v-list-subheader {
     cursor: pointer;
     background-color: #2f3653;
@@ -760,7 +730,7 @@ export default {
 
   .icon-cog {
     font-size: 0.8rem !important;
-    opacity: 0.9;
+    opacity: 0.5;
   }
 }
 
@@ -777,14 +747,12 @@ h1 {
 
 /* 폰트 크기에 비례한 버튼 크기 설정 */
 .small-btn {
-  min-width: 0.7em !important;
-  width: 0.7em !important;
-  height: 0.7em !important;
+  min-width: 1em !important;
+  width: 1em !important;
+  height: 1em !important;
   padding: 0 !important;
   /* 여백 제거 */
   margin-left: 5px !important;
-  margin-bottom: 8px;
-  margin-right: 10px;
 }
 
 .section-name {

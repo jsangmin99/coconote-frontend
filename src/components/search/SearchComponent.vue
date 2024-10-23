@@ -47,7 +47,7 @@
 
       <div v-if="!loading" class="result-container">
         <!-- 전체 검색 시 모든 카테고리 결과 출력 -->
-        <template v-if="activeTab === 'ALL'">
+        <div v-if="activeTab === 'ALL'">
           <div v-if="results.workspaceMembers.length > 0" class="category-section">
             <h3>멤버 검색 결과 ({{ totalMembers }})</h3>
             <div v-for="(result, index) in results.workspaceMembers" :key="index" class="result-card">
@@ -104,7 +104,7 @@
               <p>{{ result.blockContents || '내용 없음' }}</p>
             </div>
           </div>
-        </template>
+        </div>
 
         <!-- 개별 카테고리 탭에서의 검색 결과 -->
         <template v-else>
@@ -651,7 +651,7 @@ export default {
 .result-container {
   min-height: 300px;
   /* 최소 높이를 300px로 설정 */
-  max-height: 650px;
+  max-height: 78%;
   /* 최대 높이를 650px로 설정 */
   overflow-y: auto;
   padding: 20px;
