@@ -171,6 +171,8 @@ export default {
   },
   updated() { },
   beforeUnmount() {
+    console.log("언마운트@@@@@@");
+    
     if (this.$refs.messageList)
       this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
 
@@ -245,8 +247,8 @@ export default {
       this.$nextTick(() => {
         this.moveToThread(this.parentThread.id);
         this.parentThread = null
+        this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
       });
-
     },
     addTagFilter(tag, threadId) {
       this.tagFilter.push({ tag, threadId })
@@ -458,6 +460,7 @@ export default {
       );
     },
     async sendMessage() {
+      if(!this.ws) return
       // 메시지가 비어있거나 공백 문자만 포함된 경우
       if (!this.message.trim() && this.fileList.length === 0) {
         return; // 함수 종료
@@ -704,6 +707,8 @@ export default {
       });
     },
     debouncedScrollPagination: debounce(async function () {
+      console.log("스크롤 이벤트 온");
+      
       const list = document.getElementById("list-group");
       if (!list) { // debounce로 인해 다른 컴포넌트에서 늦게 실행되는 오류
         return false;
@@ -946,7 +951,7 @@ export default {
 
 .comment-group {
   overflow-y: auto;
-  max-height: calc(100vh - 240px);
+  max-height: calc(100vh - 230px);
 }
 
 input:focus {
