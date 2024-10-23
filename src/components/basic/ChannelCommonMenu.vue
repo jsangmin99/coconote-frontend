@@ -2,6 +2,8 @@
   <div class="channelMenuContainer">
     <div class="top">
       <div class="titleArea">
+
+        <!-- 즐겨찾기, 채널명, 채널정보수정 버튼 -->
         <div class="col">
           <div>
             <v-icon @click.stop="toggleBookmark(getChannelId)" :color="isBookmarked ? '#ffbb00' : 'grey'"
@@ -13,6 +15,8 @@
               @click="startEditingChannel" />
           </div>
         </div>
+        
+        <!-- +, 프로필이미지, 채널 설정 아이콘 -->
         <div class="col">
           <!-- + 아이콘 -->
           <div class="icon-container">
@@ -47,6 +51,7 @@
     </div>
 
 
+    <!-- 화면 전환 버튼 -->
     <div class="menuBtns" v-if="menu !== 'split'">
       <button @click="moveMenu('thread')" :class="{ active: menu === 'thread' }">
         쓰레드
@@ -64,6 +69,8 @@
         2분할 보기 <v-icon icon="mdi-eye-outline" class="eye" />
       </button>
     </div>
+
+    <!-- 2분할 버튼 -->
     <div class="menuBtns" v-else>
       <button @click="closeSplitView('left')">
         1화면 <v-icon icon="mdi-close" class="icon-color" />
@@ -73,10 +80,11 @@
       </button>
     </div>
 
-    <!-- 모달 컴포넌트 -->
+    <!-- 채널 멤버 모달 -->
     <ChannelMemberModal v-if="isChannelMemberModalOpen" :channelId="getChannelId" :workspaceId="getWorkspaceId"
       @closeModal="closeChannelMemberInviteModal" />
 
+    <!-- 채널 이름, 설명 수정 모달 -->
     <v-dialog v-model="channelDialog" width="auto" class="channelDialog">
       <v-card max-width="400">
         <v-card-title> 채널 수정 </v-card-title>
@@ -266,7 +274,7 @@ export default {
       this.isChannelMemberModalOpen = false; // 일단 false로 설정하여 초기화
       this.$nextTick(() => {
         this.isChannelMemberModalOpen = true; // 모달 열기
-        console.log("openInviteModal");
+        // console.log("openInviteModal");
       });
     },
     closeChannelMemberInviteModal() {
@@ -349,7 +357,7 @@ export default {
       console.log("기존 수정 전 공개범위", Number(chInfo.data.result.isPublic));
 
       const result = await fetchChannelMemberInfo(channelId); // 모듈로 함수 호출
-      if (result.isBookmark) {
+      if (result && result.isBookmark) {
         this.isBookmarked = true;
       } else {
         this.isBookmarked = false;
