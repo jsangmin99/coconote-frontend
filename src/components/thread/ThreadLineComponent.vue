@@ -21,9 +21,11 @@
             <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
             <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)"><strong>x</strong></button>
           </div>
-          <button @click="toggleTagMenu">#</button>
+          <div class="hash-btn">
+            <button @click="toggleTagMenu">#</button>
+          </div>
+          
           <div class="tag-toggle">
-            
             <input
               v-if="isTagMenuVisible"
               type="text"
@@ -47,7 +49,6 @@
 
       <!-- 내용 -->
       <div class="content-group">
-        <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
         <div v-if="isUpdate" class="update-group">
           <textarea
             type="text"
@@ -55,37 +56,46 @@
             v-model="message"
             v-on:keypress.enter="update"
             @keydown="handleKeydown"
+            ref="textarea"
           />
-        </div>
-        <!-- 내용 태그 -->
-        <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
-          <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
-            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
-            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+          <div class="update-group-footer">
+            <button class="btn" @click="cancel">취소</button>
+            <button class="btn" @click="update" style="background: green; color: white;">저장</button>
           </div>
-          <button class="tagButton" @click="toggleTagMenu" :style="{marginRight: 3+'px'}">#</button>
-          <div class="tag-toggle">
-            <div class="tag-input-group">
-              <input
-                v-if="isTagMenuVisible"
-                type="text"
-                class="tag-input"
-                placeholder="tags"
-                v-model="tagName"
-                v-on:keypress.enter="createTag"
-                v-on:input="adjustWidth"
-                ref="tagInput"
-                :style="{ width: inputWidth + 'px'}"
-              >
-              <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
-                <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
-                  <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+        </div>
+        <div v-if="!isUpdate">
+          <!-- 내용 태그 -->
+          <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
+            <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
+              <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+              <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+            </div>
+            <div class="hash-btn">
+              <button @click="toggleTagMenu">#</button>
+            </div>
+            <div class="tag-toggle">
+              <div class="tag-input-group">
+                <input
+                  v-if="isTagMenuVisible"
+                  type="text"
+                  class="tag-input"
+                  placeholder="tags"
+                  v-model="tagName"
+                  v-on:keypress.enter="createTag"
+                  v-on:input="adjustWidth"
+                  ref="tagInput"
+                  :style="{ width: inputWidth + 'px'}"
+                >
+                <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
+                  <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
+                    <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+                  </div>
+                  <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
                 </div>
-                <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
               </div>
             </div>
-            
           </div>
+          <div class="content" v-html="formattedContent"></div>
         </div>
       </div>
       
@@ -94,11 +104,13 @@
         <div class="file-group" v-for="(file, index) in thread.files" :key="index">
           <img :src="file.fileURL" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover; border-radius:10px;">
           <p class="custom-contents">{{file.fileName}}</p>
-          <div class="more-btn-file2">
-            <button @click="downloadFile(file.fileId,file.fileName)">다운</button>
-          </div>
           <div class="more-btn-file">
-            <button @click="deleteF(file.fileId)">삭제</button>
+            <button class="btn1" @click="downloadFile(file.fileId,file.fileName)">
+              <v-icon>mdi-download</v-icon>
+            </button>
+            <button class="btn2" @click="deleteF(file.fileId)">
+              <v-icon>mdi-trash-can</v-icon>
+            </button>
           </div>
         </div>
       </div>
@@ -164,7 +176,7 @@ import axios from '@/services/axios';
       },
     },
     created() {
-        this.message=this.thread.content
+      this.message=this.thread.content
     },
     mounted() {
         // 외부 클릭 감지 이벤트 리스너 등록
@@ -214,10 +226,24 @@ import axios from '@/services/axios';
         return color;
       },
       handleKeydown(event) {
+        if (event.isComposing) return;
+
         if (event.key === 'Enter') {
           if (event.shiftKey) {
             // Shift + Enter일 경우 개행 추가
-            this.message += '\n';
+            const textarea = this.$refs.textarea;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+
+            // 개행 문자를 현재 커서 위치에 삽입
+            this.message = this.message.substring(0, start) + '\n' + this.message.substring(end);
+            
+            // 커서 위치를 개행 뒤로 이동
+            this.$nextTick(() => {
+              textarea.selectionStart = textarea.selectionEnd = start + 1;
+              textarea.focus();
+            });
+
             event.preventDefault(); // 기본 동작 방지
           } else {
             // Enter만 누를 경우 메시지 전송
@@ -256,7 +282,7 @@ import axios from '@/services/axios';
         const screenHeight = window.innerHeight;
         const buttonPosition = event.target.getBoundingClientRect().bottom;
 
-        this.tagMenuPosition = (screenHeight / 1.7 > buttonPosition) ? 'top' : 'bottom';
+        this.tagMenuPosition = (screenHeight / 1.9 > buttonPosition) ? 'top' : 'bottom';
 
         this.$nextTick(() => {
           if (this.isTagMenuVisible) {
@@ -272,8 +298,11 @@ import axios from '@/services/axios';
       },
       editMessage() {
         // 메시지 수정 로직
-        console.log("메시지 수정");
         this.isUpdate = true
+      },
+      cancel(){
+        this.isUpdate = false
+        this.message=this.thread.content
       },
       async downloadFile(fileId,fileName) {
         try {
@@ -301,6 +330,20 @@ import axios from '@/services/axios';
         } catch (error) {
           console.error("파일 다운로드에 실패했습니다.", error);
           alert("파일 다운로드 중 오류가 발생했습니다.");
+        }
+      },
+      adjustHeight() {
+        const textarea = this.$refs.textarea;
+        setTimeout(() => {
+          textarea.style.height = 'auto'; // 이전 높이를 초기화
+          textarea.style.height = `${textarea.scrollHeight}px`; // 내용에 맞게 높이 조정
+        }, 0);
+
+          // max-height에 따라 스크롤바 보이기
+        if (textarea.scrollHeight > parseInt(getComputedStyle(textarea).maxHeight)) {
+          textarea.style.overflowY = 'auto'; // 스크롤바 보이기
+        } else {
+          textarea.style.overflowY = 'hidden'; // 스크롤바 숨기기
         }
       },
     },
@@ -372,13 +415,15 @@ import axios from '@/services/axios';
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
   gap: 5px;
 }
 .tag-container {
   position: relative;
 }
 .tag {
-  border-radius: 5px;
+  border-radius: 6px;
   padding: 0 5px 1px 5px;
   color: white;
   font-size: 11px;
@@ -416,7 +461,7 @@ import axios from '@/services/axios';
   display: flex;
   flex-direction: column;
   width: 200px;
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
 }
 .content-group{
@@ -469,9 +514,33 @@ import axios from '@/services/axios';
   background: #f8f8f8;
   display: none;
   position: absolute;
-  top: 0;
-  right: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  top: 5px;
+  right: 5px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
   z-index: 2;
+  border-radius: 5px;
+}
+.btn1:hover {
+  border-radius: 5px;
+  background-color: #d6d6d6;
+}
+.btn2:hover {
+  border-radius: 5px;
+  background-color: red;
+}
+
+.hash-btn{
+  display: flex;
+  border: 0.5px solid;
+  border-radius: 5px;
+  border-color: #f0f0f0;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+}
+.hash-btn:hover {
+  border-radius: 5px;
+  background-color: #d6d6d6;
 }
 .more-btn-file2{
   background: #f8f8f8;
@@ -491,10 +560,18 @@ import axios from '@/services/axios';
   color: blue;
 }
 .update-group{
+  background-color: white;
+  /* 배경색 설정 */
   border: 1px solid;
+  border-radius: 5px;
+  width: 90%;
 }
 .form-control {
-  width: 80%;
+  resize: none;
+  width: 99%;
+  height: 20vh;
+  overflow-y: auto;
+  margin-left: 5px;
 }
 .tagButton{
   height: fit-content;
@@ -504,6 +581,35 @@ import axios from '@/services/axios';
 }
 input:focus {
   outline: none;
+}
+textarea:focus {
+  outline: none;
+}
+.update-group-footer{
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  padding: 5px 5px;
+}
+.btn{
+  min-width: 56px;
+  height: 28px;
+  padding: 0 12px 1px;
+  font-size: 13px;
+  background-color: white;
+  border: 1px solid black;
+  color: black;
+  font-weight: 700;
+  background-clip: padding-box;
+  transition: all 80ms linear;
+
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: center;
+  white-space: nowrap;
+  justify-content: center;
+  align-items: center;
+  margin-left: 5px;
 }
 </style>
 
