@@ -211,6 +211,9 @@ export default {
       "getWsRole",
       "getChannelId",
     ]), // 글로벌 getter 사용
+    unreadCounts() {
+      return this.$store.getters["notifications/getUnreadCount"];
+    },
   },
   watch: {
     // 라우터 파라미터 channelId의 변화를 감지
@@ -233,6 +236,14 @@ export default {
       handler() {
         this.getSectionData();
         this.getMyBookmarks();
+      },
+      deep: true,
+    },
+
+    // 알림수 갱신
+    unreadCounts: {
+      handler() {
+        this.fetchUnreadCounts();
       },
       deep: true,
     },
@@ -290,12 +301,11 @@ export default {
       selectedItem: null, // 선택한 항목 (워크스페이스 또는 채널)
       selectedItemType: null, // 선택한 항목의 타입 ('workspace' 또는 'channel')
       clickedChannelId: null, // 클릭한 채널의 ID를 저장
-      unreadCounts: {}, // 각 채널의 읽지 않은 알림 수를 저장
 
     };
   },
   methods: {
-
+    ...mapActions(["fetchUnreadCounts"]),
     ...mapActions([
       "setChannelInfoActions",
       "setChannelNameInfoActions",
@@ -327,6 +337,8 @@ export default {
         this.sections = response.data.result;
         this.visibleSections = this.sections.map(section => section.sectionId);// 섹션의 토글을 모두 열도록 초기화
 
+        await this.fetchUnreadCounts();
+
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
         if (
           this.sections.length > 0 &&
@@ -340,37 +352,13 @@ export default {
             firstChannel.channelInfo
           );
         }
-        await this.fetchUnreadCounts();
 
         // this.getChannelMemberInfo(this.channelId);
       } catch (error) {
         console.log(error);
       }
     },
-    // 모든 채널의 읽지 않은 알림 수를 병렬로 가져오는 메서드
-    async fetchUnreadCounts() {
-      try {
-        const requests = [];
 
-        // 각 채널의 알림 수를 가져오는 요청을 배열에 추가
-        this.sections.forEach(section => {
-          section.channelList.forEach(channel => {
-            const request = axios.get(
-              `${process.env.VUE_APP_API_BASE_URL}/notifications/unread/count/${channel.channelId}`
-            ).then(response => {
-              // 각 채널의 알림 수를 unreadCounts 객체에 저장
-              this.unreadCounts[channel.channelId] = response.data;
-            });
-            requests.push(request);
-          });
-        });
-
-        // 모든 요청을 병렬로 실행
-        await Promise.all(requests);
-      } catch (error) {
-        console.log(error);
-      }
-    },
     // async getChannelMemberInfo(id) {
     //   const chMember = await axios.get( // 채널 권한 정보
     //   ${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${id}

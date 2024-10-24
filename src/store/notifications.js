@@ -1,9 +1,13 @@
 import { h } from 'vue'; // h 함수 가져오기
 import ToastNotification from '@/components/thread/ToastNotification.vue';
+import axios from 'axios';
+
 
 const state = {
     notifications: [], // 알림 목록
     eventSource: null, // SSE 연결 객체
+    unreadCounts: {}, // 채널별 읽지 않은 알림 수
+
 };
 
 const mutations = {
@@ -15,6 +19,8 @@ const mutations = {
     },
     CLEAR_NOTIFICATIONS(state) {
         state.notifications = [];
+        state.unreadCounts = {}; // 알림 수 초기화
+        console.log('CLEAR_NOTIFICATIONS - 모든 알림과 알림 수가 초기화되었습니다.');
     },
     CLOSE_EVENT_SOURCE(state) {
         if (state.eventSource) {
@@ -22,6 +28,19 @@ const mutations = {
             state.eventSource = null;
         }
     },
+    UPDATE_UNREAD_COUNT(state, { channelId, count }) {
+        if (!state.unreadCounts[channelId]) {
+            state.unreadCounts[channelId] = 0;
+        }
+        state.unreadCounts[channelId] += count; // 기존 수에 추가
+        console.log(`UPDATE_UNREAD_COUNT - 채널 ${channelId}의 알림 수가 업데이트되었습니다: ${state.unreadCounts[channelId]}`);
+    },
+    RESET_UNREAD_COUNT(state, channelId) {
+        if (state.unreadCounts[channelId] !== undefined) {
+            state.unreadCounts[channelId] = 0;
+            console.log(`RESET_UNREAD_COUNT - 채널 ${channelId}의 읽지 않은 알림 수가 0으로 초기화되었습니다.`);
+        }
+    }
 };
 
 const actions = {
@@ -81,6 +100,19 @@ const actions = {
         // 알림 목록 초기화
         commit('CLEAR_NOTIFICATIONS');
     },
+    fetchUnreadCounts({ commit }, { channelId }) {
+        return axios.get(`${process.env.VUE_APP_API_BASE_URL}/notifications/unread/count/${channelId}`)
+            .then(response => {
+                commit('UPDATE_UNREAD_COUNT', { channelId, count: response.data });
+            })
+            .catch(error => {
+                console.error('알림 수 가져오기 오류:', error);
+            });
+    },
+
+    markAsRead({ commit }, channelId) {
+        commit('RESET_UNREAD_COUNT', channelId);
+    }
 };
 
 // ToastNotification을 표시하는 함수
@@ -117,6 +149,8 @@ function showNotificationToast(data) {
 // Vuex 스토어의 getters
 const getters = {
     allNotifications: (state) => state.notifications,
+    getUnreadCount: (state) => (channelId) => state.unreadCounts[channelId] || 0,
+
 };
 
 export default {
