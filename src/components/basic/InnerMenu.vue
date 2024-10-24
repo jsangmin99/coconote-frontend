@@ -48,7 +48,7 @@
           :src="
             getProfileImage && getProfileImage !== 'null'
               ? getProfileImage
-              : require('@/assets/images/profileImage.png')
+              : require(`@/assets/images/profile/profile${getWorkspaceMemberId % 10}.jpg`)
           "
           alt="Profile Image"
           class="avatar-image"
@@ -117,6 +117,7 @@ export default {
       "getWorkspaceName",
       "getNickname",
       "getProfileImage",
+      "getWorkspaceMemberId",
     ]),
   },
   name: "InnerMenu",

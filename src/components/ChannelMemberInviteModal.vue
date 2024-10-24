@@ -15,14 +15,13 @@
         <div v-if="isLoadingMembers">로딩 중...</div>
         <div v-else>
           <div v-for="member in channelMembers" :key="member.id" class="member-item">
-            <img :src="member.memberInfo.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
+            <img :src="member.memberInfo.profileImage || require(`@/assets/images/profile/profile${member.memberInfo.workspaceMemberId % 10}.jpg`)" alt="프로필 이미지" class="profile-image" />
             <div class="member-title">
               <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}<v-icon v-if="member.channelRole === 'MANAGER'" color="#ffbb00">mdi-crown</v-icon></v-list-item-title>
             </div>
             <div>
-              <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown(member.id)">
-                <span @click="console.log('dots clicked')"></span>
-              </v-icon>
+               <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown(member.id)">
+          </v-icon>
             </div>
           </div>
         </div>    
@@ -32,7 +31,7 @@
         <div v-if="isLoading">로딩 중...</div>
         <div v-else>
           <div v-for="member in filteredSearchResults" :key="member.workspaceMemberId" class="member-item">
-            <img :src="member.profileImage || defaultProfileImage" alt="프로필 이미지" class="profile-image" />
+            <img :src="member.profileImage || require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" alt="프로필 이미지" class="profile-image" />
             <div class="member-title">
               <v-list-item-title>{{ member.memberName || '이름 없음' }}</v-list-item-title>
               <v-list-item-title>{{ member.email }}</v-list-item-title>
@@ -49,7 +48,7 @@
     <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
       <ul>
         <li @click="(channelRoleDialog = true)">권한 변경하기</li>
-        <li @click="removeMember()">회원 내보내기</li>
+        <li @click="removeMember">회원 내보내기</li>
       </ul>
     </div>
 
@@ -94,7 +93,6 @@ export default {
       channelMembers: [], // 채널 멤버 목록 추가
       isLoading: false,
       isLoadingMembers: false, // 채널 멤버 로딩 상태
-      defaultProfileImage: require('@/assets/images/profileImage.png'), // 프로필 이미지 없을 때 기본 이미지
       isDropdownOpen: false, // 드롭다운 상태 관리
       currentMemberId: null,
       channelRoleDialog: false,
@@ -106,7 +104,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(["getChannelId", "getChannelRole", "getChannelName"]),
+    ...mapGetters(["getChannelId", "getChannelRole", "getChannelName", "getWorkspaceMemberId", ]),
     filteredSearchResults() {
       // 현재 채널에 속하지 않은 멤버만 필터링
       return this.searchResults.filter(member =>

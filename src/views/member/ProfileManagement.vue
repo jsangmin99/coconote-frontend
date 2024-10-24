@@ -66,6 +66,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import ProfileMethods from './ProfileMethods';
 
 export default {
@@ -87,11 +88,16 @@ export default {
       nameRules: [(v) => !!v || "닉네임을 입력해주세요."], // 닉네임 유효성 검사
     };
   },
+    computed: {
+    ...mapGetters([
+      "getWorkspaceMemberId",
+    ]),
+  },
   mounted() {
     // 페이지 로드 시 localStorage에서 profileImage 불러오기
     const localProfileImage = this.$store.getters.getProfileImage;
     if (localProfileImage == null || localProfileImage == 'null') {
-      this.previewImage = require('@/assets/images/profileImage.png');
+      this.previewImage = require(`@/assets/images/profile/profile${this.getWorkspaceMemberId % 10}.jpg`);
     }
     console.log("mounted() -> localProfileImage = this.$store.getters.getProfileImage : ", localProfileImage);
     if (localProfileImage) {
