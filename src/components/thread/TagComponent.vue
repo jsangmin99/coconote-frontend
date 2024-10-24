@@ -25,7 +25,7 @@
       <ul v-else>
         <li v-for="(result, index) in searchResults" :key="index" @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
           <div class="result-content">
-            <img v-if="result.profileImageUrl" :src="result.profileImageUrl" alt="프로필 이미지" class="result-image" style="width: 24px; height: 24px">
+            <img v-if="result.profileImageUrl" :src="result.profileImageUrl" alt="프로필 이미지" class="result-image" style="width: 50px; height: 50px">
             <div class="result-details">
               <strong class="result-title">{{ result.memberName }}</strong>
               <p class="result-content-text">{{ result.content }}</p>
@@ -309,12 +309,9 @@ export default {
 /* 검색 결과 내용 스타일 */
 .result-content {
   display: flex;
-  align-items: center;
 }
 
 .result-image {
-  width: 50px;
-  height: 50px;
   border-radius: 50%;
   margin-right: 15px;
 }
