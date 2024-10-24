@@ -784,14 +784,6 @@ export default {
       margin-left: 4px;
     }
   }
-}
-
-.section-title:hover {
-  background-color: rgba(255, 255, 255, 0.05); /* 검정색을 10% 투명도로 표현 */
-  border-radius: 10px; /* 모서리를 둥글게 설정 */
-  // color: rgba(0, 0, 0, 0.7); /* 텍스트 색도 약간 투명하게 설정 */
-}
-
   &.sectionCreate &.v-list-subheader {
     cursor: pointer;
     background-color: #2f3653;
@@ -808,6 +800,12 @@ export default {
     font-size: 0.8rem !important;
     opacity: 0.5;
   }
+}
+
+.section-title:hover {
+  background-color: rgba(255, 255, 255, 0.05); /* 검정색을 10% 투명도로 표현 */
+  border-radius: 10px; /* 모서리를 둥글게 설정 */
+  // color: rgba(0, 0, 0, 0.7); /* 텍스트 색도 약간 투명하게 설정 */
 }
 
 .header-container {
