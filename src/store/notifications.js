@@ -52,19 +52,22 @@ const notifications = {
                 const notification = JSON.parse(data);
                 console.log('새로운 알림:', notification);
 
-                // 알림을 Vuex에 추가
-                const notificationData = {
-                    message: notification.message,
-                    memberName: notification.memberName,
-                    channelName: notification.channelName,
-                    channelId: notification.channelId,
-                    timestamp: new Date(),
-                };
-                commit('ADD_NOTIFICATION', notificationData);
-                console.log('알림 목록:', notificationData);
+                if (notification.channelId != localStorage.getItem("channelId") && notification.userId != localStorage.getItem("memberId")) {
+                    // 알림을 Vuex에 추가
+                    const notificationData = {
+                        message: notification.message,
+                        memberName: notification.memberName,
+                        channelName: notification.channelName,
+                        channelId: notification.channelId,
+                        timestamp: new Date(),
+                    };
+                    commit('ADD_NOTIFICATION', notificationData);
+                    console.log('알림 목록:', notificationData);
 
-                // ToastNotification 컴포넌트를 사용해 알림 표시
-                showNotificationToast(notificationData);
+                    // ToastNotification 컴포넌트를 사용해 알림 표시
+                    showNotificationToast(notificationData);
+                }
+
             });
 
             eventSource.onerror = (error) => {
