@@ -425,7 +425,6 @@ import axios from '@/services/axios';
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
   gap: 5px;
 }
 .tag-container {

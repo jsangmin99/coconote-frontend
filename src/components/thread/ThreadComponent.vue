@@ -743,13 +743,13 @@ export default {
     scrollToBottom() {
       console.log("밑으로");
 
-      setTimeout(() => {
+      this.$nextTick(() => {
         const container = document.getElementById("list-group");
 
         if (container) {
-          container.scrollTop = container.scrollHeight+600;
+            container.scrollTop = container.scrollHeight; 
         }
-      }, 1);
+      });
     },
 
     deleteImage(index) {
