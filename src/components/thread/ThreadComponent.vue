@@ -35,7 +35,9 @@
     <div class="input-group" @dragover.prevent @drop="handleDrop">
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
-          <button class="more-btn-file" type="button" @click="deleteImage(index)">삭제</button>
+          <button class="more-btn-file" type="button" @click="deleteImage(index)">
+            <v-icon>mdi-trash-can</v-icon>
+          </button>
           <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
             style="height: 120px; width: 120px; object-fit: cover; border-radius:5px;">
           <p class="custom-contents">{{ file.name }}</p>
@@ -55,6 +57,7 @@
       </div>
     </div>
   </div>
+
   <!-- 댓글 부분 -->
   <div v-if="isComment" class="container">
     <div class="comment-group">
@@ -170,6 +173,8 @@ export default {
   },
   updated() { },
   beforeUnmount() {
+    console.log("언마운트@@@@@@");
+    
     if (this.$refs.messageList)
       this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
 
@@ -244,8 +249,8 @@ export default {
       this.$nextTick(() => {
         this.moveToThread(this.parentThread.id);
         this.parentThread = null
+        this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
       });
-
     },
     addTagFilter(tag, threadId) {
       this.tagFilter.push({ tag, threadId })
@@ -370,6 +375,7 @@ export default {
             image: recv.image,
             createdTime: recv.createdTime,
             files: recv.files,
+            memberId: recv.memberId,
           });
         }
 
@@ -456,6 +462,7 @@ export default {
       );
     },
     async sendMessage() {
+      if(!this.ws) return
       // 메시지가 비어있거나 공백 문자만 포함된 경우
       if (!this.message.trim() && this.fileList.length === 0) {
         return; // 함수 종료
@@ -702,6 +709,8 @@ export default {
       });
     },
     debouncedScrollPagination: debounce(async function () {
+      console.log("스크롤 이벤트 온");
+      
       const list = document.getElementById("list-group");
       if (!list) { // debounce로 인해 다른 컴포넌트에서 늦게 실행되는 오류
         return false;
@@ -746,12 +755,24 @@ export default {
       this.fileList.splice(index, 1);
     },
     handleKeydown(event) {
-      // IME 입력 중이면 아무 동작도 하지 않음
       if (event.isComposing) return;
+
       if (event.key === 'Enter') {
         if (event.shiftKey) {
           // Shift + Enter일 경우 개행 추가
-          this.message += '\n';
+          const textarea = this.$refs.textarea;
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+
+          // 개행 문자를 현재 커서 위치에 삽입
+          this.message = this.message.substring(0, start) + '\n' + this.message.substring(end);
+          
+          // 커서 위치를 개행 뒤로 이동
+          this.$nextTick(() => {
+            textarea.selectionStart = textarea.selectionEnd = start + 1;
+            textarea.focus();
+          });
+
           event.preventDefault(); // 기본 동작 방지
         } else {
           // Enter만 누를 경우 메시지 전송
@@ -855,7 +876,7 @@ export default {
   overflow-y: auto;
   /* 세로 스크롤 가능 */
   height: 100%;
-  max-height: calc(100vh - 240px);
+  max-height: calc(100vh - 230px);
 }
 
 .list-group-item {
@@ -932,7 +953,7 @@ export default {
 
 .comment-group {
   overflow-y: auto;
-  max-height: calc(100vh - 240px);
+  max-height: calc(100vh - 230px);
 }
 
 input:focus {
@@ -964,8 +985,12 @@ textarea:focus {
 .more-btn-file{
   background: #f8f8f8;
   position: absolute;
-  top: 0;
-  right: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  top: 5px;
+  right: 5px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
   z-index: 2;
+  border-radius: 5px;
+}
+.more-btn-file:hover{
+  background: red;
 }
 </style>

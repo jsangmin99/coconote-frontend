@@ -23,12 +23,17 @@
     <div class="filter-result">
       <div v-if="searchResults.length === 0" class="no-results">검색 결과가 없습니다.</div>
       <ul v-else>
-        <li v-for="(result, index) in searchResults" :key="index">
+        <li v-for="(result, index) in searchResults" :key="index" @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
           <div class="result-content">
-            <img v-if="result.image" :src="result.image" alt="프로필 이미지" class="result-image">
+            <img v-if="result.image" :src="result.image" alt="프로필 이미지" class="result-image" style="width: 24px; height: 24px">
             <div class="result-details">
               <strong class="result-title">{{ result.memberName }}</strong>
               <p class="result-content-text">{{ result.content }}</p>
+              <div class="image-group">
+                <div class="file-group" v-for="(file, index) in result.fileUrls" :key="index">
+                  <img :src="file" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover; border-radius:10px;">
+                </div>
+              </div>
               <div class="result-tags">
                 <span v-for="(tag, idx) in result.tags" :key="idx" class="result-tag">{{ tag }}</span>
               </div>
@@ -151,10 +156,15 @@ export default {
 
         const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/search/threads/by-tags`, { params });
         this.searchResults = response.data.result.results;
+        console.log("this.searchResults: ",this.searchResults);
+        
       } catch (error) {
         console.error('태그를 통한 검색 중 오류 발생:', error);
       }
-    }
+    },
+    moveToThread(channelId, threadId, parentThreadId) {
+      window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}&parentThreadId=${parentThreadId}`;
+    },
   }
 };
 </script>
@@ -184,7 +194,7 @@ export default {
 /* 태그 스타일 */
 .tag {
   display: inline-block; 
-  border-radius: 5px;
+  border-radius: 6px;
   padding: 2px 7px 3px 7px;
   color: white;
   font-size: 12px;
@@ -404,7 +414,7 @@ export default {
 }
 .highlight {
   border: 2px solid; /* 두께 설정 */
-  animation: rainbow-border 1.5s linear infinite, rainbow-shadow 1.5s linear infinite, circle-motion 3s linear infinite; /* 애니메이션 설정 */
+  animation: rainbow-border 1.5s linear infinite, rainbow-shadow 1.5s linear infinite; /* 애니메이션 설정 */
   /* box-shadow: 0 0 10px rgba(255, 255, 0, 0.8); /* 반짝임 효과 */
   transform: scale(1.1);
 }
