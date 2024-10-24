@@ -205,15 +205,26 @@ export default {
   name: "InnerRelatedMenuHome",
   components: {},
   computed: {
-    ...mapGetters([
+    ...mapGetters([ // 'notifications'는 your store's namespace
       "getWorkspaceId",
       "getWorkspaceName",
       "getWsRole",
-      "getChannelId",
-    ]), // 글로벌 getter 사용
+      "getChannelId", // 알림용 Vuex getter
+      "allNotificationsVer"
+    ]),
   },
   watch: {
     // 라우터 파라미터 channelId의 변화를 감지
+    allNotificationsVer: {
+      handler(newNotifications) {
+        console.log('🍆🍆🍆🍆🍆🍆🍆 새로운 알림이 도착했습니다 :::::', newNotifications);
+        // unreadCounts[channel.channelId]
+        const lastNoti = newNotifications.notifications[newNotifications.notifications.length -1];
+        console.error(lastNoti)
+        this.unreadCounts[lastNoti.channelId]++;
+      },
+      deep: true
+    },
     getChannelId: {
       // immediate: true, // 처음 로딩 시에도 호출
       handler(newChannelId) {
