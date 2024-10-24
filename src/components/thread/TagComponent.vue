@@ -373,7 +373,6 @@ export default {
 }
 
 .context-menu button:hover {
-  background-color: #afafaf;
   background-color: #f0f0f0;
 }
 @keyframes rainbow-border {

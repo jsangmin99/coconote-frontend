@@ -225,6 +225,15 @@ import axios from '@/services/axios';
         }
         return color;
       },
+      // getRandomColor() {
+      //   const getRandomInt = () => Math.floor(Math.random() * 200);
+
+      //   const r = getRandomInt(0, 250); // R: 128~255
+      //   const g = getRandomInt(0, 250); // G: 128~255
+      //   const b = getRandomInt(0, 250); // B: 128~255
+
+      //   return `#${r+g+b}`;
+      // },
       handleKeydown(event) {
         if (event.isComposing) return;
 
