@@ -109,7 +109,7 @@
               <v-icon>mdi-download</v-icon>
             </button>
             <button class="btn2" @click="deleteF(file.fileId)">
-              <v-icon>mdi-trash-can</v-icon>
+              <v-icon color="error">mdi-trash-can</v-icon>
             </button>
           </div>
         </div>
@@ -424,9 +424,9 @@ import axios from '@/services/axios';
 }
 .tag {
   border-radius: 6px;
-  padding: 0 5px 1px 5px;
+  padding: 1px 9px 4px 9px;
   color: white;
-  font-size: 11px;
+  font-size: 13px;
 }
 .tag-container:hover .delete-tag {
   display: block;
@@ -525,7 +525,7 @@ import axios from '@/services/axios';
 }
 .btn2:hover {
   border-radius: 5px;
-  background-color: red;
+  background-color: #d6d6d6;
 }
 
 .hash-btn{
