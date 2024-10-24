@@ -250,14 +250,14 @@ export default {
           },
         }),
         StarterKit.configure({
-          bulletList: false, // ol, ul, li 형식 허용 X
-          orderedList: false,
-          listItem: false,
+          bulletList: true, // ol, ul, li 형식 허용 X
+          orderedList: true,
+          listItem: true,
         }),
         CustomBlock,
         DraggableItem,
         UniqueID.configure({
-          types: ["heading", "paragraph", "image"],
+          types: ["heading", "paragraph", "image", "bulletList", "orderedList", "listItem"],
         }),
         NodeRange.configure({
           key: null,
@@ -395,6 +395,19 @@ export default {
         let updateElOuterHtml = "";
         if (updateEl) {
           updateElOuterHtml = updateEl.outerHTML;
+          console.error("🍆🍆🍆🍆🍆🍆", updateEl)
+          if (
+            updateEl.tagName.toUpperCase() === "OL" || // () 추가
+            updateEl.tagName.toUpperCase() === "UL"
+          ) {
+            console.error("🍆🍆🍆🍆🍆🍆 This element is an ol or ul tag.");
+            const targetElement = updateEl.querySelector(`[data-id="${this.lastSendMsgObj.blockFeId}"]`);
+            if (targetElement) {
+              console.log("data-id='1'인 요소가 존재합니다:", targetElement);
+            } else {
+              console.log("data-id='1'인 요소가 존재하지 않습니다.");
+            }
+          }
         }
 
         if (
@@ -481,7 +494,6 @@ export default {
         this.defaultContent == undefined
           ? ""
           : this.defaultContent.join(""),
-      // content: `<p data-id="f622f995-ec41-4515-9736-75947bd2274c" style="margin-left: 0px !important">578zgq5556z1zzzfㅋgㅋ1ㅋㅋㅎ</p><p data-id="f505385b-5a03-402c-b12e-2f3a8219e615" style="margin-left: 30px !important">ㅋ저저저저저맞저ㅋㅋㅋㅋㅋㅋㅋㅋㅇㅇㅇㅎㅎㅎㅋ</p><p data-id="acb54c7b-7bef-4cd4-964f-b6160e9457c3" style="margin-left: 30px !important">1234567855</p><img class="my-image" data-id="66042961-ecc3-4351-b893-f644b561c556" src="https://coconote-s3-bucket.s3.ap-northeast-2.amazonaws.com/3cbed61c-41f5-4aae-a9bf-243cfba1d436.jpeg">`,
     });
 
     this.editor.on("create", ({ editor }) => {
@@ -562,7 +574,10 @@ export default {
         `#editorArea [data-id="${newContent.blockFeId}"]`
       );
 
-      if (newContent.method == "DELETE_BLOCK") {
+      if (
+        newContent.method == "DELETE_BLOCK" ||
+        newContent.method == "DEEP_DELETE_BLOCK"
+      ) {
         // 삭제한 경우
         if (targetElement) {
           // ⭐ 자식 생각 필요
@@ -662,10 +677,7 @@ export default {
           const targetEl2 = document.querySelector(
             `#editorArea [data-id="${newContent.blockFeId}"]`
           );
-          if (
-            targetEl2.outerHTML !=
-            newContent.blockContents
-          ) {
+          if (targetEl2.outerHTML != newContent.blockContents) {
             targetEl2.outerHTML = newContent.blockContents;
           }
         } else {

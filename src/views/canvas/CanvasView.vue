@@ -202,6 +202,9 @@ export default {
           } else if (newVal.method == "DELETE_BLOCK") {
             //삭제 캔버스
             this.sendMessageCanvas();
+          } else if (newVal.method == "DEEP_DELETE_BLOCK") {
+            //삭제 캔버스
+            this.sendMessageCanvas();
           } else {
             console.error("잘못된 block method 입니다.", newVal);
           }
@@ -346,7 +349,8 @@ export default {
         recv.method == "UPDATE_BLOCK" ||
         recv.method == "UPDATE_INDENT_BLOCK" ||
         recv.method == "CHANGE_ORDER_BLOCK" ||
-        recv.method == "DELETE_BLOCK"
+        recv.method == "DELETE_BLOCK" || 
+        recv.method == "DEEP_DELETE_BLOCK" 
       ) {
         if (recv.canvasId != this.canvasId) {
           return false;

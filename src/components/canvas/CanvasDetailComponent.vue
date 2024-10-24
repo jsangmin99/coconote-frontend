@@ -68,7 +68,8 @@ export default {
             this.getCanvasAllInfo_inDetail.method == "UPDATE_INDENT_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
-            this.getCanvasAllInfo_inDetail.method == "DELETE_BLOCK"
+            this.getCanvasAllInfo_inDetail.method == "DELETE_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method == "DEEP_DELETE_BLOCK"
           ) {
             this.recvMessage();
           } else {
@@ -202,7 +203,8 @@ export default {
       if (
         method == "CREATE_BLOCK" ||
         method == "CHANGE_ORDER_BLOCK" ||
-        method == "DELETE_BLOCK"
+        method == "DELETE_BLOCK" ||
+        method == "DEEP_DELETE_BLOCK"
       ) {
         console.error("✖️✖️✖️✖️ type 1");
         await this.clearTimeDebounceFun();
@@ -279,6 +281,26 @@ export default {
             blockType: "paragraph", //삭제여서 타입 관계 X
             blockFeId: blockFeId,
             // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
+          };
+
+          this.sendMessage();
+        }
+      });
+    },
+    deepDeleteBlock(blockFeId) {
+      const prevBlockId = this.$store.getters.getTargetBlockPrevFeId(blockFeId); //삭제전 prev block id 검색
+      this.deleteBlockTargetFeIdActions(blockFeId).then((isDeleteBlock) => {
+        if (isDeleteBlock) {
+          // 기존 값에 있어서 삭제했다면
+          this.message = {
+            postMessageType: "BLOCK", // 고정
+            method: "DEEP_DELETE_BLOCK",
+            canvasId: this.canvasId,
+            prevBlockId: prevBlockId,
+            parentBlockId: null,
+            blockContents: "",
+            blockType: "paragraph", //삭제여서 타입 관계 X
+            blockFeId: blockFeId,
           };
 
           this.sendMessage();
