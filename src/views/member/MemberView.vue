@@ -339,7 +339,7 @@ export default {
         await axios.patch(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/role`,
           {
             id: this.workspaceMemberInfo.workspaceMemberId,
-            wsRole: this.currentMemberRole,
+            wsRole: this.currentMemberRole
           }
         );
         alert("권한이 변경되었습니다.");

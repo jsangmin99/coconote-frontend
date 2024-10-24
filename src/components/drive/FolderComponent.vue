@@ -857,7 +857,7 @@ export default {
 .drive-container {
   padding: 20px;
   overflow-y: auto;
-  height: calc(100vh - 240px); /* 뷰포트 전체 높이에서 60px을 뺀 값 */
+  height: 100%; /* 뷰포트 전체 높이에서 60px을 뺀 값 */
 }
 
 .breadcrumb {
