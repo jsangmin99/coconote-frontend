@@ -25,7 +25,7 @@
       <ul v-else>
         <li v-for="(result, index) in searchResults" :key="index" @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
           <div class="result-content">
-            <img v-if="result.image" :src="result.image" alt="프로필 이미지" class="result-image" style="width: 24px; height: 24px">
+            <img v-if="result.profileImageUrl" :src="result.profileImageUrl" alt="프로필 이미지" class="result-image" style="width: 24px; height: 24px">
             <div class="result-details">
               <strong class="result-title">{{ result.memberName }}</strong>
               <p class="result-content-text">{{ result.content }}</p>
