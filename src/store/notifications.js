@@ -59,6 +59,8 @@ const notifications = {
                         memberName: notification.memberName,
                         channelName: notification.channelName,
                         channelId: notification.channelId,
+                        threadId: notification.threadId,
+                        parentThreadId: notification.parentThreadId,
                         timestamp: new Date(),
                     };
                     commit('ADD_NOTIFICATION', notificationData);
@@ -76,7 +78,7 @@ const notifications = {
                 // 재연결 시도
                 setTimeout(() => {
                     console.log('재연결 시도...');
-                    this.connectToSSE({ commit }, { workspaceId }); // self를 사용하지 않고 actions를 통해 호출
+                    this.dispatch('connectToSSE', { workspaceId });
                 }, 100); // 0.1초 후 재연결 시도
             };
         },
@@ -117,14 +119,19 @@ function showNotificationToast(data) {
                 borderRadius: '8px',
                 boxShadow: 'none',
             },
-            // onClick: () => {
-            //     moveToThread(data.channelId, data.threadId, data.parentThreadId); // 클릭 시 핸들러
-            // },
+            onClick: () => {
+                moveToThread(data.channelId, data.threadId, data.parentThreadId); // 클릭 시 핸들러
+            },
         };
 
         // Toast 알림 표시
         toast.info(toastMessage, toastOptions);
     }
+}
+
+function moveToThread(channelId, threadId, parentThreadId) {
+    // 쓰레드로 이동
+    window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}&parentThreadId=${parentThreadId}`;
 }
 
 export default notifications;
