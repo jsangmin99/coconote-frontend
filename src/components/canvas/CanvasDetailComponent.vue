@@ -177,33 +177,24 @@ export default {
     settingEditorContent() {
       let blockToEditorContentArr = [];
       for (const block of this.blocks) {
-        let tempBlockObj = {
-          type: block.type,
-          attrs: {
-            id: block.feId,
-            indent: block.indent,
-          },
-        };
-        if (block.content != null) {
-          if (block.type == "image") {
-            tempBlockObj.attrs.src = block.content;
-          } else {
-            tempBlockObj.content = [
-              {
-                type: "text",
-                text: block.content,
-              },
-            ];
-          }
-        }
+        let tempBlockHtml = block.content;
+        // if (block.content != null) {
+        //   if (block.type == "image") {
+        //     tempBlockObj.attrs.src = block.content;
+        //   } else {
+        //     tempBlockObj.content = [
+        //       {
+        //         type: "text",
+        //         text: block.content,
+        //       },
+        //     ];
+        //   }
+        // }
 
-        blockToEditorContentArr.push(tempBlockObj);
+        blockToEditorContentArr.push(tempBlockHtml);
       }
 
-      this.editorContent = {
-        type: "doc",
-        content: blockToEditorContentArr,
-      };
+      this.editorContent = blockToEditorContentArr;
     },
     async sendMessage() {
       const blockFeId = this.message.blockFeId;
@@ -297,7 +288,7 @@ export default {
     updateBlock(
       blockFeId,
       blockElType,
-      blockContent,
+      blockContents,
       previousId,
       parentId,
       blockIndent
@@ -309,14 +300,14 @@ export default {
 
       this.activeBlockId = blockFeId;
 
-      const blockMethod = this.checkBlockMethod(blockFeId, blockContent);
+      const blockMethod = this.checkBlockMethod(blockFeId, blockContents);
       this.message = {
         method: blockMethod,
         blockFeId: blockFeId, // block id
         prevBlockId: previousId,
         canvasId: this.canvasId,
         // parentBlockId: parentId,
-        blockContents: blockContent,
+        blockContents: blockContents,
         blockType: blockElType,
         // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
         blockIndent: blockIndent,
@@ -326,6 +317,7 @@ export default {
     },
     checkBlockMethod(targetBlockFeId) {
       const found = this.getBlockFeId(targetBlockFeId);
+      console.error("found >>>>> ",found)
       if (found) {
         // block의 생성, 수정, 삭제 (create, update, delete)
         return "UPDATE_BLOCK";
@@ -334,13 +326,14 @@ export default {
         return "CREATE_BLOCK";
       }
     },
-    updateIndentBlock(nodeDataId, nodeIndent) {
+    updateIndentBlock(nodeDataId, nodeElOuterHtml, nodeIndent) {
       console.error("⭐⭐⭐⭐⭐", nodeDataId, nodeIndent);
       this.message = {
         canvasId: this.canvasId,
         method: "UPDATE_INDENT_BLOCK",
         blockFeId: nodeDataId,
         blockIndent: nodeIndent,
+        blockContents: nodeElOuterHtml
       };
       this.sendMessage();
     },

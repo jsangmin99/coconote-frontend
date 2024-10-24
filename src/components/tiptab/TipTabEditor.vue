@@ -176,7 +176,7 @@ export default {
   },
   props: {
     initialContent: {
-      type: Object,
+      type: Array,
       required: true, // 부모로부터 받아야 하는 값
     },
     parentUpdateEditorContent: {
@@ -312,19 +312,7 @@ export default {
             // Do something with the node
           },
         }),
-        Indent.configure({
-          // onNodeChange: async (options) => {
-          //   this.currentEvent = "indent";
-          //   const node = options?.nodes[0];
-          //   const nodeDataId = node?.node?.attrs?.id;
-          //   const nodeIndent = node?.node?.attrs?.indent;
-          //   console.error("indent update >>> ", options);
-
-          //   if (nodeDataId && nodeIndent >= 0) {
-          //     await this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
-          //   }
-          // },
-        }),
+        Indent.configure({}),
         // Placeholder.configure({
         //   placeholder: "내용을 작성하세요.",
         //   // Use different placeholders depending on the node type:
@@ -341,7 +329,7 @@ export default {
           mode: "all",
         }),
       ],
-      autofocus: true,
+      // autofocus: true,
       onUpdate: () => {
         if (this.isRecvUpdate) {
           console.error("흠...........................2222222222");
@@ -353,8 +341,8 @@ export default {
           console.error("흠...........................3333333");
           return false;
         }
-        console.error("흠...........................");
         const selectedNode = this.editor.state.selection;
+        console.error("흠...........................", selectedNode);
         let isReturn = true;
 
         if (!selectedNode) {
@@ -402,11 +390,15 @@ export default {
           return false;
         }
         const updateBlockIndent = selectedNode?.$head?.path[3]?.attrs?.indent;
-        const updateContent =
-          selectedNode?.$head?.path[3]?.content?.content[0]?.text;
+
+        const updateEl = document.querySelector(`[data-id="${updateBlockID}"]`);
+        let updateElOuterHtml = "";
+        if (updateEl) {
+          updateElOuterHtml = updateEl.outerHTML;
+        }
 
         if (
-          this.lastSendMsgObj.updateContent == updateContent &&
+          this.lastSendMsgObj.updateElOuterHtml == updateElOuterHtml &&
           this.lastSendMsgObj.blockFeId == updateBlockID
         ) {
           return false;
@@ -415,29 +407,28 @@ export default {
         console.log(
           "⭐ Node:",
           updateBlockID,
-          updateContent,
+          updateElOuterHtml,
           this.editor.view?.trackWrites?.dataset?.id,
-          updateContent == "",
           this.editor.view?.trackWrites?.data,
-          updateContent == undefined,
           updateBlockIndent
         );
 
         if (this.localJSON.content == undefined) {
           this.isFirstAndNullContent = true;
-          this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateContent 값 비교 시 무조건 같은 값
+          this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateElOuterHtml 값 비교 시 무조건 같은 값
         }
 
         // 내용 차이 확인
-        const filteredItems = this.localJSON?.content.filter(
-          (item) => item.attrs.id === updateBlockID
-        );
-        console.log("filteredItems >> ", filteredItems);
-        if (filteredItems.length > 0) {
+        // const filteredItems = this.localJSON?.content.filter(
+        //   (item) => item.attrs.id === updateBlockID
+        // );
+        // console.log("filteredItems >> ", filteredItems);
+        const filterEl = document.querySelector("updateBlockID");
+        if (filterEl) {
+          const filterElOuterHtml = filterEl.outerHTML;
           if (
             !this.isFirstAndNullContent &&
-            filteredItems[0].content != undefined &&
-            filteredItems[0].content[0].text == updateContent
+            filterElOuterHtml == updateElOuterHtml
           ) {
             isReturn = false; // 값이 동일하다면 보내지 않음
           }
@@ -474,7 +465,7 @@ export default {
         this.$parent.updateBlock(
           updateBlockID,
           targetElType,
-          updateContent == "" ? "" : updateContent,
+          updateElOuterHtml,
           previousId,
           parentId,
           updateBlockIndent
@@ -482,14 +473,14 @@ export default {
 
         this.lastSendMsgObj.blockFeId = updateBlockID;
         this.lastSendMsgObj.blockIndent = updateBlockIndent;
-        this.lastSendMsgObj.blockContents = updateContent;
+        this.lastSendMsgObj.blockContents = updateElOuterHtml;
       },
       content:
         this.defaultContent == "" ||
-        this.defaultContent?.content?.length <= 0 ||
+        this.defaultContent?.length <= 0 ||
         this.defaultContent == undefined
           ? ""
-          : this.defaultContent,
+          : this.defaultContent.join(""),
       // content: `<p data-id="f622f995-ec41-4515-9736-75947bd2274c" style="margin-left: 0px !important">578zgq5556z1zzzfㅋgㅋ1ㅋㅋㅎ</p><p data-id="f505385b-5a03-402c-b12e-2f3a8219e615" style="margin-left: 30px !important">ㅋ저저저저저맞저ㅋㅋㅋㅋㅋㅋㅋㅋㅇㅇㅇㅎㅎㅎㅋ</p><p data-id="acb54c7b-7bef-4cd4-964f-b6160e9457c3" style="margin-left: 30px !important">1234567855</p><img class="my-image" data-id="66042961-ecc3-4351-b893-f644b561c556" src="https://coconote-s3-bucket.s3.ap-northeast-2.amazonaws.com/3cbed61c-41f5-4aae-a9bf-243cfba1d436.jpeg">`,
     });
 
@@ -515,7 +506,7 @@ export default {
       // const plel = document.getElementsByClassName("placeholder");
       const plel = document.querySelector(".placeholder");
       // const plel2 = document.getElementById("placeholder");
-      console.log("plel >>> ",plel);
+      console.log("plel >>> ", plel);
       // if (plel) {
       //   plel.classList.add("hidden");
       // }
@@ -615,12 +606,6 @@ export default {
 
         // 기존 요소를 교체
         indentNode.parentNode.replaceChild(newElement, indentNode);
-        // console.error("indent recv >>> ", indentNode, newContent.blockIndent);
-        // indentNode.style.setProperty('margin-left', `${newContent.blockIndent}px`, 'important');
-        // indentNode.setAttribute(
-        //   "style",
-        //   `margin-left: ${newContent.blockIndent}px !important;`
-        // );
       } else if (newContent.method == "CHANGE_ORDER_BLOCK") {
         // 순서변경의 경우
         console.log("부모로부터 순서변경 감지!!! ");
@@ -663,50 +648,44 @@ export default {
         }
       } else {
         // 생성이나, 현재 targetElement가 없는 update의 경우
+        console.error("💻💻💻💻💻", newContent.blockContents);
         if (targetElement) {
+          console.error("💻💻💻💻💻💻 이미 있는 내용 변경", targetElement);
           // 이미 있는 내용 변경
-          // 해당 요소의 텍스트를 변경
-          targetElement.textContent = newContent.blockContents;
+          // 해당 요소의 html을 전체 변경
+          targetElement.outerHTML = newContent.blockContents;
+          console.error(
+            "@@@ newContent.blockContents",
+            targetElement.outerHTML,
+            newContent.blockContents
+          );
+          const targetEl2 = document.querySelector(
+            `#editorArea [data-id="${newContent.blockFeId}"]`
+          );
+          if (
+            targetEl2.outerHTML !=
+            newContent.blockContents
+          ) {
+            targetEl2.outerHTML = newContent.blockContents;
+          }
         } else {
-          const typeEl = {
-            heading: "h",
-            paragraph: "p",
-            orderedList: "ol",
-            bulletList: "ul",
-            listItem: "li",
-            image: "img",
-          };
-
-          let elTagType = typeEl[newContent.blockType];
-          if (elTagType === "h") {
-            elTagType += "1";
-          }
-
-          let newElement = document.createElement(elTagType);
-          newElement.setAttribute("data-id", newContent.blockFeId);
-          if (elTagType == "img") {
-            newElement.src = newContent.blockContents;
-          } else {
-            newElement.textContent = newContent.blockContents;
-          }
-
+          console.error("💻💻💻💻💻💻 222");
+          const newElement = newContent.blockContents;
+          console.error(newElement);
           if (newContent.method == "CREATE_BLOCK") {
             // 생성인 경우 store 개수 늘리기
             this.appendBlockFeIdsAfterPrevActions(
               newContent.blockFeId,
               newContent.prevBlockId
             );
-            console.error("이전 nodeLength", this.nodeLength);
             this.nodeLength = this.localJSON.content.length;
-            console.error("이후 nodeLength", this.nodeLength);
-            console.log("zzz>> ", newContent.method, this.nodeLength);
           }
 
           if (newContent.prevBlockId != null) {
             let prevElement = document.querySelector(
               `#editorArea [data-id="${newContent.prevBlockId}"]`
             );
-            prevElement.insertAdjacentElement("afterend", newElement);
+            prevElement.insertAdjacentHTML("afterend", newElement);
             return false;
           } else if (newContent.parentBlockId != null) {
             let parentElement = document.querySelector(
@@ -716,8 +695,7 @@ export default {
             return false;
           } else {
             // parent, prev null 이어서 insert
-            let elementString = newElement.outerHTML;
-            console.error("editor에 추가", newElement, elementString);
+            let elementString = newElement;
             this.editor.commands.insertContent(elementString);
           }
         }
@@ -874,11 +852,12 @@ export default {
             if (foundImageEl != undefined && foundImageEl != "") {
               // 여기서 parent update 메소드 호출 -> image는 update 시, 기존 update 로직 활성화 X
               const imagePrevNode = foundImageEl.previousSibling;
+              const foundImageElOuterHtml = foundImageEl.outerHTML;
               // const imageNextNode = foundImageEl.nextSibling;
               this.$parent.updateBlock(
                 foundImageEl.getAttribute("data-id"),
                 "image",
-                foundImageEl.getAttribute("src"),
+                foundImageElOuterHtml,
                 imagePrevNode != null
                   ? imagePrevNode.getAttribute("data-id")
                   : null,
@@ -910,17 +889,17 @@ export default {
         // el.removeAttribute("tabindex");
       }
     },
-    noneContentFunc() {
-      const thisuuId = this.generateUUID();
-      this.$parent.updateBlock(
-        thisuuId,
-        "paragraph",
-        "", // updateContent
-        null,
-        null
-      );
-      return `<p class='is-empty is-editor-empty' data-placeholder='내용을 작성하세요.' data-id='${thisuuId}'></p>`;
-    },
+    // noneContentFunc() {
+    //   const thisuuId = this.generateUUID();
+    //   this.$parent.updateBlock(
+    //     thisuuId,
+    //     "paragraph",
+    //     "", // updateElOuterHtml
+    //     null,
+    //     null
+    //   );
+    //   return `<p class='is-empty is-editor-empty' data-placeholder='내용을 작성하세요.' data-id='${thisuuId}'></p>`;
+    // },
     generateUUID() {
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
         /[xy]/g,
@@ -937,11 +916,12 @@ export default {
       // const node = options?.nodes[0];
       const nodeDataId = node.attrs?.id;
       let nodeIndent = node.attrs?.indent;
-      nodeIndent = (nodeIndent < 210) ? nodeIndent + 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
-      
+      nodeIndent = nodeIndent < 210 ? nodeIndent + 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
+      const nodeEl = document.querySelector(`[data-id="${nodeDataId}"]`);
 
-      if (nodeDataId && nodeIndent >= 0) {
-        this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
+      if (nodeEl) {
+        const nodeElOuterHtml = nodeEl.outerHTML;
+        this.$parent.updateIndentBlock(nodeDataId, nodeElOuterHtml, nodeIndent);
       }
     },
     onOutdentExecuted(event) {
@@ -950,11 +930,12 @@ export default {
       // const node = options?.nodes[0];
       const nodeDataId = node.attrs?.id;
       let nodeIndent = node.attrs?.indent;
-      nodeIndent = (nodeIndent > 0) ? nodeIndent - 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
-      
+      nodeIndent = nodeIndent > 0 ? nodeIndent - 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
+      const nodeEl = document.querySelector(`[data-id="${nodeDataId}"]`);
 
-      if (nodeDataId && nodeIndent >= 0) {
-        this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
+      if (nodeEl) {
+        const nodeElOuterHtml = nodeEl.outerHTML;
+        this.$parent.updateIndentBlock(nodeDataId, nodeElOuterHtml, nodeIndent);
       }
     },
   },
@@ -965,7 +946,7 @@ export default {
     window.removeEventListener("indentExecuted", this.onIndentExecuted);
     window.removeEventListener("outdentExecuted", this.onOutdentExecuted);
     // if (typeof window !== "undefined") {
-      
+
     // }
   },
 };
