@@ -103,6 +103,7 @@ export default {
   },
   computed: {
     ...mapGetters([
+      "getWorkspaceMemberId",
       // socket용 vuex
       "getCanvasAllInfo",
       "getPageInfoForComponent",
@@ -118,7 +119,7 @@ export default {
     if (this.$route.name === "CanvasView") {
       // URL에서 canvasId를 가져옴
       this.canvasId = this.$route.params.canvasId;
-    } else {
+    } else if(this.splitCanvasId) {
       // props로 전달된 splitCanvasId 사용
       this.canvasId = this.splitCanvasId;
     }
@@ -158,10 +159,12 @@ export default {
             this.latestWatchBlockMsg.method == newVal.method &&
             this.latestWatchBlockMsg.blockContents == newVal.blockContents
           ) {
-            if (
-              newVal.method == "UPDATE_INDENT_BLOCK" &&
-              this.latestWatchBlockMsg.blockIndent == newVal.blockIndent
-            ) {
+            if(newVal.method == "UPDATE_INDENT_BLOCK"){
+              if(newVal.blockIndent == this.latestWatchBlockMsg.blockIndent){
+                console.error("🤔🤔🤔🤔🤔 3333", this.latestWatchBlockMsg, newVal);
+                isReturn = false;
+              }
+            }else{
               console.error("🤔🤔🤔🤔🤔", this.latestWatchBlockMsg, newVal);
               isReturn = false;
             }
@@ -170,6 +173,7 @@ export default {
           this.latestWatchBlockMsg.blockFeId = newVal.blockFeId;
           this.latestWatchBlockMsg.method = newVal.method;
           this.latestWatchBlockMsg.blockContents = newVal.blockContents;
+          this.latestWatchBlockMsg.blockIndent = newVal.blockIndent;
 
           console.error(
             "🤔🤔🤔🤔🤔22222",
@@ -219,6 +223,7 @@ export default {
         blockFeId: "",
         method: "",
         blockContents: "",
+        blockIndent: "",
       }, // 중복 보냄을 방지하기 위해 마지막으로 보낸 block id와 block method 저장
 
       // websocket용도
@@ -270,11 +275,14 @@ export default {
       );
     },
     // 실제 socket에 message를 전송하는 영역
-    async sendMessageCanvas() {
+    sendMessageCanvas() {
       if (this.ws && this.ws.connected) {
         const postMessage = this.getCanvasAllInfo;
         postMessage.channelId = this.channelId;
-        await this.ws.send(
+        if(postMessage.workspaceMemberId){
+          postMessage.workspaceMemberId = this.getWorkspaceMemberId;
+        }
+        this.ws.send(
           `/pub/canvas/message`,
           { Authorization: this.authToken },
           JSON.stringify(postMessage)

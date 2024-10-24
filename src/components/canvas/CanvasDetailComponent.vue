@@ -72,7 +72,10 @@ export default {
           ) {
             this.recvMessage();
           } else {
-            console.error("detail 에서는 사용 X 혹은 잘못된 method", this.getCanvasAllInfo_inDetail.method);
+            console.error(
+              "detail 에서는 사용 X 혹은 잘못된 method",
+              this.getCanvasAllInfo_inDetail.method
+            );
           }
         }
       },
@@ -119,8 +122,7 @@ export default {
       parentUpdateEditorContent: "초기 값",
 
       // router용 쿼리파라미터
-      routeQueryBlockFeId : null,
-      
+      routeQueryBlockFeId: null,
     };
   },
   mounted() {
@@ -129,10 +131,9 @@ export default {
       this.beforeRouteLeave();
     };
     this.handleCanvasIdChange(this.canvasId);
-    if(this.$route?.query?.blockFeId){
-      this.routeQueryBlockFeId =  this.$route.query.blockFeId;
+    if (this.$route?.query?.blockFeId) {
+      this.routeQueryBlockFeId = this.$route.query.blockFeId;
     }
-    
   },
   methods: {
     ...mapActions([
@@ -217,7 +218,10 @@ export default {
         await this.postSendMessage();
         this.debounceMessage = { ...this.message };
         await this.postSendMessage();
-      } else if (blockFeId != this.debounceMessage.blockFeId) {
+      } else if (
+        this.debounceMessage.blockFeId &&
+        blockFeId != this.debounceMessage.blockFeId
+      ) {
         console.error("✖️✖️✖️✖️ type 2");
         await this.postSendMessage();
         await this.clearTimeDebounceFun();
@@ -231,7 +235,9 @@ export default {
         this.debounceMessage = { ...this.message };
       } else {
         console.error("✖️✖️✖️✖️ type 4");
-        await this.clearTimeDebounceFun();
+        if(this.timeoutSendFun){
+          this.clearTimeDebounceFun();
+        }
         await this.timerSendMessage();
       }
     },
@@ -288,7 +294,14 @@ export default {
         }
       });
     },
-    updateBlock(blockFeId, blockElType, blockContent, previousId, parentId) {
+    updateBlock(
+      blockFeId,
+      blockElType,
+      blockContent,
+      previousId,
+      parentId,
+      blockIndent
+    ) {
       if (!blockFeId) {
         return false;
       }
@@ -306,6 +319,7 @@ export default {
         blockContents: blockContent,
         blockType: blockElType,
         // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
+        blockIndent: blockIndent,
       };
 
       this.sendMessage();
@@ -320,8 +334,8 @@ export default {
         return "CREATE_BLOCK";
       }
     },
-    updateIndentBlock(nodeDataId, nodeIndent){
-      console.error("⭐⭐⭐⭐⭐", nodeDataId, nodeIndent)
+    updateIndentBlock(nodeDataId, nodeIndent) {
+      console.error("⭐⭐⭐⭐⭐", nodeDataId, nodeIndent);
       this.message = {
         canvasId: this.canvasId,
         method: "UPDATE_INDENT_BLOCK",

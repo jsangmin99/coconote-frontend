@@ -1,7 +1,8 @@
 import { Extension } from "@tiptap/core";
 // import { Node } from "prosemirror-model";
 import { TextSelection, AllSelection } from "prosemirror-state";
-import { Plugin } from "prosemirror-state";
+
+// let isAddKeyTriggered = false;
 
 export function clamp(val, min, max) {
   if (val < min) {
@@ -92,12 +93,6 @@ export const Indent = Extension.create({
       types: ["heading", "paragraph"],
       indentLevels: [0, 30, 60, 90, 120, 150, 180, 210],
       defaultIndentLevel: 0,
-      onNodeChange: (options) => {
-        const node = options?.nodes[0];
-        const event = new CustomEvent('nodeChange', { detail: node });
-        window.dispatchEvent(event);
-
-      },
     };
   },
 
@@ -121,65 +116,57 @@ export const Indent = Extension.create({
       },
     ];
   },
-
   addCommands() {
     return {
       indent:
         () =>
-        ({ tr, state, dispatch }) => {
-          const { selection } = state;
-          tr = tr.setSelection(selection);
-          tr = updateIndentLevel(tr, IndentProps.more);
-
-          if (tr.docChanged) {
-            dispatch && dispatch(tr);
-            return true;
-          }
-
-          return false;
-        },
+          ({ tr, state, dispatch }) => {
+            const { selection } = state;
+            tr = tr.setSelection(selection);
+            console.error("💻💻💻💻💻", tr, selection);
+            tr = updateIndentLevel(tr, IndentProps.more);
+            console.error("indent 진행");
+  
+            if (tr.docChanged) {
+              dispatch && dispatch(tr);
+              // isAddKeyTriggered = true;
+  
+              // indent 명령이 실행되었을 때 이벤트 발생
+              const indentEvent = new CustomEvent("indentExecuted", {
+                detail: { indentLevel: IndentProps.more, tr, selection }
+              });
+              window.dispatchEvent(indentEvent); // 이벤트를 전역에서 발생시킴
+  
+              return true;
+            }
+  
+            return false;
+          },
       outdent:
         () =>
-        ({ tr, state, dispatch }) => {
-          const { selection } = state;
-          tr = tr.setSelection(selection);
-          tr = updateIndentLevel(tr, IndentProps.less);
-
-          if (tr.docChanged) {
-            dispatch && dispatch(tr);
-            return true;
-          }
-
-          return false;
-        },
+          ({ tr, state, dispatch }) => {
+            const { selection } = state;
+            tr = tr.setSelection(selection);
+            tr = updateIndentLevel(tr, IndentProps.less);
+            console.error("outdent 진행");
+  
+            if (tr.docChanged) {
+              dispatch && dispatch(tr);
+              // isAddKeyTriggered = true;
+  
+              // outdent 명령이 실행되었을 때 이벤트 발생
+              const outdentEvent = new CustomEvent("outdentExecuted", {
+                detail: { indentLevel: IndentProps.less, tr, selection }
+              });
+              window.dispatchEvent(outdentEvent); // 이벤트를 전역에서 발생시킴
+  
+              return true;
+            }
+  
+            return false;
+          },
     };
   },
-
-  addProseMirrorPlugins() {
-    const onNodeChange = this.options.onNodeChange;
-
-    return [
-      new Plugin({
-        view: () => {
-          return {
-            update: (view, prevState) => {
-              if (view.state.doc !== prevState.doc) {
-                const { from, to } = view.state.selection;
-                const nodes = [];
-                view.state.doc.nodesBetween(from, to, (node, pos) => {
-                  nodes.push({ node, pos });
-                });
-
-                // `onNodeChange` 호출
-                onNodeChange({ nodes, editor: this.editor });
-              }
-            },
-          };
-        },
-      }),
-    ];
-  },
-
   addKeyboardShortcuts() {
     return {
       Tab: () => this.editor.commands.indent(),

@@ -1,8 +1,12 @@
 <template>
   <v-navigation-drawer permanent class="innerSubMenu" :absolute="false">
-    <div class="header-container" @contextmenu.prevent="showContextMenu($event, 'workspace', workpsace)">
+    <div
+      class="header-container"
+      @contextmenu.prevent="showContextMenu($event, 'workspace', workpsace)"
+    >
       <h1>{{ this.getWorkspaceName }}</h1>
       <v-btn v-if="getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn">
+
         <v-icon class="icon-cog">mdi-cog</v-icon>
         <v-menu activator="parent">
           <v-list>
@@ -18,6 +22,7 @@
     </div>
 
     <v-list>
+
       <v-list-subheader class="section-title">
         <v-icon icon="mdi-star" color="#ffbb00" />
         즐겨찾기
@@ -36,25 +41,42 @@
           <v-icon v-else icon="mdi-apple-keyboard-command"></v-icon>
         </template>
 
-        <v-list-item-title v-if="channel.isPublic || isMember(channel.channelId)">
-          {{ channel.channelName }}</v-list-item-title>
+        <v-list-item-title
+          v-if="channel.isPublic || isMember(channel.channelId)"
+        >
+          {{ channel.channelName }}</v-list-item-title
+        >
       </v-list-item>
       <template v-for="section in sections" :key="section.sectionId">
         <div class="header-container">
-          <v-list-subheader class="section-title" @click="toggleSection(section.sectionId)">
+          <v-list-subheader
+            class="section-title"
+            @click="toggleSection(section.sectionId)"
+          >
             <v-icon>{{
               visibleSections.includes(section.sectionId)
                 ? "mdi-menu-down"
                 : "mdi-menu-right"
             }}</v-icon>
             <span class="section-name">{{ section.sectionName }}</span>
-            <v-btn v-if="this.getWsRole !== 'USER'" elevation="0" icon color="#32446e"
-              class="small-btn"><!-- 관리자일 때만 표시 -->
+
+            <!-- 섹션 메뉴 -->
+            <v-btn
+              v-if="this.getWsRole !== 'USER'"
+              elevation="0"
+              icon
+              color="#32446e"
+              class="small-btn cog-btn"
+              ><!-- 관리자일 때만 표시 -->
               <v-icon class="icon-cog">mdi-cog</v-icon>
-              <v-menu activator="parent">
+              <v-menu activator="parent" class="vList-sm">
                 <v-list>
-                  <v-list-item @click="openEditDialog(section)">수정</v-list-item><!-- 수정 버튼 클릭 시 모달 열기 -->
-                  <v-list-item @click="deleteSection(section.sectionId)">삭제</v-list-item>
+                  <v-list-item @click="openEditDialog(section)"
+                    >수정</v-list-item
+                  ><!-- 수정 버튼 클릭 시 모달 열기 -->
+                  <v-list-item @click="deleteSection(section.sectionId)"
+                    >삭제</v-list-item
+                  >
                 </v-list>
               </v-menu>
             </v-btn>
@@ -69,7 +91,12 @@
             </v-card-title>
             <v-card-text>
               <!-- 새로운 섹션 이름 입력 -->
-              <v-text-field v-model="editedSectionName" label="New Section Name" outlined :rules="nameRules"></v-text-field>
+              <v-text-field
+                v-model="editedSectionName"
+                label="New Section Name"
+                outlined
+                :rules="nameRules"
+              ></v-text-field>
             </v-card-text>
             <v-card-actions>
               <v-btn color="primary" @click="editSection">저장</v-btn>
@@ -100,8 +127,12 @@
             <!-- 알림 수와 삭제 버튼을 flex 컨테이너로 감쌈 -->
             <div class="notification-wrapper">
               <!-- 알림 수 표시 -->
-              <v-badge v-if="notificationCounts[channel.channelId]" :content="notificationCounts[channel.channelId]"
-                color="red" overlap>
+              <v-badge
+                v-if="notificationCounts[channel.channelId]"
+                :content="notificationCounts[channel.channelId]"
+                color="red"
+                overlap
+              >
               </v-badge>
             </div>
           </v-list-item>
@@ -132,9 +163,19 @@
         <v-text-field ref="channelNameInput" color="primary" density="compact" variant="underlined"
           v-model="createChannelInfo.channelName" @keyup.enter="createChannel" placeholder="이름" :rules="nameRules"></v-text-field>
         <p>채널의 설명을 입력하세요.</p>
-        <v-text-field color="primary" density="compact" variant="underlined" v-model="createChannelInfo.channelInfo"
-          @keyup.enter="createChannel" placeholder="설명"></v-text-field>
-        <v-radio-group inline label="채널종류" v-model="createChannelInfo.isPublic">
+        <v-text-field
+          color="primary"
+          density="compact"
+          variant="underlined"
+          v-model="createChannelInfo.channelInfo"
+          @keyup.enter="createChannel"
+          placeholder="설명"
+        ></v-text-field>
+        <v-radio-group
+          inline
+          label="채널종류"
+          v-model="createChannelInfo.isPublic"
+        >
           <v-radio label="공개채널" value="1"></v-radio>
           <v-radio label="비공개 채널" value="0"></v-radio>
         </v-radio-group>
@@ -162,18 +203,30 @@
       </template>
     </v-card>
   </v-dialog>
-
   <!-- 워크스페이스 수정 모달 -->
   <v-dialog v-model="workspaceEditModal" max-width="500px" class="workspaceEditModal">
     <v-card>
-      <v-card-title class="text-h5 text-center">워크스페이스 정보 수정</v-card-title>
+      <v-card-title class="text-h5 text-center"
+        >워크스페이스 정보 수정</v-card-title
+      >
       <v-card-text>
         <v-list>
-          <v-text-field v-model="editedName" placeholder="이름" :rules="nameRules"></v-text-field>
-          <v-text-field v-model="editedWsInfo" placeholder="설명"></v-text-field>
+          <v-text-field
+            v-model="editedName"
+            placeholder="이름"
+            :rules="nameRules"
+          ></v-text-field>
+          <v-text-field
+            v-model="editedWsInfo"
+            placeholder="설명"
+          ></v-text-field>
         </v-list>
       </v-card-text>
-      <v-btn text="수정" color="blue" @click="saveEditing(this.getWorkspaceId)"></v-btn>
+      <v-btn
+        text="수정"
+        color="blue"
+        @click="saveEditing(this.getWorkspaceId)"
+      ></v-btn>
     </v-card>
   </v-dialog>
 
@@ -184,10 +237,16 @@
     :style="{top: `${contextMenuPosition.y}px`, left: `${contextMenuPosition.x}px`,}"
   >
     <ul>
-      <li v-if="selectedItemType === 'workspace'" @click="leaveWorkspace(this.getWorkspaceId)">
+      <li
+        v-if="selectedItemType === 'workspace'"
+        @click="leaveWorkspace(this.getWorkspaceId)"
+      >
         워크스페이스 나가기
       </li>
-      <li v-if="selectedItemType === 'channel'" @click="leaveChannel(selectedItem.channelId)">
+      <li
+        v-if="selectedItemType === 'channel'"
+        @click="leaveChannel(selectedItem.channelId)"
+      >
         채널 나가기
       </li>
     </ul>
@@ -240,7 +299,7 @@ export default {
     getChannelId: {
       // immediate: true, // 처음 로딩 시에도 호출
       handler(newChannelId) {
-        console.error("getChannelId handler")
+        console.error("getChannelId handler");
         if (newChannelId != this.selectedChannelMenuId) {
           this.selectedChannelMenuId = newChannelId;
           this.changeChannel(newChannelId);
@@ -267,7 +326,7 @@ export default {
   mounted() {
     this.selectedChannelMenuId = this.$route.params.channelId;
     this.channelId = this.$route.params.channelId;
-    console.error("channelIDs >> ", this.selectedChannelMenuId, this.channelId)
+    console.error("channelIDs >> ", this.selectedChannelMenuId, this.channelId);
 
     this.getSectionData();
     this.getMyBookmarks();
@@ -304,8 +363,8 @@ export default {
       editedWsInfo: "",
       myChannels: [],
       nameRules: [
-        v => !!v || 'Name is required',
-        v => (v && v.length >= 1) || 'Name must be at least 1 characters'
+        (v) => !!v || "Name is required",
+        (v) => (v && v.length >= 1) || "Name must be at least 1 characters",
       ],
 
       editDialog: false, // dialog 창 상태
@@ -716,6 +775,23 @@ export default {
 
 <style lang="scss">
 .section-title {
+  cursor: pointer;
+  > * {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    .cog-btn{
+      margin-left: 4px;
+    }
+  }
+}
+
+.section-title:hover {
+  background-color: rgba(255, 255, 255, 0.05); /* 검정색을 10% 투명도로 표현 */
+  border-radius: 10px; /* 모서리를 둥글게 설정 */
+  // color: rgba(0, 0, 0, 0.7); /* 텍스트 색도 약간 투명하게 설정 */
+}
+
   &.sectionCreate &.v-list-subheader {
     cursor: pointer;
     background-color: #2f3653;
@@ -756,7 +832,7 @@ h1 {
 }
 
 .section-name {
-  font-size: 1rem;
+  font-size: 0.7rem;
   /* 원하는 폰트 크기로 설정 */
 }
 
