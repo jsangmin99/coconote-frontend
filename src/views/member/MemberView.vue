@@ -16,8 +16,8 @@
   </div>
   
   <div class="memberview-memberlist" style="padding: 50px;">
-    <v-row>
-      <v-col v-for="member in workspaceMemberList" :key="member.workspaceMemberId" cols="2" md="2">
+    <!-- <v-row> -->
+      <div v-for="member in workspaceMemberList" :key="member.workspaceMemberId" cols="2" md="2">
         <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card">
           <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" alt="Profile Image" style="height: 169px; width: 100%"/>
           <v-card-text class="member-info">{{ member.nickname || '별명 없음' }}</v-card-text>
@@ -26,8 +26,8 @@
           <v-icon v-if="member.wsRole === 'SMANAGER'"  color='#C0C0C0'>mdi-crown</v-icon>
             <v-icon v-if="member.wsRole === 'USER'" style="visibility: hidden;">mdi-crown</v-icon>
           </v-card>
-      </v-col>
-    </v-row>
+      </div>
+    <!-- </v-row> -->
   </div>
 </v-container>
   
@@ -378,6 +378,13 @@ export default {
   height: 90vh;
   width: 100%;
 }
+
+.memberview-memberlist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* 반응형 그리드 */
+  gap: 16px; /* 아이템 간격 */
+}
+
 .hover-card {
     transition: transform 0.2s ease;
     border-radius: 15px;
