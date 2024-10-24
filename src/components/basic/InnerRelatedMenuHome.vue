@@ -219,7 +219,7 @@ export default {
       handler(newNotifications) {
         console.log('🍆🍆🍆🍆🍆🍆🍆 새로운 알림이 도착했습니다 :::::', newNotifications);
         // unreadCounts[channel.channelId]
-        const lastNoti = newNotifications.notifications[newNotifications.notifications.length -1];
+        const lastNoti = newNotifications.notifications[newNotifications.notifications.length - 1];
         console.error(lastNoti)
         this.unreadCounts[lastNoti.channelId]++;
       },
@@ -247,6 +247,7 @@ export default {
       },
       deep: true,
     },
+
   },
   created() {
     // this.selectedChannelMenuId = this.$route.params.channelId;
@@ -382,6 +383,19 @@ export default {
         console.log(error);
       }
     },
+    async removeUnreadCount(channelId) {
+      if (this.unreadCounts && this.unreadCounts[channelId] !== undefined) {
+        this.unreadCounts[channelId] = 0;
+      }
+
+      try {
+        await axios.delete(
+          `${process.env.VUE_APP_API_BASE_URL}/notifications/mark-as-read/${channelId}`
+        );
+      } catch (error) {
+        console.error("Failed to remove unread count:", error);
+      }
+    },
     // async getChannelMemberInfo(id) {
     //   const chMember = await axios.get( // 채널 권한 정보
     //   ${process.env.VUE_APP_API_BASE_URL}/member/me/channel/${id}
@@ -390,11 +404,14 @@ export default {
 
     // },
     async handleChannelClick(id, name, desc) {
+      this.removeUnreadCount(localStorage.getItem("channelId"));
       this.selectedChannelMenuId = id;
       this.setChannelInfoActions(id);
       this.setChannelNameInfoActions(name);
       this.setChannelDescInfoActions(desc);
 
+
+      this.removeUnreadCount(id);
 
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
@@ -422,10 +439,15 @@ export default {
         return false;
       }
       if (id) {
+        console.log ("[InnerRelatedMenuHome] changeChannel().id : ", id);
+        this.removeUnreadCount(localStorage.getItem("channelId"));
+
         this.selectedChannelMenuId = id;
         this.setChannelInfoActions(id);
         this.setChannelNameInfoActions(name);
         this.setChannelDescInfoActions(desc);
+
+        this.removeUnreadCount(id);
 
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/channel/${id}/isjoin`
