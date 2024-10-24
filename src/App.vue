@@ -9,7 +9,7 @@
       </v-row>
       <v-row no-gutters style="height: 100%">
         <v-col
-          :cols="!isInnerMenuOnlyOutsidePage ? 2 : 'auto'"
+          :cols="!OnlyOutsidePage ? 2 : 'auto'"
           v-if="!isHiddenPage"
         >
           <div class="d-flex innerMenuContainer">

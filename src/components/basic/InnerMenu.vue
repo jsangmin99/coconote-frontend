@@ -344,6 +344,8 @@ export default {
   padding: 10px;
   z-index: 1005;
   top: 50px;
+  overflow-y: auto;
+  max-height: 400px;
 }
 
 .workspace-dropdown-menu ul {

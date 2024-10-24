@@ -16,25 +16,25 @@
   </div>
   
   <div class="memberview-memberlist" style="padding: 50px;">
-    <v-row>
-      <v-col v-for="member in workspaceMemberList" :key="member.workspaceMemberId" cols="2" md="2">
-        <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card">
-          <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" alt="Profile Image" style="height: 169px; width: 100%"/>
-          <v-card-text class="member-info">{{ member.nickname || '별명 없음' }}</v-card-text>
-          <v-card-title class="member-title">{{ member.memberName || '이름 없음' }}</v-card-title>
-          <v-icon v-if="member.wsRole === 'PMANAGER'"  color='#ffbb00'>mdi-crown</v-icon>
-          <v-icon v-if="member.wsRole === 'SMANAGER'"  color='#C0C0C0'>mdi-crown</v-icon>
-            <v-icon v-if="member.wsRole === 'USER'" style="visibility: hidden;">mdi-crown</v-icon>
-          </v-card>
-      </v-col>
-    </v-row>
+    <div v-for="member in workspaceMemberList" :key="member.workspaceMemberId" cols="2" md="2">
+      <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card" style="border-radius: 15px;">
+        <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" 
+        alt="Profile Image" 
+        class="memberview-memberlist-img"/>
+        <v-card-text class="member-info" style="padding-bottom: 0; font-size: 12px;">{{ member.nickname || '별명 없음' }}</v-card-text>
+        <v-card-title class="member-title" style="padding-top: 3px;">{{ member.memberName || '이름 없음' }}</v-card-title>
+        <v-icon v-if="member.wsRole === 'PMANAGER'"  color='#ffbb00'>mdi-crown</v-icon>
+        <v-icon v-if="member.wsRole === 'SMANAGER'"  color='#C0C0C0'>mdi-crown</v-icon>
+        <v-icon v-if="member.wsRole === 'USER'" style="visibility: hidden;">mdi-crown</v-icon>
+      </v-card>
+    </div>
   </div>
 </v-container>
   
 
     <v-dialog v-model="workspaceMemberModal" max-width="600px" class="workspaceMemberModal">
        <v-card>
-        <v-card-title class="text-h5">
+        <v-card-title class="text-h5" style="padding : 24px;">
           <h2>프로필 
           <v-icon color="grey" v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)" size="20">mdi-cog</v-icon></h2>
 
@@ -45,7 +45,9 @@
                 <div class="member-detail-container">
                   <v-row>
                     <v-col>
-                      <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${this.memberImageId}.jpg`)" alt="Profile Image" height="200px"/>
+                      <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${this.memberImageId}.jpg`)" 
+                      alt="Profile Image" 
+                      style="width: 100%; border-radius: 15px;"/>
                       
                       <div v-if="getWsRole !== 'USER' && workspaceMemberInfo.wsRole !== 'PMANAGER'">
                       <v-btn color="#3a8bcd" text="권한" @click="(workspaceRoleDialog = true)">
@@ -56,94 +58,82 @@
                     </v-col>
                     <v-col>
                       <div class="member-info-container">
-                        <v-row>
-                              <v-col cols="3">
-                                <h4 class="member-info">닉네임</h4>
-                              </v-col>
-                              <v-col cols="9">
-                                {{ workspaceMemberInfo.nickname }}
-                              </v-col>
-                            </v-row>
-                            <v-row>
-                              <v-col cols="3">
-                                <h2 class="member-title">이름</h2>
-                              </v-col>
-                              <v-col cols="9">
-                                {{ workspaceMemberInfo.memberName }}
-                              </v-col>
-                            </v-row>
-                        
-                        
+                        <v-row class="member-info-list">
+                          <v-col cols="3" class="member-info-list">
+                            <h4 class="member-info">닉네임</h4>
+                          </v-col>
+                          <v-col cols="9" class="member-info-list">{{ workspaceMemberInfo.nickname }}
+                          </v-col>
+                        </v-row>
+                        <v-row class="member-info-list">
+                          <v-col cols="3" class="member-info-list">
+                            <h2 class="member-title">이름</h2>
+                          </v-col>
+                          <v-col cols="9" class="member-info-list">{{ workspaceMemberInfo.memberName }}
+                          </v-col>
+                        </v-row>
 
                         <v-divider class="my-3"></v-divider>
-                        
-                        <div class="member-details">
 
-                          <div class="info-item">
-                            <v-row>
-                              <v-col cols="3">
-                                <v-icon>mdi-email-outline</v-icon>
-                                <div class="member-info" style="margin-top: 5px;">이메일</div>
-                              </v-col>
-                              <v-col cols="9">
-                                <div style="margin-top: 10px;">{{ workspaceMemberInfo.email }}</div>
-                              </v-col>
-                            </v-row>
-                          </div>
-               
+                        <v-row class="member-info-list">
+                          <v-col cols="3" class="member-info-list">
+                            <v-icon>mdi-email-outline</v-icon>
+                            
+                          </v-col>
+                          <v-col cols="9" class="member-info-list">
+                            <div class="member-info">이메일</div>
+                            <div>{{ workspaceMemberInfo.email }}</div>
+                          </v-col>
+                        </v-row>
+                        
                         <v-divider class="my-3"></v-divider>
    
-                        <div>
-                        
-                          <div class="info-item">
-                            <v-row>
-                              <v-col cols="3">
-                                <v-icon>mdi-domain</v-icon>
-                                <div class="member-info" style="margin-top: 5px;">소속</div>
-                              </v-col>
-                              <v-col cols="9">
-                                <div style="margin-top: 10px;">{{ workspaceMemberInfo.field }}</div>
-                              </v-col>
-                            </v-row>
-                          </div>
+                          <v-row class="member-info-list">
+                            <v-col cols="3" class="member-info-list">
+                              <v-icon>mdi-domain</v-icon>
+                              
+                            </v-col>
+                            <v-col cols="9" class="member-info-list">
+                              <div class="member-info">소속</div>
+                              <div>{{ workspaceMemberInfo.field }}</div>
+                            </v-col>
+                          </v-row >
 
 
-                        <br>
 
 
-                          <div class="info-item">
-                            <v-row>
-                              <v-col cols="3">
+                            <v-row class="member-info-list">
+                              <v-col cols="3" class="member-info-list">
                                 <v-icon>mdi-briefcase-outline</v-icon>
-                                <div class="member-info" style="margin-top: 5px;">직급</div>
+                                
                               </v-col>
-                              <v-col cols="9">
-                                <div style="margin-top: 10px;">{{ workspaceMemberInfo.position }}</div>
+                              <v-col cols="9" class="member-info-list">
+                                <div class="member-info">직급</div>
+                                <div>{{ workspaceMemberInfo.position }}</div>
                               </v-col>
                             </v-row>
-                          </div>
 
 
-                          <br>
+                          
 
 
-                          <div class="info-item">
-                            <v-row>
-                              <v-col cols="3">
+                            <v-row class="member-info-list">
+                              <v-col cols="3" class="member-info-list">
                                 <v-icon>mdi-crown</v-icon>
-                                <div class="member-info" style="margin-top: 5px;">등급</div>
+        
                               </v-col>
-                              <v-col cols="9">
-                                <div  v-if="workspaceMemberInfo.wsRole === 'PMANAGER'" style="margin-top: 10px;">워크스페이스 최고 관리자</div>
-                                <div  v-if="workspaceMemberInfo.wsRole === 'SMANAGER'" style="margin-top: 10px;">워크스페이스 관리자</div>
-                                <div  v-if="workspaceMemberInfo.wsRole === 'USER'" style="margin-top: 10px;">일반 회원</div>
+                              <v-col cols="9" class="member-info-list">
+                                <div class="member-info">등급</div>
+                                <div v-if="workspaceMemberInfo.wsRole === 'PMANAGER'">워크스페이스 최고 관리자</div>
+                                <div v-if="workspaceMemberInfo.wsRole === 'SMANAGER'">워크스페이스 관리자</div>
+                                <div v-if="workspaceMemberInfo.wsRole === 'USER'">일반 회원</div>
                               </v-col>
                             </v-row>
-                          </div>
+                       
 
                         </div>
-                      </div>
-                     </div>
+                 
+                   
                   </v-col>
                 </v-row>
                 </div>
@@ -378,6 +368,20 @@ export default {
   height: 90vh;
   width: 100%;
 }
+
+.memberview-memberlist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+  gap: 16px;
+}
+
+.memberview-memberlist-img {
+  height: 200px; /* 고정 높이 설정 */
+    width: 100%; /* 너비를 카드에 맞추기 */
+    object-fit: cover; /* 이미지 비율 유지하며 잘라내기 */
+    border-radius: 15px 15px 15px 15px; /* 상단 모서리 둥글게 */
+}
+
 .hover-card {
     transition: transform 0.2s ease;
     border-radius: 15px;
@@ -407,6 +411,10 @@ export default {
     color: #919191;
     padding-bottom: 0px;
     font-size: 12px;
+}
+
+.member-info-list {
+    padding: 0; 
 }
 
 
