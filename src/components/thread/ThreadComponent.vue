@@ -747,7 +747,7 @@ export default {
         const container = document.getElementById("list-group");
 
         if (container) {
-          container.scrollTop = container.scrollHeight;
+          container.scrollTop = container.scrollHeight+600;
         }
       }, 1);
     },

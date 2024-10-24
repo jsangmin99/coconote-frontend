@@ -8,7 +8,7 @@
     <div class="tag-list">
       <div class="tag-container" v-for="(tag, index) in tagList" :key="index" @contextmenu.prevent="showContextMenu(tag, $event)">
         <strong v-if="!isUpdateTagName || selectedTag.id !== tag.id" class="tag"
-          :style="{ backgroundColor: tag.color }" @click="selectTag(tag)" :class="{ highlight: selectedTags.some(selectedTag => selectedTag.id === tag.id) }">
+          :style="{ backgroundColor: selectedTags.some(selectedTag => selectedTag.id === tag.id)? tag.color: tag.color + '50' }" @click="selectTag(tag)" :class="{ highlight: selectedTags.some(selectedTag => selectedTag.id === tag.id) }">
           {{ tag.name }}
         </strong>
         <input v-if="isUpdateTagName && selectedTag.id === tag.id" type="text" class="tag"
@@ -373,6 +373,7 @@ export default {
 }
 
 .context-menu button:hover {
+  background-color: #afafaf;
   background-color: #f0f0f0;
 }
 @keyframes rainbow-border {
@@ -413,9 +414,9 @@ export default {
   }
 }
 .highlight {
-  border: 2px solid; /* 두께 설정 */
-  animation: rainbow-border 1.5s linear infinite, rainbow-shadow 1.5s linear infinite; /* 애니메이션 설정 */
+  /* animation: rainbow-border 1.5s linear infinite; /* 애니메이션 설정 */
   /* box-shadow: 0 0 10px rgba(255, 255, 0, 0.8); /* 반짝임 효과 */
-  transform: scale(1.1);
+  transform: scale(1.2);
+  margin: 0 5px;
 }
 </style>
