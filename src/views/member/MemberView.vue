@@ -23,11 +23,12 @@
       <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card" style="border-radius: 15px;">
         <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" 
             alt="Profile Image" 
-            class="memberview-memberlist-img"/>
-        <v-icon v-if="member.wsRole === 'PMANAGER'"  color='#ffbb00'>mdi-crown</v-icon>
-        <v-icon v-if="member.wsRole === 'SMANAGER'"  color='#C0C0C0'>mdi-crown</v-icon>
+            class="memberview-memberlist-img"
+            style="margin-bottom: 8px;"/>
+        <v-icon v-if="member.wsRole === 'PMANAGER'"  color='#ffbb00' style="margin-left: 16px;">mdi-crown</v-icon>
+        <v-icon v-if="member.wsRole === 'SMANAGER'"  color='#C0C0C0' style="margin-left: 16px;">mdi-crown</v-icon>
         <v-icon v-if="member.wsRole === 'USER'" style="visibility: hidden;">mdi-crown</v-icon>
-        <v-card-text class="member-info" style="padding-bottom: 0; font-size: 12px;">{{ member.nickname || '별명 없음' }}</v-card-text>
+        <v-card-text class="member-info" style="padding-bottom: 0; padding-top: 8px; font-size: 12px;">{{ member.nickname || '별명 없음' }}</v-card-text>
         <v-card-title class="member-title" style="padding-top: 3px;">{{ member.memberName || '이름 없음' }}</v-card-title>
         <br>
       </v-card>
