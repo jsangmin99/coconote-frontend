@@ -3,6 +3,19 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  .control-group{
+    .button-group{
+      margin-top: 12px;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      button{
+        border: 1px solid #aaa;
+        padding:4px 12px;
+      }
+    }
+  }
+
   #editorArea {
     min-height: 100%;
     position: relative;

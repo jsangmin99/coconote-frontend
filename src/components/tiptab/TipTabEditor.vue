@@ -1,6 +1,6 @@
 <template>
   <div v-if="editor" class="container">
-    <!-- <div class="control-group">
+    <div class="control-group">
       <div class="button-group">
         <button
           @click="editor.chain().focus().toggleBold().run()"
@@ -129,7 +129,7 @@
           Purple
         </button>
       </div>
-    </div> -->
+    </div>
     <!-- 이미지 업로드 버튼 -->
     <div class="image-upload-container">
       <input type="file" ref="fileInput" @change="handleImageUpload" hidden />
@@ -490,6 +490,7 @@ export default {
         this.defaultContent == undefined
           ? ""
           : this.defaultContent,
+      // content: `<p data-id="f622f995-ec41-4515-9736-75947bd2274c" style="margin-left: 0px !important">578zgq5556z1zzzfㅋgㅋ1ㅋㅋㅎ</p><p data-id="f505385b-5a03-402c-b12e-2f3a8219e615" style="margin-left: 30px !important">ㅋ저저저저저맞저ㅋㅋㅋㅋㅋㅋㅋㅋㅇㅇㅇㅎㅎㅎㅋ</p><p data-id="acb54c7b-7bef-4cd4-964f-b6160e9457c3" style="margin-left: 30px !important">1234567855</p><img class="my-image" data-id="66042961-ecc3-4351-b893-f644b561c556" src="https://coconote-s3-bucket.s3.ap-northeast-2.amazonaws.com/3cbed61c-41f5-4aae-a9bf-243cfba1d436.jpeg">`,
     });
 
     this.editor.on("create", ({ editor }) => {
