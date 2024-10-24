@@ -1,130 +1,98 @@
-import { h } from 'vue';
+import { h } from 'vue'; // h 함수 가져오기
 import ToastNotification from '@/components/thread/ToastNotification.vue';
-import { EventSourcePolyfill } from 'event-source-polyfill';
-import axios from 'axios';
 
 const state = {
-    eventSource: null,
-    notifications: [],
-    notificationCounts: {},
-    currentChannelId: null,
-    isConnected: false,
-};
-
-const getters = {
-    notifications: (state) => state.notifications,
-    notificationCounts: (state) => state.notificationCounts,
-    isConnected: (state) => state.isConnected,
+    notifications: [], // 알림 목록
+    eventSource: null, // SSE 연결 객체
 };
 
 const mutations = {
+    ADD_NOTIFICATION(state, notification) {
+        state.notifications.push(notification);
+    },
     SET_EVENT_SOURCE(state, eventSource) {
         state.eventSource = eventSource;
     },
-    ADD_NOTIFICATION(state, notification) {
-        // 중복 알림 필터링 제거
-        state.notifications.push(notification);
-        // 새로운 객체로 할당하여 반응성 유지
-        state.notificationCounts = {
-            ...state.notificationCounts,
-            [notification.channelId]: (state.notificationCounts[notification.channelId] || 0) + 1,
-        };
-        console.log("Updated notificationCounts:", state.notificationCounts);
-    },
-
-    REMOVE_NOTIFICATIONS_BY_CHANNEL(state, channelId) {
-        state.notifications = state.notifications.filter(n => n.channelId !== channelId);
-        delete state.notificationCounts[channelId];
-    },
     CLEAR_NOTIFICATIONS(state) {
         state.notifications = [];
-        state.notificationCounts = {};
     },
-    SET_CURRENT_CHANNEL(state, channelId) {
-        state.currentChannelId = channelId;
-    },
-    SET_CONNECTION_STATUS(state, status) {
-        state.isConnected = status;
+    CLOSE_EVENT_SOURCE(state) {
+        if (state.eventSource) {
+            state.eventSource.close();
+            state.eventSource = null;
+        }
     },
 };
 
 const actions = {
-    subscribeToNotifications({ commit, state }, workspaceId) {
-        if (state.eventSource) {
-            state.eventSource.close();
-            commit('SET_EVENT_SOURCE', null);
-        }
+    connectToSSE({ commit }, { workspaceId }) {
+        // URL에 인증 토큰을 쿼리 파라미터로 추가
+        const accessToken = localStorage.getItem('accessToken');
+        const eventSourceUrl = `${process.env.VUE_APP_API_BASE_URL}/notifications/subscribe/${workspaceId}?token=${encodeURIComponent(accessToken)}`;
 
-        const eventSource = new EventSourcePolyfill(`${process.env.VUE_APP_API_BASE_URL}/notifications/subscribe/${workspaceId}`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-            withCredentials: true,
-            heartbeatTimeout: 30000,
-        });
+        // SSE 연결을 설정하고 알림을 수신
+        const eventSource = new EventSource(eventSourceUrl);
+        console.log('SSE 연결:', eventSource);
+        commit('SET_EVENT_SOURCE', eventSource);
 
         eventSource.onopen = () => {
-            commit('SET_CONNECTION_STATUS', true);
+            console.log('SSE 연결이 성공적으로 열렸습니다.');
         };
 
+        // 'notification' 이벤트 리스너 등록
         eventSource.addEventListener('notification', (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                console.log('New notification:', data);
-                // 현재 사용자의 알림은 무시
-                if (data.userId != localStorage.getItem('workspaceMemberId')) { 
-                    console.log(data.userId, localStorage.getItem('workspaceMemberId'));
-                    if (data.channelId != localStorage.getItem('channelId')) {
-                        console.log("SSE channel Id:", data.channelId , "localStorage channel Id:", localStorage.getItem('channelId'));
-                        commit('ADD_NOTIFICATION', data); // 알림 추가
-                        showNotificationToast(data); // 알림 토스트 표시
-                    }
-                }
-            } catch (e) {
-                console.error("Error processing notification:", e);
-            }
+            console.log('SSE 수신:', event);
+            const data = event.data;
+            console.log('수신된 데이터:', data); // 수신된 데이터 확인
+            const notification = JSON.parse(data);
+            console.log('새로운 알림:', notification);
+
+            // 알림을 Vuex에 추가
+            const notificationData = {
+                message: notification.message,
+                memberName: notification.memberName,
+                channelName: notification.channelName,
+                channelId: notification.channelId,
+                timestamp: new Date(),
+            };
+            commit('ADD_NOTIFICATION', notificationData);
+            console.log('알림 목록:', notificationData);
+
+            // ToastNotification 컴포넌트를 사용해 알림 표시
+            showNotificationToast(notificationData);
         });
 
-        eventSource.onerror = () => {
-            commit('SET_CONNECTION_STATUS', false);
-            commit('SET_EVENT_SOURCE', null);
+        eventSource.onerror = (error) => {
+            console.error('SSE connection error:', error);
+            commit('CLOSE_EVENT_SOURCE');
+            // 재연결 시도
+            setTimeout(() => {
+                console.log('재연결 시도...');
+                actions.connectToSSE({ commit }, { workspaceId }); // self를 사용하지 않고 actions를 통해 호출
+            }, 100); // 0.1초 후 재연결 시도
         };
-
-        commit('SET_EVENT_SOURCE', eventSource);
     },
 
-
-    async clearChannelNotifications({ commit }, channelId) {
-        try {
-            await axios.delete(`${process.env.VUE_APP_API_BASE_URL}/notifications/channel/${channelId}`);
-            commit('REMOVE_NOTIFICATIONS_BY_CHANNEL', channelId);
-        } catch (error) {
-            console.error('Error clearing notifications:', error);
-        }
+    disconnectSSE({ commit }) {
+        // SSE 연결 해제
+        commit('CLOSE_EVENT_SOURCE');
     },
-
-    closeEventSource({ state, commit }) {
-        if (state.eventSource) {
-            state.eventSource.close();
-            commit('SET_EVENT_SOURCE', null);
-            commit('SET_CONNECTION_STATUS', false);
-        }
-    },
-
-    changeChannel({ commit }, channelId) {
-        commit('SET_CURRENT_CHANNEL', channelId);
+    clearNotifications({ commit }) {
+        // 알림 목록 초기화
         commit('CLEAR_NOTIFICATIONS');
     },
 };
 
+// ToastNotification을 표시하는 함수
 function showNotificationToast(data) {
-    const toast = window.app.config.globalProperties.$toast;
+    const toast = window.app.config.globalProperties.$toast; // 전역에서 toast 가져오기
     if (toast && data.message) {
         const toastMessage = h(ToastNotification, {
             channelName: data.channelName,
             memberName: data.memberName,
             message: data.message,
         });
+
         const toastOptions = {
             position: 'bottom-right',
             autoClose: 5000,
@@ -136,24 +104,25 @@ function showNotificationToast(data) {
                 borderRadius: '8px',
                 boxShadow: 'none',
             },
-             // 클릭 시 쓰레드로 이동하는 핸들러 추가
-             onClick: () => {
-                moveToThread(data.channelId, data.threadId, data.parentThreadId);
-            },
+            // onClick: () => {
+            //     moveToThread(data.channelId, data.threadId, data.parentThreadId); // 클릭 시 핸들러
+            // },
         };
+
+        // Toast 알림 표시
         toast.info(toastMessage, toastOptions);
     }
 }
-function moveToThread(channelId, threadId, parentThreadId) {
-    console.log("parentThreadId: ", parentThreadId);
-    // 쓰레드로 이동
-    window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}&parentThreadId=${parentThreadId}`;
-}
+
+// Vuex 스토어의 getters
+const getters = {
+    allNotifications: (state) => state.notifications,
+};
 
 export default {
     namespaced: true,
     state,
-    getters,
     mutations,
     actions,
+    getters,
 };
