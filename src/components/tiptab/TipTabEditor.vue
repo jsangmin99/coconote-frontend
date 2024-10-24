@@ -257,7 +257,14 @@ export default {
         CustomBlock,
         DraggableItem,
         UniqueID.configure({
-          types: ["heading", "paragraph", "image", "bulletList", "orderedList", "listItem"],
+          types: [
+            "heading",
+            "paragraph",
+            "image",
+            "bulletList",
+            "orderedList",
+            "listItem",
+          ],
         }),
         NodeRange.configure({
           key: null,
@@ -395,17 +402,68 @@ export default {
         let updateElOuterHtml = "";
         if (updateEl) {
           updateElOuterHtml = updateEl.outerHTML;
-          console.error("🍆🍆🍆🍆🍆🍆", updateEl)
-          if (
+          console.error("🍆🍆🍆🍆🍆🍆", updateEl);
+          if ( //update 한 element가 ol이나 ul 이라면, 기존에 생성된 p태그는 ul태그 안으로 들어감 (p 태그의 아이디 중복 발생)
             updateEl.tagName.toUpperCase() === "OL" || // () 추가
             updateEl.tagName.toUpperCase() === "UL"
           ) {
             console.error("🍆🍆🍆🍆🍆🍆 This element is an ol or ul tag.");
-            const targetElement = updateEl.querySelector(`[data-id="${this.lastSendMsgObj.blockFeId}"]`);
+            const targetElement = updateEl.querySelector(
+              `[data-id="${this.lastSendMsgObj.blockFeId}"]`
+            );
             if (targetElement) {
-              console.log("data-id='1'인 요소가 존재합니다:", targetElement);
-            } else {
-              console.log("data-id='1'인 요소가 존재하지 않습니다.");
+              this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // 따라서 기존 p 태그 DB상에서 삭제함
+            }
+          } else if (updateEl.tagName.toUpperCase() === "P") {
+            if (this.lastSendMsgObj.blockContents) {
+              const tempDiv = document.createElement("div");
+              tempDiv.innerHTML = this.lastSendMsgObj.blockContents;
+
+              // 첫 번째 자식을 가져옵니다.
+              const prevUpdateElType = tempDiv.firstElementChild;
+              if (
+                prevUpdateElType.tagName.toUpperCase() === "OL" ||
+                prevUpdateElType.tagName.toUpperCase() === "UL"
+              ) {
+                //이전에 update 한 element 가 ol이나 ul 이고 현재 update 된 태그가 p태그 라면
+                const isInsideEl = prevUpdateElType.querySelector(
+                  `[data-id="${updateBlockID}"]`
+                );
+                if (isInsideEl) {
+                  // 현재 update 하는 p태그가 이전 update 부분에 포함되어 있다면
+                  console.error(
+                    "😭😭😭😭😭",
+                    `현재 업데이트 하려는 ${updateBlockID}는 ${this.lastSendMsgObj.blockFeId}에 포함되어있다`
+                  );
+
+                  // prevUpdateElType 내 자식 요소들이 isInsideEl 값만 있는지 확인
+                  const allPTags = prevUpdateElType.querySelectorAll('p');
+
+                  if (allPTags.length === 1 && allPTags[0] === isInsideEl) {
+                    console.log(
+                      "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다."
+                    );
+                    this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // ul 태그 deep 삭제 보내기
+                    // p 생성하도록 하기
+                    // 임시로 저장해서 다 끝나고 보내기 p태그 create. ⭐⭐⭐⭐
+
+                  } else {
+                    console.log(
+                      "❌ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 있습니다."
+                    );
+                    // ul태그 [현재 상태값] update로 값 보내기
+                    const nowListStatusHtml = document.querySelector(`[data-id="${this.lastSendMsgObj.blockFeId}"]`)
+                    if(nowListStatusHtml){
+                      const nowListStatusHtmlOuter = nowListStatusHtml.outerHTML;
+                      this.$parent.patchBlock(this.lastSendMsgObj.blockFeId,nowListStatusHtmlOuter)
+                    }
+                    // p 태그 생성하기
+                    // 임시로 저장해서 다 끝나고 보내기 p태그 create. ⭐⭐⭐⭐
+                  }
+                  // 이 값들은 다른 장소에서 update 보내주도록 함
+                  return false;
+                }
+              }
             }
           }
         }
@@ -431,11 +489,6 @@ export default {
           this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateElOuterHtml 값 비교 시 무조건 같은 값
         }
 
-        // 내용 차이 확인
-        // const filteredItems = this.localJSON?.content.filter(
-        //   (item) => item.attrs.id === updateBlockID
-        // );
-        // console.log("filteredItems >> ", filteredItems);
         const filterEl = document.querySelector("updateBlockID");
         if (filterEl) {
           const filterElOuterHtml = filterEl.outerHTML;
@@ -530,6 +583,9 @@ export default {
       "deleteBlockTargetFeIdActions",
       "appendBlockFeIdsAfterPrevActions",
     ]),
+    updateDataEditor(){
+      
+    },
     findPreviousId(obj, targetId) {
       return this.recursiveSearch(obj, targetId);
     },

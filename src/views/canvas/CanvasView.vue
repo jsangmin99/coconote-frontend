@@ -347,6 +347,7 @@ export default {
       } else if (
         recv.method == "CREATE_BLOCK" ||
         recv.method == "UPDATE_BLOCK" ||
+        recv.method == "PATCH_BLOCK" || // 일부 정보만 업데이트
         recv.method == "UPDATE_INDENT_BLOCK" ||
         recv.method == "CHANGE_ORDER_BLOCK" ||
         recv.method == "DELETE_BLOCK" || 

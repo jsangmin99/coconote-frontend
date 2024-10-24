@@ -200,6 +200,7 @@ export default {
     async sendMessage() {
       const blockFeId = this.message.blockFeId;
       const method = this.message.method;
+      console.error("✖️✖️✖️✖️✖️✖️✖️ sendMessage >>>>", blockFeId, method)
       if (
         method == "CREATE_BLOCK" ||
         method == "CHANGE_ORDER_BLOCK" ||
@@ -292,7 +293,8 @@ export default {
       this.deleteBlockTargetFeIdActions(blockFeId).then((isDeleteBlock) => {
         if (isDeleteBlock) {
           // 기존 값에 있어서 삭제했다면
-          this.message = {
+          setTimeout(() => {
+            this.message = {
             postMessageType: "BLOCK", // 고정
             method: "DEEP_DELETE_BLOCK",
             canvasId: this.canvasId,
@@ -302,8 +304,8 @@ export default {
             blockType: "paragraph", //삭제여서 타입 관계 X
             blockFeId: blockFeId,
           };
-
-          this.sendMessage();
+            this.sendMessage();
+          }, 10);
         }
       });
     },
@@ -323,6 +325,9 @@ export default {
       this.activeBlockId = blockFeId;
 
       const blockMethod = this.checkBlockMethod(blockFeId, blockContents);
+      
+      console.error("💻💻💻💻💻" , blockFeId, blockMethod)
+      
       this.message = {
         method: blockMethod,
         blockFeId: blockFeId, // block id
