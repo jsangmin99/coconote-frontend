@@ -134,7 +134,7 @@ body {
   /* 이미지의 가로 크기 */
   height: 150px;
   /* 이미지의 세로 크기 */
-  border-radius: 50%;
+  border-radius: 15px;
   /* 이미지를 동그랗게 만듦 */
   object-fit: cover;
   /* 이미지가 부모 요소 크기에 맞게 잘림 */

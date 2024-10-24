@@ -495,8 +495,8 @@ export default {
     .circle {
       width: 30px;
       height: 30px;
-      border-radius: 50%;
       overflow: hidden;
+      border-radius: 10px;
       position: relative;
       z-index: 2;
 

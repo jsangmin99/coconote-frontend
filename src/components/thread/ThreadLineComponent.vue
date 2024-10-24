@@ -390,7 +390,7 @@ import axios from '@/services/axios';
   /* 이미지의 가로 크기 */
   height: 50px;
   /* 이미지의 세로 크기 */
-  border-radius: 50%;
+  border-radius: 15px;
   /* 이미지를 동그랗게 만듦 */
   object-fit: cover;
 }

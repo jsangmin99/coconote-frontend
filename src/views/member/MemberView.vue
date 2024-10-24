@@ -1,10 +1,12 @@
 <template>
-<v-container class="memberview-container" style="margin: 0 0 0 0; padding: 0 0 0 0">
+<v-container class="memberview-container" style="margin: 0px; padding: 0px">
 
+  <!-- MemberView 헤더 부분 -->
   <div class="memberview-header" style="margin: 20px; padding-left: 30px;">
     <h1>모든 회원</h1>
   </div>
   
+  <!-- 중간에 상자 부분 -->
   <div class="memberview-banner" style="background-color: #000435; color: white; padding: 50px; margin-top: 20px;">
     <br>
     <br>
@@ -15,23 +17,25 @@
     <br>
   </div>
   
-  <div class="memberview-memberlist" style="padding: 50px;">
-    <div v-for="member in workspaceMemberList" :key="member.workspaceMemberId" cols="2" md="2">
+  <!-- 회원 카드 전체 보기 -->
+  <div class="memberview-memberlist">
+    <div v-for="member in workspaceMemberList" :key="member.workspaceMemberId">
       <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card" style="border-radius: 15px;">
         <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" 
-        alt="Profile Image" 
-        class="memberview-memberlist-img"/>
-        <v-card-text class="member-info" style="padding-bottom: 0; font-size: 12px;">{{ member.nickname || '별명 없음' }}</v-card-text>
-        <v-card-title class="member-title" style="padding-top: 3px;">{{ member.memberName || '이름 없음' }}</v-card-title>
+            alt="Profile Image" 
+            class="memberview-memberlist-img"/>
         <v-icon v-if="member.wsRole === 'PMANAGER'"  color='#ffbb00'>mdi-crown</v-icon>
         <v-icon v-if="member.wsRole === 'SMANAGER'"  color='#C0C0C0'>mdi-crown</v-icon>
         <v-icon v-if="member.wsRole === 'USER'" style="visibility: hidden;">mdi-crown</v-icon>
+        <v-card-text class="member-info" style="padding-bottom: 0; font-size: 12px;">{{ member.nickname || '별명 없음' }}</v-card-text>
+        <v-card-title class="member-title" style="padding-top: 3px;">{{ member.memberName || '이름 없음' }}</v-card-title>
+        <br>
       </v-card>
     </div>
   </div>
 </v-container>
   
-
+<!-- 회원 카드 상세 보기 -->
     <v-dialog v-model="workspaceMemberModal" max-width="600px" class="workspaceMemberModal">
        <v-card>
         <v-card-title class="text-h5" style="padding : 24px;">
@@ -44,7 +48,7 @@
               <v-col cols="12">
                 <div class="member-detail-container">
                   <v-row>
-                    <v-col>
+                    <v-col cols="5">
                       <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${this.memberImageId}.jpg`)" 
                       alt="Profile Image" 
                       style="width: 100%; border-radius: 15px;"/>
@@ -56,7 +60,7 @@
                       </v-btn>
                       </div>
                     </v-col>
-                    <v-col>
+                    <v-col cols="7">
                       <div class="member-info-container">
                         <v-row class="member-info-list">
                           <v-col cols="3" class="member-info-list">
@@ -373,14 +377,16 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
   gap: 16px;
+  padding: 50px;
 }
 
 .memberview-memberlist-img {
-  height: 200px; /* 고정 높이 설정 */
-    width: 100%; /* 너비를 카드에 맞추기 */
-    object-fit: cover; /* 이미지 비율 유지하며 잘라내기 */
-    border-radius: 15px 15px 15px 15px; /* 상단 모서리 둥글게 */
+  width: 100%; /* 부모 요소의 너비에 맞춤 */
+  height: 200px;
+  object-fit: cover; 
+  border-radius: 15px; 
 }
+
 
 .hover-card {
     transition: transform 0.2s ease;
@@ -415,6 +421,19 @@ export default {
 
 .member-info-list {
     padding: 0; 
+}
+
+
+.image {
+  width: 300px; /* 원하는 크기로 조정 */
+  height: auto; /* 비율 유지 */
+}
+
+.icon {
+  position: absolute;
+  top: 10px; /* 이미지 위의 위치 조정 */
+  left: 10px; /* 이미지 위의 위치 조정 */
+  font-size: 24px; /* 아이콘 크기 조정 */
 }
 
 
