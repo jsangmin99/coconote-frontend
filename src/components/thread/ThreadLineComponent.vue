@@ -32,7 +32,6 @@
               class="tag-input"
               placeholder="tags"
               v-model="tagName"
-              v-on:keypress.enter="createTag"
               v-on:input="adjustWidth"
               @keydown="tagHandleKeydown"
               ref="tagInput"
@@ -48,7 +47,14 @@
               >
                 <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
               </div>
-              <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
+              <strong 
+                class="tag-create" 
+                :class="{ 'active': focusedIndex === filteredTagList.length }"
+                @click="createTag"
+                ref="createTagRef"
+              >
+                + Create "{{tagName}}"
+              </strong>
             </div>
           </div>
         </div>
@@ -56,6 +62,49 @@
 
       <!-- 내용 -->
       <div class="content-group">
+        <!-- 내용 태그 -->
+        <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
+          <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
+            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+          </div>
+          <div class="hash-btn">
+            <button @click="toggleTagMenu">#</button>
+          </div>
+          <div class="tag-toggle">
+            <input
+              v-if="isTagMenuVisible"
+              type="text"
+              class="tag-input"
+              placeholder="tags"
+              v-model="tagName"
+              v-on:input="adjustWidth"
+              @keydown="tagHandleKeydown"
+              ref="tagInput"
+              :style="{ width: inputWidth + 'px'}"
+            >
+            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }" tabindex="0">
+              <div 
+              v-for="(tag,index) in filteredTagList" 
+              :key="index" class="tag-list" 
+              :class="{ 'active': index === focusedIndex }" 
+              @click="addT(tag.id)"
+              ref="tagRefs"
+              >
+                <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+              </div>
+              <strong 
+                class="tag-create" 
+                :class="{ 'active': focusedIndex === filteredTagList.length }"
+                @click="createTag"
+                ref="createTagRef"
+              >
+                + Create "{{tagName}}"
+              </strong>
+            </div>
+          </div>
+        </div>
+        <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
         <div v-if="isUpdate" class="update-group">
           <textarea
             type="text"
@@ -69,40 +118,6 @@
             <button class="btn" @click="cancel">취소</button>
             <button class="btn" @click="update" style="background: green; color: white;">저장</button>
           </div>
-        </div>
-        <div v-if="!isUpdate">
-          <!-- 내용 태그 -->
-          <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
-            <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
-              <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
-              <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
-            </div>
-            <div class="hash-btn">
-              <button @click="toggleTagMenu">#</button>
-            </div>
-            <div class="tag-toggle">
-              <div class="tag-input-group">
-                <input
-                  v-if="isTagMenuVisible"
-                  type="text"
-                  class="tag-input"
-                  placeholder="tags"
-                  v-model="tagName"
-                  v-on:keypress.enter="createTag"
-                  v-on:input="adjustWidth"
-                  ref="tagInput"
-                  :style="{ width: inputWidth + 'px'}"
-                >
-                <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
-                  <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
-                    <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
-                  </div>
-                  <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="content" v-html="formattedContent"></div>
         </div>
       </div>
       
@@ -217,7 +232,7 @@ import axios from '@/services/axios';
         }
         
         if(this.tagList.some(t => t.name === this.tagName)) {
-          // alert("이미 있는 태그 이름입니다!")
+          alert("이미 있는 태그 이름입니다!")
           return;
         }
         this.createAndAddTag(this.thread.id, this.tagName, this.getRandomColor());
@@ -373,9 +388,9 @@ import axios from '@/services/axios';
         const { key } = event;
 
         if (key === 'ArrowDown') {
-          this.focusedIndex = (this.focusedIndex + 1) % this.filteredTagList.length;
+          this.focusedIndex = (this.focusedIndex + 1) % (this.filteredTagList.length + 1);
         } else if (key === 'ArrowUp') {
-          this.focusedIndex = (this.focusedIndex - 1 + this.filteredTagList.length) % this.filteredTagList.length;
+          this.focusedIndex = (this.focusedIndex - 1 + this.filteredTagList.length + 1) % (this.filteredTagList.length + 1);
         } else if (key === 'Enter') {
           if (this.focusedIndex < this.filteredTagList.length) {
             this.addT(this.filteredTagList[this.focusedIndex].id);
@@ -386,10 +401,15 @@ import axios from '@/services/axios';
 
         // 포커스된 태그가 보이도록 스크롤 조정
         this.$nextTick(() => {
-          const tagElements = this.$refs.tagRefs;
-          if (tagElements[this.focusedIndex]) {
-            const element = tagElements[this.focusedIndex];
-            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          if (this.focusedIndex < this.filteredTagList.length) {
+            const tagElements = this.$refs.tagRefs;
+            if (tagElements[this.focusedIndex]) {
+              const element = tagElements[this.focusedIndex];
+              element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          } else {
+            // Create 태그로 스크롤 조정
+            this.$refs.createTagRef.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
         });
       },
@@ -511,8 +531,6 @@ import axios from '@/services/axios';
   overflow-y: auto;
 }
 .content-group{
-  display: flex;
-  flex-direction: row;
   gap: 10px;
 }
 .content {
@@ -659,6 +677,9 @@ textarea:focus {
 }
 .tag-list.active {
   background-color: #f0f0f0; /* 포커스된 태그의 배경 색 */
+}
+.tag-create.active {
+  background-color: #e0e0e0; /* 포커스된 Create 태그의 배경 색 */
 }
 </style>
 
