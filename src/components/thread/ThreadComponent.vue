@@ -12,7 +12,7 @@
       <div v-if="isLastPage" class="enter-title">
         <h1>#채널의 시작이에요</h1>
       </div>
-      <v-skeleton-loader v-if="!isLastPage" type="list-item-avatar, paragraph"></v-skeleton-loader>
+      <v-skeleton-loader v-if="!isLastPage" type="list-item-avatar, paragraph,list-item-avatar, paragraph,list-item-avatar, paragraph"></v-skeleton-loader>
       <div class="list-group-item" v-for="(message, index) in filteredMessages.slice().reverse()" :key="message.id">
         <div
           v-if="index === 0 || (index > 0 && this.isDifferentDay(message.createdTime, filteredMessages.slice().reverse()[index - 1].createdTime))">
@@ -60,7 +60,7 @@
 
   <!-- 댓글 부분 -->
   <div v-if="isComment" class="container">
-    <div class="comment-group">
+    <div class="comment-group" id="comment-group">
       <div class="thread-title">
         <button @click="commentOut">
           <img :src="require('@/assets/images/left-icon.png')" alt="back" style="height: 30px; width: 30px; margin-top: 2px;">
@@ -745,9 +745,15 @@ export default {
 
       this.$nextTick(() => {
         const container = document.getElementById("list-group");
+        const container2 = document.getElementById("comment-group");
 
         if (container) {
-            container.scrollTop = container.scrollHeight; 
+          container.scrollTop = container.scrollHeight; 
+          console.log("밑으로111");
+        }
+        if (container2) {
+          container2.scrollTop = container2.scrollHeight; 
+          console.log("밑으로222");
         }
       });
     },
