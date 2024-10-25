@@ -130,6 +130,7 @@ function showNotificationToast(data) {
 }
 
 function moveToThread(channelId, threadId, parentThreadId) {
+    localStorage.setItem('channelId', channelId);
     // 쓰레드로 이동
     window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}&parentThreadId=${parentThreadId}`;
 }
