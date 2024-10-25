@@ -595,6 +595,7 @@ export default {
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             this.dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
             console.log("드롭된 파일 ID:", this.dragedFile.fileId);
+            // 파일아이디 없고 폴더일경우 return
             if(!this.dragedFile.fileId) return;
             // 파일 업로드나 추가 작업을 수행할 로직 작성
             parsedData.map(dragedFile =>this.fileList.push({

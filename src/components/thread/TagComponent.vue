@@ -317,7 +317,11 @@ export default {
 .result-content {
   display: flex;
 }
-
+.image-group{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 .result-image {
   border-radius: 50%;
   margin-right: 15px;

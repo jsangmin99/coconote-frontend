@@ -30,7 +30,7 @@
               v-if="isTagMenuVisible"
               type="text"
               class="tag-input"
-              placeholder="tags"
+              placeholder="태그를 입력해주세요"
               v-model="tagName"
               v-on:input="adjustWidth"
               @keydown="tagHandleKeydown"
@@ -76,7 +76,7 @@
               v-if="isTagMenuVisible"
               type="text"
               class="tag-input"
-              placeholder="tags"
+              placeholder="태그를 입력해주세요"
               v-model="tagName"
               v-on:input="adjustWidth"
               @keydown="tagHandleKeydown"
@@ -175,7 +175,7 @@ import axios from '@/services/axios';
             isUpdate: false,
             tagName: "",
             tagColor: "",
-            inputWidth: 35,
+            inputWidth: 150,
             isTagMenuVisible: false,
             focusedIndex: 0, // 현재 포커스된 인덱스
         };
