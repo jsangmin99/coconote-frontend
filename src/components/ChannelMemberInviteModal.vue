@@ -1,22 +1,31 @@
 <template>
   <div v-if="isModalOpen" class="modal" @click="closeModal">
     <div class="modal-content" @click.stop>
+      <!-- 검색창 헤더 -->
       <header>
-        <h2># {{ getChannelName }}</h2>
-        <h2>#멤버 초대</h2>
+          <h2># {{ getChannelName }}</h2>
+          <h2>#멤버 초대</h2>
         <v-icon @click="closeModal" class="close-button">mdi-close</v-icon>
       </header>
+      <br>
+      <!-- 멤버 검색창 -->
       <div class="search-bar">
-        <input type="text" v-model="searchKeyword" placeholder="멤버 찾기" @input="debouncedSearchMembers" />
+        <v-text-field
+          v-model="searchKeyword"
+          variant="outlined"
+          placeholder="멤버 찾기"
+          @input="debouncedSearchMembers"
+          append-icon="mdi-magnify"
+        ></v-text-field>
       </div>
       <div class="member-list">
         <!-- 현재 채널에 있는 멤버 목록 -->
-        <h3>현재 채널 멤버</h3>
+        <h4>현재 채널 멤버</h4>
         <div v-if="isLoadingMembers">로딩 중...</div>
         <div v-else>
           <div v-for="member in channelMembers" :key="member.id" class="member-item">
             <img :src="member.memberInfo.profileImage || require(`@/assets/images/profile/profile${member.memberInfo.workspaceMemberId % 10}.jpg`)" alt="프로필 이미지" class="profile-image" />
-            <div class="member-title">
+            <div class="member-title" style="width: 100%; margin-left: 12px;">
               <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}<v-icon v-if="member.channelRole === 'MANAGER'" color="#ffbb00">mdi-crown</v-icon></v-list-item-title>
             </div>
             <div>
@@ -26,21 +35,21 @@
           </div>
         </div>    
 
+        <v-divider class="my-3"></v-divider>
+
         <!-- 멤버 검색 결과 -->
-        <h3>멤버 검색 결과</h3>
+          <h4>멤버 검색 결과</h4>
         <div v-if="isLoading">로딩 중...</div>
         <div v-else>
           <div v-for="member in filteredSearchResults" :key="member.workspaceMemberId" class="member-item">
             <img :src="member.profileImage || require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" alt="프로필 이미지" class="profile-image" />
-            <div class="member-title">
+            <div class="member-title"  style="width: 100%; margin-left: 12px;">
               <v-list-item-title>{{ member.memberName || '이름 없음' }}</v-list-item-title>
-              <v-list-item-title>{{ member.email }}</v-list-item-title>
+              <v-list-item-title style="font-size: 10px;">{{ member.email }}</v-list-item-title>
             </div>
             <div class="invite-button-wrap">
-              <button v-if="!isMemberInChannel(member)" @click="inviteMember(member.workspaceMemberId)" class="invite-button">
-                초대
-              </button>
-              <span v-else>가입됨</span>
+              <v-btn v-if="!isMemberInChannel(member)" @click="inviteMember(member.workspaceMemberId)" icon="mdi-account-plus" class="invite-button">
+              </v-btn>
             </div>
           </div>
         </div>
@@ -265,7 +274,7 @@ export default {
 
 .modal-content {
   background-color: white;
-  padding: 20px;
+  padding: 24px;
   border-radius: 5px;
   width: 400px;
   max-width: 90%;
@@ -285,23 +294,24 @@ export default {
   cursor: pointer;
 }
 
-.search-bar input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 20px;
+
+.search-bar {
+  display: flex; 
+  justify-content: flex-start; 
+  width: 100%; 
 }
 
 .member-list .member-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin: 12px;
 }
 
 .member-list .member-item img {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 10px;
 }
 
 /* .member-info {
@@ -333,4 +343,12 @@ export default {
 .invite-button:hover {
   background-color: #45a049;
 }
+
+.search-bar input {
+  padding: 10px; /* 내부 여백 */
+  border: 1px solid #ccc; /* 테두리 설정 */
+  border-radius: 4px; /* 모서리 둥글기 */
+  outline: none; /* 포커스 시 기본 테두리 제거 */
+}
+
 </style>
