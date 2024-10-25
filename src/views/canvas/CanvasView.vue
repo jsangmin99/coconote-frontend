@@ -192,6 +192,8 @@ export default {
 
           if (newVal.method == "CREATE_BLOCK") {
             this.sendMessageCanvas();
+          } else if (newVal.method == "HOT_UPDATE_CONTENTS_BLOCK") {
+            this.sendMessageCanvas();
           } else if (newVal.method == "UPDATE_BLOCK") {
             this.sendMessageCanvas();
           } else if (newVal.method == "UPDATE_INDENT_BLOCK") {
@@ -346,8 +348,9 @@ export default {
         }
       } else if (
         recv.method == "CREATE_BLOCK" ||
+        recv.method == "HOT_UPDATE_CONTENTS_BLOCK" || // content만 변경
         recv.method == "UPDATE_BLOCK" ||
-        recv.method == "PATCH_BLOCK" || // 일부 정보만 업데이트
+        // recv.method == "PATCH_BLOCK" || // 일부 정보만 업데이트
         recv.method == "UPDATE_INDENT_BLOCK" ||
         recv.method == "CHANGE_ORDER_BLOCK" ||
         recv.method == "DELETE_BLOCK" || 
