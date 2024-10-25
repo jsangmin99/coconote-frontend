@@ -189,7 +189,7 @@ export default {
     this.fetchChannelInfo(this.getChannelId);
   },
   methods: {
-    ...mapActions(["setWorkspaceInfoActions"]),
+    ...mapActions(["setWorkspaceInfoActions", "setChannelNameInfoActions", "setChannelDescInfoActions"]),
             handleClickOutside(event) {
       // 드롭다운 버튼을 클릭한 경우는 무시
       const dropdownToggle = this.$el.querySelector(".mdi-dots-vertical");
@@ -336,14 +336,19 @@ export default {
         channelInfo: this.updateChannelInfo.channelInfo,
       };
       try {
-        await axios.patch(
+        const response = await axios.patch(
           `${process.env.VUE_APP_API_BASE_URL}/channel/update/${this.getChannelId}`,
           data
         );
         alert("채널 수정이 완료되었습니다.");
-        this.$router.push("/workspace").then(() => {
-          location.reload(); // URL 변경 후 페이지 새로고침
-        });
+        // this.$router.push("/workspace").then(() => {
+        //   location.reload(); // URL 변경 후 페이지 새로고침
+        // })
+        const result = response.data.result;
+        this.setChannelNameInfoActions(result.channelName);
+        this.setChannelDescInfoActions(result.channelInfo);
+        this.channelDialog = false;
+        this.$router.push(`/channel/${this.getChannelId}/thread/view`);
       } catch (error) {
         console.error("채널 수정 에러", error);
       }
