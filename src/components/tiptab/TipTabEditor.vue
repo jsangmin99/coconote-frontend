@@ -30,12 +30,8 @@
         >
           Code
         </button>
-        <button @click="editor.chain().focus().unsetAllMarks().run()">
-          Clear marks
-        </button>
-        <button @click="editor.chain().focus().clearNodes().run()">
-          Clear nodes
-        </button>
+        <button @click="editor.chain().focus().unsetAllMarks().run()">Clear marks</button>
+        <button @click="editor.chain().focus().clearNodes().run()">Clear nodes</button>
         <button
           @click="editor.chain().focus().setParagraph().run()"
           :class="{ 'is-active': editor.isActive('paragraph') }"
@@ -105,9 +101,7 @@
         <button @click="editor.chain().focus().setHorizontalRule().run()">
           Horizontal rule
         </button>
-        <button @click="editor.chain().focus().setHardBreak().run()">
-          Hard break
-        </button>
+        <button @click="editor.chain().focus().setHardBreak().run()">Hard break</button>
         <button
           @click="editor.chain().focus().undo().run()"
           :disabled="!editor.can().chain().focus().undo().run()"
@@ -283,10 +277,7 @@ export default {
                 this.editor.getJSON().content,
                 this.dragCheckSelectionNode?.attrs?.id
               );
-              console.log(
-                "현 선택자에 대한 이전 이후 값 >> ",
-                this.dragCheckEditorJson
-              );
+              console.log("현 선택자에 대한 이전 이후 값 >> ", this.dragCheckEditorJson);
             });
 
             // 드래그가 끝날 때
@@ -360,11 +351,7 @@ export default {
         if (this.dragCheckSelectionNode == null) {
           //drag 중이 아닐 때 가능
           const updateAfterNodes = selectedNode.$anchor.path[0].content.content;
-          console.log(
-            "ㅠㅠㅠㅠㅠㅠㅠㅠㅠ",
-            this.nodeLength,
-            updateAfterNodes.length
-          );
+          console.log("ㅠㅠㅠㅠㅠㅠㅠㅠㅠ", this.nodeLength, updateAfterNodes.length);
           if (this.nodeLength > updateAfterNodes.length) {
             // 개수가 생성 때 보다 적어졌을 때
             const originAllFeIds = this.getAllBlockFeIds;
@@ -457,7 +444,8 @@ export default {
 
                   if (allPTags.length === 1 && allPTags[0] === isInsideEl) {
                     console.log(
-                      "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다.", this.lastSendMsgObj.blockFeId
+                      "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다.",
+                      this.lastSendMsgObj.blockFeId
                     );
                     this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // ul 태그 deep 삭제 보내기
                     // p 태그 생성하기
@@ -470,8 +458,7 @@ export default {
                       `[data-id="${this.lastSendMsgObj.blockFeId}"]`
                     );
                     if (nowListStatusHtml) {
-                      const nowListStatusHtmlOuter =
-                        nowListStatusHtml.outerHTML;
+                      const nowListStatusHtmlOuter = nowListStatusHtml.outerHTML;
                       this.$parent.patchBlock(
                         this.lastSendMsgObj.blockFeId,
                         nowListStatusHtmlOuter
@@ -514,13 +501,10 @@ export default {
           this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateElOuterHtml 값 비교 시 무조건 같은 값
         }
 
-        const filterEl = document.querySelector("updateBlockID");
+        const filterEl = document.querySelector(`[data-id="${updateBlockID}"]`);
         if (filterEl) {
           const filterElOuterHtml = filterEl.outerHTML;
-          if (
-            !this.isFirstAndNullContent &&
-            filterElOuterHtml == updateElOuterHtml
-          ) {
+          if (!this.isFirstAndNullContent && filterElOuterHtml == updateElOuterHtml) {
             isReturn = false; // 값이 동일하다면 보내지 않음
           }
         }
@@ -536,17 +520,17 @@ export default {
         this.nodeLength = this.localJSON.content.length;
 
         // element 위치 감지
-        const searchElAndPrevEl = this.findPreviousId(
+        const searchElAndPrevEl = this.selectedNodePrevAndNext(
           this.localJSON.content,
           updateBlockID
         );
 
-        if (searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0) {
+        if (searchElAndPrevEl == undefined) {
           return false;
         }
 
-        const previousId = searchElAndPrevEl[0];
-        const targetElType = searchElAndPrevEl[1];
+        // const previousId = searchElAndPrevEl.prevBlockId;
+        // const targetElType = searchElAndPrevEl.type;
 
         // console.error("➡️prev➡️➡️", previousId);
 
@@ -555,9 +539,10 @@ export default {
         // 여기서 감지해서 보내기
         this.$parent.updateBlock(
           updateBlockID,
-          targetElType,
+          searchElAndPrevEl.type,
           updateElOuterHtml,
-          previousId,
+          searchElAndPrevEl.prevBlockId,
+          searchElAndPrevEl.nextBlockId,
           parentId,
           updateBlockIndent
         );
@@ -608,11 +593,7 @@ export default {
       "deleteBlockTargetFeIdActions",
       "appendBlockFeIdsAfterPrevActions",
     ]),
-    updateDataEditorAfterEvent(
-      updateBlockID,
-      updateElOuterHtml,
-      updateBlockIndent
-    ) {
+    updateDataEditorAfterEvent(updateBlockID, updateElOuterHtml, updateBlockIndent) {
       // editor onupdate 이벤트와 동일하게 복사해옴
       let isReturn = true;
 
@@ -624,10 +605,7 @@ export default {
       const filterEl = document.querySelector("updateBlockID");
       if (filterEl) {
         const filterElOuterHtml = filterEl.outerHTML;
-        if (
-          !this.isFirstAndNullContent &&
-          filterElOuterHtml == updateElOuterHtml
-        ) {
+        if (!this.isFirstAndNullContent && filterElOuterHtml == updateElOuterHtml) {
           isReturn = false; // 값이 동일하다면 보내지 않음
         }
       }
@@ -643,28 +621,30 @@ export default {
       this.nodeLength = this.localJSON.content.length;
 
       // element 위치 감지
-      const searchElAndPrevEl = this.findPreviousId(
+      const searchElAndPrevEl = this.selectedNodePrevAndNext(
         this.localJSON.content,
         updateBlockID
       );
 
-      if (searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0) {
+      if (searchElAndPrevEl == undefined) {
         return false;
       }
 
-      const previousId = searchElAndPrevEl[0];
-      const targetElType = searchElAndPrevEl[1];
+      // const previousId = searchElAndPrevEl.prevBlockId;
+      // const targetElType = searchElAndPrevEl.type;
 
-      // console.error("➡️prev➡️➡️", previousId);
+      console.error("➡️➡️➡️➡️prev➡️➡️", searchElAndPrevEl);
+      // alert(JSON.stringify(searchElAndPrevEl))
 
       const parentId = null;
 
       // 여기서 감지해서 보내기
       this.$parent.updateBlock(
         updateBlockID,
-        targetElType,
+        searchElAndPrevEl.type,
         updateElOuterHtml,
-        previousId,
+        searchElAndPrevEl.prevBlockId,
+        searchElAndPrevEl.nextBlockId,
         parentId,
         updateBlockIndent
       );
@@ -692,27 +672,24 @@ export default {
         }
 
         // 하위 content가 있으면 재귀적으로 검색
-        if (item.content && Array.isArray(item.content)) {
-          const found = this.recursiveSearch(
-            item.content,
-            targetId,
-            previousId
-          );
-          if (found) {
-            return found; // 값을 찾았으면 반환
-          }
-        }
+        // if (item.content && Array.isArray(item.content)) {
+        //   const found = this.recursiveSearch(
+        //     item.content,
+        //     targetId,
+        //     previousId
+        //   );
+        //   if (found) {
+        //     return found; // 값을 찾았으면 반환
+        //   }
+        // }
       }
 
       return null; // 찾지 못했을 때
     },
     onContentChanged(newContent) {
-      console.log(
-        "부모 컴포넌트로부터 새로운 content를 받았습니다:",
-        newContent
-      );
+      console.log("부모 컴포넌트로부터 새로운 content를 받았습니다:", newContent);
       this.isRecvUpdate = newContent.isRecvMessage;
-      
+
       this.localHTML = this.editor.getHTML();
       this.localJSON = this.editor.getJSON();
 
@@ -724,6 +701,7 @@ export default {
         newContent.method == "DELETE_BLOCK" ||
         newContent.method == "DEEP_DELETE_BLOCK"
       ) {
+        console.error("삭제합니다. :: 부모 컴포넌트로부터 받은 값");
         // 삭제한 경우
         console.error("⭐⭐targetElements⭐⭐", targetElements);
         if (targetElements.length > 0) {
@@ -736,35 +714,28 @@ export default {
           });
         }
         // defaultFeId 중 해당 아이디 삭제
-        this.deleteBlockTargetFeIdActions(newContent.blockFeId).then(
-          (isDeleteBlock) => {
-            console.log("isDeleteBlock newContent.feId :: ", isDeleteBlock);
-            console.error(
-              "이전 nodeLength :: DELETE_BLOCK ::",
-              this.nodeLength
-            );
-            this.nodeLength = this.localJSON.content.length;
-            console.error(
-              "이후 nodeLength :: DELETE_BLOCK ::",
-              this.nodeLength
-            );
-            if (this.nodeLength <= 0) {
-              const plel = document.querySelector(".placeholder");
-              if (plel) {
-                if (plel.classList.contains("hidden")) {
-                  plel.classList.remove("hidden");
-                }
+        this.deleteBlockTargetFeIdActions(newContent.blockFeId).then((isDeleteBlock) => {
+          console.log("isDeleteBlock newContent.feId :: ", isDeleteBlock);
+          console.error("이전 nodeLength :: DELETE_BLOCK ::", this.nodeLength);
+          this.nodeLength = this.localJSON.content.length;
+          console.error("이후 nodeLength :: DELETE_BLOCK ::", this.nodeLength);
+          if (this.nodeLength <= 0) {
+            const plel = document.querySelector(".placeholder");
+            if (plel) {
+              if (plel.classList.contains("hidden")) {
+                plel.classList.remove("hidden");
               }
             }
           }
-        );
+        });
       } else if (
         newContent.method == "UPDATE_INDENT_BLOCK" ||
         newContent.method == "HOT_UPDATE_CONTENTS_BLOCK"
       ) {
-        const changeNode = document.querySelector(
-          `[data-id="${newContent.blockFeId}"]`
+        console.error(
+          "인덴트를 바꾸거나, 내용만 변경합니다. :: 부모 컴포넌트로부터 받은 값"
         );
+        const changeNode = document.querySelector(`[data-id="${newContent.blockFeId}"]`);
         if (!changeNode) {
           return false;
         }
@@ -781,17 +752,12 @@ export default {
           newElement.innerHTML = newContent.blockContents; // HTML 문자열을 DOM 요소로 변환
 
           // 변환된 DOM 요소의 첫 번째 자식을 기존 노드와 교체
-          changeNode.parentNode.replaceChild(
-            newElement.firstElementChild,
-            changeNode
-          );
+          changeNode.parentNode.replaceChild(newElement.firstElementChild, changeNode);
         }
       } else if (newContent.method == "CHANGE_ORDER_BLOCK") {
+        console.error("순서변경합니다. :: 부모 컴포넌트로부터 받은 값");
         // 순서변경의 경우
-        console.log("부모로부터 순서변경 감지!!! ");
-        const changeNode = document.querySelector(
-          `[data-id="${newContent.blockFeId}"]`
-        );
+        const changeNode = document.querySelector(`[data-id="${newContent.blockFeId}"]`);
         const targetDataId =
           newContent.prevBlockId == null
             ? newContent.nextBlockId
@@ -809,9 +775,7 @@ export default {
           newContent.prevBlockId,
           newContent.nextBlockId
         );
-        const targetNode = document.querySelector(
-          `[data-id="${targetDataId}"]`
-        );
+        const targetNode = document.querySelector(`[data-id="${targetDataId}"]`);
         // 이동 실행: changeNode가 targetNode 앞에 이동
         if (changeNode) {
           if (appendType == "prev") {
@@ -828,6 +792,9 @@ export default {
         }
       } else {
         // 생성이나, 현재 targetElement가 없는 update의 경우
+        console.error(
+          "생성이나, targetElement가 없는 update :: 부모 컴포넌트로부터 받은 값"
+        );
         console.error("💻💻💻💻💻", newContent.blockContents);
         if (targetElements.length > 0) {
           console.error("💻💻💻💻💻💻 이미 있는 내용 변경", targetElements);
@@ -849,7 +816,7 @@ export default {
             targetEl2.outerHTML = newContent.blockContents;
           }
         } else {
-          console.error("💻💻💻💻💻💻 222");
+          console.error("💻💻💻💻💻💻 222", newContent.method);
           const newElement = newContent.blockContents;
           console.error(newElement);
           if (newContent.method == "CREATE_BLOCK") {
@@ -880,7 +847,7 @@ export default {
           }
         }
       }
-      
+
       this.localHTML = this.editor.getHTML();
       this.localJSON = this.editor.getJSON();
     },
@@ -923,6 +890,7 @@ export default {
         nextBlockId: null,
         feId: targetId,
         parentBlockId: null, // 부모블록. 사용X
+        type: null,
       };
       for (let i = 0; i < editorJson.length; i++) {
         if (editorJson[i].attrs?.id == targetId) {
@@ -931,6 +899,7 @@ export default {
             i < editorJson.length - 1 ? editorJson[i + 1].attrs.id : null;
 
           idGroupObj.contents = editorJson[i]?.content?.text;
+          idGroupObj.type = editorJson[i]?.content?.type;
           break;
         }
       }
@@ -1034,15 +1003,16 @@ export default {
             if (foundImageEl != undefined && foundImageEl != "") {
               // 여기서 parent update 메소드 호출 -> image는 update 시, 기존 update 로직 활성화 X
               const imagePrevNode = foundImageEl.previousSibling;
+              const imageNextNode = foundImageEl.nextSibling;
               const foundImageElOuterHtml = foundImageEl.outerHTML;
               // const imageNextNode = foundImageEl.nextSibling;
               this.$parent.updateBlock(
                 foundImageEl.getAttribute("data-id"),
                 "image",
                 foundImageElOuterHtml,
-                imagePrevNode != null
-                  ? imagePrevNode.getAttribute("data-id")
-                  : null,
+                imagePrevNode != null ? imagePrevNode.getAttribute("data-id") : null,
+                imageNextNode != null ? imageNextNode.getAttribute("data-id") : null,
+                null,
                 null
               );
             }
@@ -1056,9 +1026,7 @@ export default {
     },
 
     focusBlockFromBlockFeId() {
-      const el = document.querySelector(
-        `[data-id="${this.routeQueryBlockFeId}"]`
-      );
+      const el = document.querySelector(`[data-id="${this.routeQueryBlockFeId}"]`);
       // const $el = this.editor.$node(`[data-id="${this.routeQueryBlockFeId}"]`)
       const $p = this.editor.$node("paragraph");
 
@@ -1083,14 +1051,11 @@ export default {
     //   return `<p class='is-empty is-editor-empty' data-placeholder='내용을 작성하세요.' data-id='${thisuuId}'></p>`;
     // },
     generateUUID() {
-      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-        /[xy]/g,
-        function (c) {
-          var r = (Math.random() * 16) | 0,
-            v = c === "x" ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        }
-      );
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+        var r = (Math.random() * 16) | 0,
+          v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
     },
     onIndentExecuted(event) {
       console.log("Indent 실행됨:", event.detail);

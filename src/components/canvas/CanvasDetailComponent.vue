@@ -347,6 +347,7 @@ export default {
       blockElType,
       blockContents,
       previousId,
+      nextId,
       parentId,
       blockIndent
     ) {
@@ -364,6 +365,7 @@ export default {
         method: blockMethod,
         blockFeId: blockFeId, // block id
         prevBlockId: previousId,
+        nextBlockId: nextId,
         canvasId: this.canvasId,
         // parentBlockId: parentId,
         blockContents: blockContents,
