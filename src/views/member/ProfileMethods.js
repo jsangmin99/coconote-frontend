@@ -142,8 +142,8 @@ export default {
 		async cancel() {
             const response = await axios.get(
                 `${process.env.VUE_APP_API_BASE_URL}/${this.$store.getters.getWorkspaceId}/channel/first`
-              );
-              this.$router.push(`/channel/${response.data.result.channelId}`);
+			);
+			this.$router.push(`/channel/${response.data.result.channelId}`);
 		},
 	},
 };
