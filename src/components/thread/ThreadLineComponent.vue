@@ -34,11 +34,18 @@
               v-model="tagName"
               v-on:keypress.enter="createTag"
               v-on:input="adjustWidth"
+              @keydown="tagHandleKeydown"
               ref="tagInput"
               :style="{ width: inputWidth + 'px'}"
             >
-            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
-              <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
+            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }" tabindex="0">
+              <div 
+              v-for="(tag,index) in filteredTagList" 
+              :key="index" class="tag-list" 
+              :class="{ 'active': index === focusedIndex }" 
+              @click="addT(tag.id)"
+              ref="tagRefs"
+              >
                 <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
               </div>
               <strong class="tag-create" @click="createTag">+ Create "{{tagName}}"</strong>
@@ -155,6 +162,7 @@ import axios from '@/services/axios';
             tagColor: "",
             inputWidth: 35,
             isTagMenuVisible: false,
+            focusedIndex: 0, // 현재 포커스된 인덱스
         };
     },
     computed: {
@@ -209,7 +217,7 @@ import axios from '@/services/axios';
         }
         
         if(this.tagList.some(t => t.name === this.tagName)) {
-          alert("이미 있는 태그 이름입니다!")
+          // alert("이미 있는 태그 이름입니다!")
           return;
         }
         this.createAndAddTag(this.thread.id, this.tagName, this.getRandomColor());
@@ -218,6 +226,7 @@ import axios from '@/services/axios';
       },
       addT(tagId){
         this.addTag(this.thread.id, tagId)
+        this.tagName = "";
       },
       deleteTag(tagId, threadTagId){
         this.removeTag(this.thread.id,tagId,threadTagId)
@@ -359,6 +368,30 @@ import axios from '@/services/axios';
         } else {
           textarea.style.overflowY = 'hidden'; // 스크롤바 숨기기
         }
+      },
+      tagHandleKeydown(event) {
+        const { key } = event;
+
+        if (key === 'ArrowDown') {
+          this.focusedIndex = (this.focusedIndex + 1) % this.filteredTagList.length;
+        } else if (key === 'ArrowUp') {
+          this.focusedIndex = (this.focusedIndex - 1 + this.filteredTagList.length) % this.filteredTagList.length;
+        } else if (key === 'Enter') {
+          if (this.focusedIndex < this.filteredTagList.length) {
+            this.addT(this.filteredTagList[this.focusedIndex].id);
+          } else {
+            this.createTag();
+          }
+        }
+
+        // 포커스된 태그가 보이도록 스크롤 조정
+        this.$nextTick(() => {
+          const tagElements = this.$refs.tagRefs;
+          if (tagElements[this.focusedIndex]) {
+            const element = tagElements[this.focusedIndex];
+            element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        });
       },
     },
   };
@@ -623,6 +656,9 @@ textarea:focus {
   justify-content: center;
   align-items: center;
   margin-left: 5px;
+}
+.tag-list.active {
+  background-color: #f0f0f0; /* 포커스된 태그의 배경 색 */
 }
 </style>
 
