@@ -911,6 +911,12 @@ export default {
             );
             prevElement.insertAdjacentHTML("afterend", newElement);
             return false;
+          } else if (newContent.nextBlockId != null) {
+            let nextElement = document.querySelector(
+              `#editorArea [data-id="${newContent.nextBlockId}"]`
+            );
+            nextElement.insertAdjacentHTML("beforebegin", newElement);
+            return false;
           } else if (newContent.parentBlockId != null) {
             let parentElement = document.querySelector(
               `#editorArea [data-id="${newContent.parentBlockId}"]`
