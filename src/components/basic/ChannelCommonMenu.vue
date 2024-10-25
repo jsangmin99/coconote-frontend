@@ -406,7 +406,7 @@ export default {
         this.channelAccessDialog = false;
         this.$router.push("/workspace").then(() => {
           location.reload(); // URL 변경 후 페이지 새로고침
-        });
+      });
       } catch (error) {
         console.error("채널 공개 범위 수정 중 오류 발생", error);
       }
