@@ -64,7 +64,8 @@ export default {
             }
           } else if (
             this.getCanvasAllInfo_inDetail.method == "CREATE_BLOCK" ||
-            this.getCanvasAllInfo_inDetail.method == "HOT_UPDATE_CONTENTS_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method ==
+              "HOT_UPDATE_CONTENTS_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "UPDATE_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "UPDATE_INDENT_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
@@ -103,6 +104,7 @@ export default {
   },
   data() {
     return {
+      isSendMessageLocked: false,
       room: {},
       sender: "",
       member: "",
@@ -198,6 +200,28 @@ export default {
       this.editorContent = blockToEditorContentArr;
     },
     async sendMessage(message) {
+      console.error("☺️☺️☺️", message);
+      while (this.isSendMessageLocked) {
+        await new Promise((resolve) => setTimeout(resolve, 50)); // 50ms 대기
+      }
+      console.error("👍👍👍👍", message);
+
+      // 함수 실행 시작
+      this.isSendMessageLocked = true;
+
+      try {
+        // 여기에 동기화된 작업을 수행합니다.
+        console.log("작업 시작");
+        await this.performTask(message); // 비동기 작업 예시
+        console.log("작업 완료");
+      } catch (error) {
+        console.error("작업 중 오류 발생:", error);
+      } finally {
+        // 작업이 끝난 후 잠금 해제
+        this.isSendMessageLocked = false;
+      }
+    },
+    async performTask(message) {
       const blockFeId = message.blockFeId;
       const method = message.method;
       console.error("✖️✖️✖️✖️✖️✖️✖️ sendMessage >>>>", blockFeId, method);
@@ -235,6 +259,7 @@ export default {
         }
         await this.timerSendMessage(message);
       }
+      // resolve('작업 완료');
     },
     timerSendMessage(message) {
       this.debounceMessage = { ...message };
@@ -292,24 +317,20 @@ export default {
     },
     deepDeleteBlock(blockFeId) {
       const prevBlockId = this.$store.getters.getTargetBlockPrevFeId(blockFeId); //삭제전 prev block id 검색
-      this.deleteBlockTargetFeIdActions(blockFeId).then((isDeleteBlock) => {
-        if (isDeleteBlock) {
-          // 기존 값에 있어서 삭제했다면
-          // setTimeout(() => {
-            const message = {
-              postMessageType: "BLOCK", // 고정
-              method: "DEEP_DELETE_BLOCK",
-              canvasId: this.canvasId,
-              prevBlockId: prevBlockId,
-              parentBlockId: null,
-              blockContents: "",
-              blockType: "paragraph", //삭제여서 타입 관계 X
-              blockFeId: blockFeId,
-            };
-            this.sendMessage(message);
-          // }, 10);
-        }
-      });
+      this.deleteBlockTargetFeIdActions(blockFeId);
+      // setTimeout(() => {
+      const message = {
+        postMessageType: "BLOCK", // 고정
+        method: "DEEP_DELETE_BLOCK",
+        canvasId: this.canvasId,
+        prevBlockId: prevBlockId,
+        parentBlockId: null,
+        blockContents: "",
+        blockType: "paragraph", //삭제여서 타입 관계 X
+        blockFeId: blockFeId,
+      };
+      this.sendMessage(message);
+      // }, 10);
     },
     patchBlock(blockFeId, blockContents) {
       // 해당 id의 content만 수정하는 용도

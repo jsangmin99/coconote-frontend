@@ -457,7 +457,7 @@ export default {
 
                   if (allPTags.length === 1 && allPTags[0] === isInsideEl) {
                     console.log(
-                      "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다."
+                      "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다.", this.lastSendMsgObj.blockFeId
                     );
                     this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // ul 태그 deep 삭제 보내기
                     // p 태그 생성하기
@@ -879,8 +879,10 @@ export default {
             this.editor.commands.insertContent(elementString);
           }
         }
-        return false;
       }
+      
+      this.localHTML = this.editor.getHTML();
+      this.localJSON = this.editor.getJSON();
     },
 
     // drag 시, 변경된 순서 갖고오는 메소드
