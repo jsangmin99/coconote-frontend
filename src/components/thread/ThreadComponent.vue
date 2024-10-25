@@ -79,7 +79,7 @@
         <ThreadLineComponent :thread="message" :createdTime="this.getTime(message.createdTime)"
           :updateMessage="updateMessage" :deleteMessage="deleteMessage" :deleteFile="deleteFile"
           :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
-          :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
+          :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter" :isComment="isComment"
           :isDifferentMember="index === 0 || message.memberId != parentThread.childThreads[index - 1].memberId" />
       </div>
     </div>

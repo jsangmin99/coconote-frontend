@@ -286,7 +286,7 @@ import axios from '@/services/axios';
         const screenHeight = window.innerHeight;
         const buttonPosition = event.target.getBoundingClientRect().bottom;
 
-        this.contextMenuPosition = (screenHeight / 1.7 > buttonPosition) ? '10' : '-120';
+        this.contextMenuPosition = (screenHeight / 1.7 > buttonPosition) ? '10' : '-110';
       },
       toggleTagMenu(event) {
         event.stopPropagation(); // 클릭 이벤트 전파 방지
