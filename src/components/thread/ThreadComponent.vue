@@ -954,6 +954,7 @@ export default {
 
 .comment-group {
   overflow-y: auto;
+  height: 100%;
   max-height: calc(100vh - 230px);
 }
 
