@@ -207,6 +207,11 @@ import axios from '@/services/axios';
         if (!this.tagName.trim()) {
           return;
         }
+        
+        if(this.tagList.some(t => t.name === this.tagName)) {
+          alert("이미 있는 태그 이름입니다!")
+          return;
+        }
         this.createAndAddTag(this.thread.id, this.tagName, this.getRandomColor());
         this.tagName = ""
         this.inputWidth = 35
