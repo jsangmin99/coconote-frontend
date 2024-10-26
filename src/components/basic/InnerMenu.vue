@@ -347,6 +347,10 @@ export default {
   overflow-y: auto;
   max-height: 400px;
 }
+// 스크롤바 숨기기
+.workspace-dropdown-menu::-webkit-scrollbar {
+  display: none; /* 웹킷 브라우저 (크롬, 사파리)에서 스크롤바 숨기기 */
+}
 
 .workspace-dropdown-menu ul {
   list-style: none;
