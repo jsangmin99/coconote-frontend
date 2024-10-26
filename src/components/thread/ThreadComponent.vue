@@ -1,4 +1,6 @@
 <template>
+<div class="threadWrap">
+
   <div v-if="!isComment" class="container">
     <!-- 필터 태그 -->
     <div class="tag-filter-container">
@@ -107,6 +109,12 @@
       </div>
     </div>
   </div>
+
+  <!-- drag drop 되는 부분 표시용 -->
+  <div class="tcdDropContainer">
+    <p>이 곳에 drop 하세요.</p>
+  </div>
+</div>
 </template>
 
 <script>
@@ -116,6 +124,8 @@ import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import { debounce } from "lodash";
 import { mapGetters } from 'vuex';
+
+import { EventBus } from '@/eventBus/eventBus.js';
 
 export default {
   props: ['id', 'threadId', 'parentThreadId'],
@@ -167,6 +177,8 @@ export default {
     }
     this.getTagList();
     this.connect();
+
+    EventBus.on('drag-start', this.handleDragStart); // 이벤트 리스너 등록
   },
   mounted() {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
@@ -187,6 +199,8 @@ export default {
         console.log("WebSocket connection closed.");
       });
     }
+
+    EventBus.off('drag-start', this.handleDragStart); // 이벤트 리스너 해제
   },
   computed: {
     ...mapGetters(['getWorkspaceId', 'getWorkspaceName']),
@@ -578,7 +592,10 @@ export default {
       });
       this.files = null;
     },
-
+    handleDragStart(folder) {
+      // 드래그 시작 시 수신한 폴더 데이터를 저장
+      console.log('드래그된 정보 :', folder);
+    },
     async handleDrop(event) {
       event.preventDefault();
       const droppedData = event.dataTransfer.getData("items");
