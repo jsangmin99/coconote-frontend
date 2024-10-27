@@ -111,8 +111,13 @@
   </div>
 
   <!-- drag drop 되는 부분 표시용 -->
-  <div class="tcdDropContainer">
-    <p>이 곳에 drop 하세요.</p>
+  <div
+      class="tcd-drop-area"
+      v-if="tcdDroppedData"
+      @dragover.prevent
+      @drop="handleDrop"
+    >
+    이 곳에 data를 drop 하세요
   </div>
 </div>
 </template>
@@ -160,6 +165,9 @@ export default {
       parentThread: null,
       dragedFile: null,
       isCreated: false,
+
+      // drag 용
+      tcdDroppedData: null,
     };
   },
   async created() {
@@ -178,10 +186,16 @@ export default {
     this.getTagList();
     this.connect();
 
-    EventBus.on('drag-start', this.handleDragStart); // 이벤트 리스너 등록
   },
   mounted() {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
+
+    EventBus.on('drag-start', (data) => {
+      this.tcdDroppedData = data; // 드래그 데이터 저장
+    });
+    EventBus.on('drag-end', () => {
+      this.tcdDroppedData = null; // 드래그 종료 시 드롭 영역 숨김
+    });
   },
   updated() { },
   beforeUnmount() {
@@ -200,7 +214,8 @@ export default {
       });
     }
 
-    EventBus.off('drag-start', this.handleDragStart); // 이벤트 리스너 해제
+    EventBus.off('drag-start');
+    EventBus.off('drag-end');
   },
   computed: {
     ...mapGetters(['getWorkspaceId', 'getWorkspaceName']),
@@ -592,10 +607,6 @@ export default {
       });
       this.files = null;
     },
-    handleDragStart(folder) {
-      // 드래그 시작 시 수신한 폴더 데이터를 저장
-      console.log('드래그된 정보 :', folder);
-    },
     async handleDrop(event) {
       event.preventDefault();
       const droppedData = event.dataTransfer.getData("items");
@@ -611,13 +622,16 @@ export default {
 
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             this.dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
-            console.log("드롭된 파일 ID:", this.dragedFile.fileId);
-            // 파일 업로드나 추가 작업을 수행할 로직 작성
-            parsedData.map(dragedFile =>this.fileList.push({
-              fileId: dragedFile.fileId,
-              name: dragedFile.fileName,
-              imageUrl: dragedFile.fileUrl
-            }));
+            if (this.dragedFile.type === "drive") {
+              console.log("드롭된 파일 ID:", this.dragedFile.fileId);
+              // 파일 업로드나 추가 작업을 수행할 로직 작성
+              parsedData.map(dragedFile =>this.fileList.push({
+                fileId: dragedFile.fileId,
+                name: dragedFile.fileName,
+                imageUrl: dragedFile.fileUrl
+              }));
+            }
+            
             
           } else {
             console.log("드래그된 파일이 없습니다.");
@@ -628,6 +642,8 @@ export default {
       } else {
         console.log("드롭된 데이터가 없습니다.");
       }
+
+      this.tcdDroppedData = null;
     },
 
 
@@ -1009,5 +1025,20 @@ textarea:focus {
 }
 .more-btn-file:hover{
   background: red;
+}
+</style>
+
+<style lang="scss">
+.threadWrap{
+  position:relative;
+
+  .tcd-drop-area{
+    position:absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba($color: #000000, $alpha: 0.5);
+  }
 }
 </style>

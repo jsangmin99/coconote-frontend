@@ -269,10 +269,16 @@ export default {
     // 드래그 시작 시 호출
     // 스레드, 캔버스, 드라이브 공용사용 
     tcdShareDragStart(event, type, item) {
+      let tcdSharedData = null;
       if (this.selectedItems.length === 0 || !this.selectedItems.includes(item)) {
         this.selectedItems = [item];
+        tcdSharedData = this.selectedItems;
+        tcdSharedData[0].type = "drive";
       }
-      const dataToTransfer = JSON.stringify(this.selectedItems);
+      
+      console.error(tcdSharedData)
+
+      const dataToTransfer = JSON.stringify(tcdSharedData);
       event.dataTransfer.setData("items", dataToTransfer);
       this.draggedType = type;
 

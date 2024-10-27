@@ -17,7 +17,7 @@
       </v-col>
     </v-row>
     <hr />
-    <div class="tiptapEditorContainer" @dragover.prevent @drop="handleDrop">
+    <div class="tiptapEditorContainer">
       <TipTabEditor
         v-if="this.editorContent != null"
         :initialContent="editorContent"
@@ -445,9 +445,6 @@ export default {
       };
       this.$store.dispatch("setInfoMultiTargetAction", pageSetObj);
       this.deleteCanvasView();
-    },
-    handleDrop(event){
-      console.error("@@@ handleDrop @@@",event)
     },
   },
   beforeUnmount() {},

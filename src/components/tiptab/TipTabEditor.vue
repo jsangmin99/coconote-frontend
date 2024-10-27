@@ -1,5 +1,5 @@
 <template>
-  <div v-if="editor" class="container">
+  <div v-if="editor" class="container tiptapWrap">
     <div class="control-group">
       <div class="button-group">
         <button
@@ -145,6 +145,14 @@
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
     </div>
+    <div
+      class="tcd-drop-area"
+      v-if="tcdDroppedData"
+      @dragover.prevent
+      @drop="handleDrop"
+    >
+      이 곳에 data를 drop 하세요
+    </div>
   </div>
 </template>
 
@@ -169,6 +177,9 @@ import Focus from "@tiptap/extension-focus";
 import { Indent } from "@/components/tiptab/indent";
 
 import { mapGetters, mapActions } from "vuex";
+
+// drag용
+import { EventBus } from "@/eventBus/eventBus.js";
 
 export default {
   components: {
@@ -229,6 +240,9 @@ export default {
 
       // 현재 보내는 이벤트 구분용
       currentEvent: null,
+
+      // drag 용
+      tcdDroppedData: null,
     };
   },
   watch: {
@@ -242,6 +256,13 @@ export default {
     },
   },
   mounted() {
+    EventBus.on("drag-start", (data) => {
+      this.tcdDroppedData = data; // 드래그 데이터 저장
+    });
+    EventBus.on("drag-end", () => {
+      this.tcdDroppedData = null; // 드래그 종료 시 드롭 영역 숨김
+    });
+
     this.editor = new Editor({
       extensions: [
         Image.configure({
@@ -1177,6 +1198,42 @@ export default {
         this.$parent.updateIndentBlock(nodeDataId, nodeElOuterHtml, nodeIndent);
       }
     },
+
+    // drag용 이벤트
+    async handleDrop(event) {
+      event.preventDefault();
+      const droppedData = event.dataTransfer.getData("items");
+
+      // 드롭된 데이터 로그 출력
+      console.log("드롭된 데이터2222(raw):", droppedData);
+
+      // 드롭된 데이터가 유효한지 확인합니다.
+      if (droppedData && droppedData.trim() !== "") {
+        try {
+          const parsedData = JSON.parse(droppedData);
+          console.log("드롭된 데이터(parsed):", parsedData);
+
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            const dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
+            if (dragedFile.type === "drive") {
+              console.log("드롭된 파일 ID:", dragedFile.fileId);
+              // 파일 업로드나 추가 작업을 수행할 로직 작성
+
+              // 에디터에 이미지 삽입
+              this.insertImageToEditor(dragedFile.fileUrl);
+            }
+          } else {
+            console.log("드래그된 파일이 없습니다.");
+          }
+        } catch (error) {
+          console.error("JSON 파싱 오류:", error);
+        }
+      } else {
+        console.log("드롭된 데이터가 없습니다.");
+      }
+
+      this.tcdDroppedData = null;
+    },
   },
   beforeUnmount() {
     // 컴포넌트 제거 시 이벤트 리스너 제거
@@ -1187,10 +1244,28 @@ export default {
     // if (typeof window !== "undefined") {
 
     // }
+
+    EventBus.off("drag-start");
+    EventBus.off("drag-end");
   },
 };
 </script>
 
 <style lang="scss">
 @import "@/assets/css/tiptapCustom.scss";
+</style>
+
+<style lang="scss">
+.tiptapWrap {
+  position: relative;
+
+  .tcd-drop-area {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba($color: #000000, $alpha: 0.5);
+  }
+}
 </style>
