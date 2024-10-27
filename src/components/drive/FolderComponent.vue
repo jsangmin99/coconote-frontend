@@ -59,6 +59,7 @@
         :class="{ selected: selectedItems.includes(file) }"
         @click="toggleSelection($event, 'file', file); showFullFileName(file.fileId)"
         @dragstart="tcdShareDragStart($event, 'file', file)" @dragover.prevent @drop="onDrop($event, null)"
+        @dragend="onDragEnd"
         @contextmenu.prevent="showContextMenu($event, 'file', file)" @dblclick="openPreviewModal(file)">
 
         <!-- 이미지 파일일 경우 -->
@@ -275,16 +276,21 @@ export default {
         tcdSharedData = this.selectedItems;
         tcdSharedData[0].type = "drive";
       }
-      
-      console.error(tcdSharedData)
+      if(tcdSharedData != null){
+        console.error(tcdSharedData)
 
-      const dataToTransfer = JSON.stringify(tcdSharedData);
-      event.dataTransfer.setData("items", dataToTransfer);
-      this.draggedType = type;
+        const dataToTransfer = JSON.stringify(tcdSharedData);
+        event.dataTransfer.setData("items", dataToTransfer);
+        this.draggedType = type;
 
-      // 드래그 시작 시 전송할 데이터 로그 출력
-      console.log("드래그 시작 - 전송할 데이터:", dataToTransfer);
-      EventBus.emit('drag-start', dataToTransfer); // drag-start 이벤트 발생
+        // 드래그 시작 시 전송할 데이터 로그 출력
+        console.error("드래그 시작 - 전송할 데이터:", dataToTransfer);
+        EventBus.emit('drag-start', dataToTransfer); // drag-start 이벤트 발생
+      }
+    },
+    // 전역적으로 drag end 감지
+    onDragEnd(){
+      EventBus.emit('drag-end'); // 드래그 종료 이벤트 전송
     },
 
     // 드롭 시 호출

@@ -618,7 +618,7 @@ export default {
       if (droppedData && droppedData.trim() !== "") {
         try {
           const parsedData = JSON.parse(droppedData);
-          console.log("드롭된 데이터(parsed):", parsedData);
+          console.log("드롭된 데이터(parsed)222222222222:", parsedData);
 
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             this.dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
@@ -633,6 +633,8 @@ export default {
             }
             
             
+          } else if(parsedData?.type === "canvas"){
+            console.error("캔버스 파일 드롭");
           } else {
             console.log("드래그된 파일이 없습니다.");
           }

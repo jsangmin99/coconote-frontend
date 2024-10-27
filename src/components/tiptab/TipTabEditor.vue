@@ -257,9 +257,13 @@ export default {
   },
   mounted() {
     EventBus.on("drag-start", (data) => {
-      this.tcdDroppedData = data; // 드래그 데이터 저장
+      console.error("tiptap data set :: " , data)
+      const parseData = JSON.parse(data)
+      if(parseData && parseData?.type == "thread" || parseData[0]?.type == "drive"){
+        this.tcdDroppedData = data; // 드래그 데이터 저장
+      }
     });
-    EventBus.on("drag-end", () => {
+    EventBus.on('drag-end', () => {
       this.tcdDroppedData = null; // 드래그 종료 시 드롭 영역 숨김
     });
 
