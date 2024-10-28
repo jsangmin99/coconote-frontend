@@ -1,5 +1,5 @@
 <template>
-<v-container class="memberview-container" style="margin: 0px; padding: 0px">
+<v-sheet class="memberview-container" style="margin: 0px; padding: 0px">
 
   <!-- MemberView 헤더 부분 -->
   <div class="memberview-header" style="margin: 20px; padding-left: 30px;">
@@ -34,7 +34,7 @@
       </v-card>
     </div>
   </div>
-</v-container>
+</v-sheet>
   
 <!-- 회원 카드 상세 보기 -->
     <v-dialog v-model="workspaceMemberModal" max-width="600px" class="workspaceMemberModal">

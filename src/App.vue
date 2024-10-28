@@ -7,16 +7,19 @@
           <CommonTopMenu v-if="!isHiddenPage" />
         </v-col>
       </v-row>
-      <v-row no-gutters style="height: 100%">
+      <v-row no-gutters style="height: 100%; flex-wrap: nowrap;">
         <v-col
-          :cols="!OnlyOutsidePage ? 2 : 'auto'"
+          :cols="!isInnerMenuOnlyOutsidePage ? 2 : 'auto'"
           v-if="!isHiddenPage"
         >
           <div class="d-flex innerMenuContainer">
             <InnerMenu v-if="!isHiddenPage" />
           </div>
         </v-col>
-        <v-col :cols="showHeaderAndSidebar ? 10 : 12">
+        <v-col 
+          :cols="!isInnerMenuOnlyOutsidePage ? 10 : 'auto'"
+          :class="!isInnerMenuOnlyOutsidePage ? '' : 'isfull'"
+        >
           <LoadingComponent v-if="loading" />
           <v-sheet v-if="!loading" class="main-content">
             <router-view :key="$route.fullPath" />
@@ -49,6 +52,7 @@ export default {
       // 좌측 메뉴 중 1번째 메뉴만 보이는 화면인지 확인 (좌측메뉴 사이즈 조정용)
       // router 이름으로 검색
       const routePageNames = ["SEARCH", "MemberView"];
+      console.error("this.$route.name >> ",this.$route.name)
       return routePageNames.includes(this.$route.name);
     },
   },
@@ -87,5 +91,12 @@ export default {
 }
 .main-content {
   height: calc(100% - 40px);
+}
+.isfull{
+  flex: 1 !important;
+
+  >*{
+    max-width: auto !important;
+  }
 }
 </style>

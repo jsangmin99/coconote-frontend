@@ -166,15 +166,15 @@
           </div>
         </template>
 
+        <div v-if="!loading && totalAll === 0" class="no-results-message">No results found.</div>
+
         <!-- 페이징 -->
-        <div class="pagination">
+        <div v-else class="pagination">
           <button @click="previousPage" :disabled="currentPage === 1">Previous</button>
           <span>Page {{ currentPage }} of {{ totalPages }}</span>
           <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
         </div>
       </div>
-
-      <div v-if="!loading && totalAll === 0" class="no-results-message">No results found.</div>
     </div>
   </div>
 </template>
@@ -539,8 +539,8 @@ export default {
   background-color: #fff;
   color: #333;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   height: 90vh;
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
   /* 화면의 90% 높이로 설정 */
 }
 

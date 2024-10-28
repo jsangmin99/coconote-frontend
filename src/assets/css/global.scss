@@ -2,14 +2,20 @@ $font-size-lg: 1.4rem;
 $font-size-md: 0.8rem;
 $font-size-sm: 0.5rem;
 
+*{
+  font-family: 'Pretendard', sans-serif;
+}
+
 html {
   background-color: rebeccapurple;
   overflow: auto !important;
+  font-family: 'Pretendard', sans-serif;
 }
 
 body {
   overflow: hidden;
   height: 100vh;
+  font-family: 'Pretendard', sans-serif;
 }
 
 /* 채널별 내용 */
