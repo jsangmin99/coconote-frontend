@@ -12,15 +12,14 @@
     <!-- 스레드 그룹 -->
     <div class="list-group" ref="messageList" id="list-group">
       <div v-if="isLastPage" class="enter-title">
-        <h1>#채널의 시작이에요</h1>
+        <h1>🥰 환영합니다!</h1>
       </div>
       <v-skeleton-loader v-if="!isLastPage" type="list-item-avatar, paragraph"></v-skeleton-loader>
       <div class="list-group-item" v-for="(message, index) in filteredMessages.slice().reverse()" :key="message.id">
         <div
           v-if="index === 0 || (index > 0 && this.isDifferentDay(message.createdTime, filteredMessages.slice().reverse()[index - 1].createdTime))">
-          <div style="display: flex; align-content: center; text-align: center; margin: auto;">
-            <hr style="width: 27%; margin:auto;"><span style="margin:auto;">{{ this.getDay(message.createdTime) }}</span>
-            <hr style="width: 27%; margin:auto;">
+          <div class="hrDayLine">
+            <span class="hrDayContent">{{ this.getDay(message.createdTime) }}</span>
           </div>
         </div>
         <ThreadLineComponent :id="`thread-${message.id}`" :thread="message"
@@ -74,7 +73,7 @@
         :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
         :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter" :isComment="isComment"
         :isDifferentMember="true" />
-      <h5>{{ parentThread.childThreads && parentThread.childThreads.length > 0 ? `밑으로
+      <h5 class="comentLines">{{ parentThread.childThreads && parentThread.childThreads.length > 0 ? `밑으로
         ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
 
       <div v-for="(message, index) in parentThread.childThreads" :key="index">
@@ -956,155 +955,6 @@ export default {
 };
 </script>
 
-<style scoped>
-.enter-title{
-  margin-top: 40px;
-}
-.container {
-  padding: 0 0 0 24px;
-  height: 100%;
-}
-
-.list-group {
-  overflow-y: auto;
-  /* 세로 스크롤 가능 */
-  height: 100%;
-  max-height: calc(100vh - 230px);
-}
-
-.list-group-item {
-  gap: 10px;
-  padding: 3px 0;
-}
-
-.input-group {
-  position: fixed;
-  bottom: 0;
-  /* 하단에 고정 */
-  background-color: white;
-  /* 배경색 설정 */
-  border: 1px solid;
-  border-radius: 5px;
-  margin-right: 24px;
-  margin-bottom: 10px;
-  max-height: 70vh;
-  overflow-y: auto;
-  width: 80%;
-  z-index: 5;
-}
-
-.image-group {
-  display: flex;
-  flex-wrap: wrap;
-  overflow-y: auto;
-}
-
-.custom-contents {
-  max-width: 120px;
-  /* 제목의 최대 너비를 설정 */
-  overflow: hidden;
-  /* 내용이 넘칠 경우 숨김 처리 */
-  text-overflow: ellipsis !important;
-  /* 넘치는 텍스트에 '...' 추가*/
-  white-space: nowrap;
-  /* 텍스트 줄 바꿈 방지 */
-}
-
-.text-group {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
-  padding: 5px 3px;
-}
-
-.form-control {
-  resize: none;
-  width: 100%;
-  max-height: 40vh;
-  overflow-y: auto;
-  margin-left: 5px;
-}
-
-.tag-filter-container {
-  display: flex;
-  flex-direction: row;
-  gap: 5px;
-}
-
-.tag {
-  border-radius: 5px;
-  padding: 0 5px 1px 5px;
-  color: white;
-  font-size: 11px;
-}
-
-.thread-title {
-  display: flex;
-  flex-direction: row;
-}
-
-.comment-group {
-  overflow-y: auto;
-  max-height: calc(100vh - 230px);
-}
-
-input:focus {
-  outline: none;
-}
-
-textarea:focus {
-  outline: none;
-}
-
-.highlight {
-  background-color: #e8ca93;
-  /* 강조할 배경 색 */
-  transition: background-color 0.5s ease;
-  /* 부드러운 전환 효과 */
-}
-
-.fade-out {
-  background-color: transparent;
-  /* 투명 상태 */
-}
-.input-group-append{
-  display: flex;
-}
-.send-btn{
-  width: 20px;
-  height: 20px;
-}
-.more-btn-file{
-  background: #f8f8f8;
-  position: absolute;
-  top: 5px;
-  right: 5px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
-  z-index: 2;
-  border-radius: 5px;
-}
-.more-btn-file:hover{
-  background: red;
-}
-</style>
-
 <style lang="scss">
-.threadWrap{
-  position:relative;
-
-  .tcd-drop-area{
-    position:absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    background-color: rgba($color: #000000, $alpha: 0.5);
-    color:#ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    font-weight: bold;
-  }
-}
+@import "@/assets/css/thread.scss";
 </style>

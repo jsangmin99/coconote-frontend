@@ -1,0 +1,474 @@
+.threadWrap {
+  position: relative;
+
+  .enter-title h1 {
+    margin-top: 24px;
+    font-size: 32px;
+    color: #162138;
+  }
+  .container {
+    padding: 0 0 0 24px;
+    height: 100%;
+  }
+
+  .list-group {
+    overflow-y: auto;
+    /* 세로 스크롤 가능 */
+    height: 100%;
+    max-height: calc(100vh - 230px);
+  }
+
+  .list-group-item {
+    gap: 10px;
+    padding: 3px 0;
+  }
+
+  .input-group {
+    position: fixed;
+    bottom: 0;
+    /* 하단에 고정 */
+    background-color: white;
+    /* 배경색 설정 */
+    border: 1px solid;
+    border-radius: 5px;
+    margin-right: 24px;
+    margin-bottom: 10px;
+    max-height: 70vh;
+    overflow-y: auto;
+    width: 80%;
+    z-index: 5;
+  }
+
+  .image-group {
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: auto;
+  }
+
+  .custom-contents {
+    max-width: 120px;
+    /* 제목의 최대 너비를 설정 */
+    overflow: hidden;
+    /* 내용이 넘칠 경우 숨김 처리 */
+    text-overflow: ellipsis !important;
+    /* 넘치는 텍스트에 '...' 추가*/
+    white-space: nowrap;
+    /* 텍스트 줄 바꿈 방지 */
+  }
+
+  .text-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    padding: 5px 3px;
+  }
+
+  .form-control {
+    resize: none;
+    width: 100%;
+    max-height: 40vh;
+    overflow-y: auto;
+    margin-left: 5px;
+  }
+
+  .tag-filter-container {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+  }
+
+  .tag {
+    border-radius: 5px;
+    padding: 0 5px 1px 5px;
+    color: white;
+    font-size: 11px;
+  }
+  .tag-input {
+    font-size: 12px;
+  }
+
+  .hash-btn {
+    font-size: 10px;
+    color: #435088;
+    background-color: #e4e9ff;
+  }
+
+  .thread-title {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .comment-group {
+    overflow-y: auto;
+    max-height: calc(100vh - 230px);
+    .comentLines{
+    
+    }
+  }
+  
+
+  input:focus {
+    outline: none;
+  }
+
+  textarea:focus {
+    outline: none;
+  }
+
+  .highlight {
+    background-color: #e8ca93;
+    /* 강조할 배경 색 */
+    transition: background-color 0.5s ease;
+    /* 부드러운 전환 효과 */
+  }
+
+  .fade-out {
+    background-color: transparent;
+    /* 투명 상태 */
+  }
+  .input-group-append {
+    display: flex;
+  }
+  .send-btn {
+    width: 20px;
+    height: 20px;
+  }
+  .more-btn-file {
+    background: #f8f8f8;
+    position: absolute;
+    top: 5px;
+    right: 5px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+    z-index: 2;
+    border-radius: 5px;
+  }
+  .more-btn-file:hover {
+    background: red;
+  }
+
+  .tcd-drop-area {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba($color: #000000, $alpha: 0.5);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+  }
+  .hrDayLine {
+    display: flex;
+    align-content: center;
+    text-align: center;
+    margin: auto;
+    width: 100%;
+    position: relative;
+    justify-content: center;
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background-color: #dee4f1;
+      top: 50%;
+    }
+    .hrDayContent {
+      z-index: 1;
+      font-size: 10px;
+      color: #435088;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 12px;
+      border: 1px solid #dee4f1;
+      border-radius: 30px;
+      background-color: #ffffff;
+    }
+  }
+  
+}
+
+// ThreadLineComponent.vue 코드
+.thread-wrapper {
+  position: relative;
+
+  .thread {
+    display: flex;
+  }
+
+  .more-btn {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 20px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+    z-index: 2;
+  }
+  .context-btn {
+    padding: 2px;
+    border-radius: 5px;
+  }
+  .context-btn:hover {
+    background-color: #f8f8f8;
+  }
+  &:hover {
+    background-color: #f8f8f8;
+  }
+  &:hover .more-btn {
+    display: block;
+  }
+  .image {
+    width: 50px;
+    /* 이미지의 가로 크기 */
+    margin: 0 10px;
+    justify-content: center;
+    align-content: center;
+    align-items: center;
+  }
+  .profile-image {
+    width: 50px;
+    /* 이미지의 가로 크기 */
+    height: 50px;
+    /* 이미지의 세로 크기 */
+    border-radius: 15px;
+    /* 이미지를 동그랗게 만듦 */
+    object-fit: cover;
+  }
+  .thread-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    width: 100%;
+  }
+  .title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .nickName {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+  }
+  .createdTime {
+    color: #aaa;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+  }
+  .tag-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+  }
+  .tag-container {
+    position: relative;
+  }
+  .tag {
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: white;
+    font-size: 10px;
+    font-weight: 400;
+  }
+  .tag-container:hover .delete-tag {
+    display: block;
+  }
+  .delete-tag {
+    display: none;
+    position: absolute;
+    top: -6px;
+    right: -3px;
+    z-index: 3;
+  }
+  .tag-toggle {
+    z-index: 3;
+    position: relative;
+  }
+  .tag-list {
+    justify-content: center;
+    align-items: center;
+  }
+  .tag-list:hover {
+    background-color: #f0f0f0;
+  }
+  .tag-create {
+    font-size: 12px;
+    color: #aaa;
+  }
+  .tag-create:hover {
+    background-color: #f0f0f0;
+  }
+  .more-tag {
+    position: absolute;
+    left: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .content-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+  }
+  .content {
+    white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */
+    font-size: 13px;
+    color: #1e1e1e;
+  }
+  .files {
+  }
+  .context-menu {
+    position: absolute;
+    right: 50px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    z-index: 10;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0); /* 반투명 배경 */
+    z-index: 2; /* 컨텍스트 메뉴보다 아래에 위치 */
+  }
+  .image-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .file-group {
+    position: relative;
+  }
+  .file-group:hover .more-btn-file {
+    display: block;
+  }
+  .file-group:hover .more-btn-file2 {
+    display: block;
+  }
+  .more-btn-file {
+    background: #f8f8f8;
+    display: none;
+    position: absolute;
+    top: 5px;
+    right: 5px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+    z-index: 2;
+    border-radius: 5px;
+  }
+  .btn1:hover {
+    border-radius: 5px;
+    background-color: #d6d6d6;
+  }
+  .btn2:hover {
+    border-radius: 5px;
+    background-color: #d6d6d6;
+  }
+
+  .hash-btn {
+    display: flex;
+    border: 0.5px solid;
+    border-radius: 5px;
+    border-color: #f0f0f0;
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+  }
+  .hash-btn:hover {
+    border-radius: 5px;
+    background-color: #d6d6d6;
+  }
+  .more-btn-file2 {
+    background: #f8f8f8;
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+    z-index: 2;
+  }
+  .custom-contents {
+    max-width: 120px; /* 제목의 최대 너비를 설정 */
+    overflow: hidden; /* 내용이 넘칠 경우 숨김 처리 */
+    text-overflow: ellipsis !important; /* 넘치는 텍스트에 '...' 추가 (이거 적용안됨 이후 수정필요)*/
+    white-space: nowrap; /* 텍스트 줄 바꿈 방지 */
+  }
+  .comment {
+    font-weight: 400;
+    color: #162138;
+    font-size: 11px;
+    .v-icon{
+      color: #94969a;
+      font-size: 10px;
+    }
+  }
+  .update-group {
+    background-color: white;
+    /* 배경색 설정 */
+    border: 1px solid;
+    border-radius: 5px;
+    width: 90%;
+  }
+  .form-control {
+    resize: none;
+    width: 99%;
+    height: 20vh;
+    overflow-y: auto;
+    margin-left: 5px;
+  }
+  .tagButton {
+    height: fit-content;
+  }
+  .tag-input-group {
+    position: relative;
+  }
+  input:focus {
+    outline: none;
+  }
+  textarea:focus {
+    outline: none;
+  }
+  .update-group-footer {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    padding: 5px 5px;
+  }
+  .btn {
+    min-width: 56px;
+    height: 28px;
+    padding: 0 12px 1px;
+    font-size: 13px;
+    background-color: white;
+    border: 1px solid black;
+    color: black;
+    font-weight: 700;
+    background-clip: padding-box;
+    transition: all 80ms linear;
+
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: center;
+    white-space: nowrap;
+    justify-content: center;
+    align-items: center;
+    margin-left: 5px;
+  }
+}
