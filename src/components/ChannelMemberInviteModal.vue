@@ -1,10 +1,9 @@
 <template>
-  <div v-if="isModalOpen" class="modal" @click="closeModal">
+  <div v-if="isModalOpen" class="modal channelMemeberModal" @click="closeModal">
     <div class="modal-content" @click.stop>
       <!-- 검색창 헤더 -->
       <header>
-          <h2># {{ getChannelName }}</h2>
-          <h2>#멤버 초대</h2>
+          <h3># {{ getChannelName }} 멤버 초대</h3>
         <v-icon @click="closeModal" class="close-button">mdi-close</v-icon>
       </header>
       <br>
