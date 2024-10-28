@@ -178,9 +178,6 @@ import { Indent } from "@/components/tiptab/indent";
 
 import { mapGetters, mapActions } from "vuex";
 
-// drag용
-import { EventBus } from "@/eventBus/eventBus.js";
-
 export default {
   components: {
     EditorContent,
@@ -201,6 +198,9 @@ export default {
       "getBlockFeIdIndex",
       "getTargetBlockPrevFeId",
       "getTargetBlockPrevFeIdIndex",
+
+      // tcd용
+      "getAllTcdState",
     ]),
   },
 
@@ -254,17 +254,19 @@ export default {
       },
       deep: true, // 객체 내부의 변경사항도 감지
     },
+    getAllTcdState: {
+      handler(newVal) {
+        console.error("tcd 값 감지. canvas >>>> ", newVal);
+        if(newVal.isDragStatus){
+          this.tcdDroppedData = newVal; // 드래그 데이터 저장
+        }else{
+          this.tcdDroppedData = null;
+        }
+      },
+      deep: true,
+    }
   },
   created(){
-    EventBus.off("drag-start");
-    EventBus.off("drag-end");
-    EventBus.on("drag-start", (data) => {
-      console.error("DRAGSTART >>  tiptap data set :: " , data)
-      this.tcdDroppedData = data; // 드래그 데이터 저장
-    });
-    EventBus.on('drag-end', () => {
-      this.tcdDroppedData = null; // 드래그 종료 시 드롭 영역 숨김
-    });
   },
   mounted() {
     this.editor = new Editor({
@@ -667,6 +669,9 @@ export default {
       "pushBlockFeIdsActions",
       "deleteBlockTargetFeIdActions",
       "appendBlockFeIdsAfterPrevActions",
+
+      // tcd용
+
     ]),
     updateDataEditorAfterEvent(
       updateBlockID,
@@ -1256,9 +1261,6 @@ export default {
     // if (typeof window !== "undefined") {
 
     // }
-
-    EventBus.off("drag-start");
-    EventBus.off("drag-end");
   },
 };
 </script>

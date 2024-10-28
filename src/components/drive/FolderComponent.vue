@@ -146,8 +146,7 @@
 <script>
 import axios from "@/services/axios";
 import CoconutLoader from "@/components/basic/CoconutLoader.vue";
-import { EventBus } from '@/eventBus/eventBus.js';
-
+import { mapActions } from "vuex";
 
 export default {
   components: {
@@ -178,6 +177,10 @@ export default {
     };
   },
   methods: {
+    ...mapActions([
+      // tcd용
+      "setTcdStateAllDataActions"
+    ]),
     // 항목 선택 토글
     toggleSelection(event, type, item) {
       const itemList = [...this.folderList, ...this.fileList]; // 폴더와 파일 목록을 결합
@@ -287,13 +290,23 @@ export default {
 
         // 드래그 시작 시 전송할 데이터 로그 출력
         console.error("드래그 시작 - 전송할 데이터 folder :", dataToTransfer);
-        EventBus.emit('drag-start', dataToTransfer); // drag-start 이벤트 발생
+        const setInfoObj = {
+          isDragStatus: true,
+          dragStartPage: "drive",
+          result: dataToTransfer,
+        }
+        this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
       }
     },
     // 전역적으로 drag end 감지
     onDragEnd(){
       this.selectedItems = [];
-      EventBus.emit('drag-end'); // 드래그 종료 이벤트 전송
+      
+      const setInfoObj = {
+        isDragStatus: false,
+        dragStartPage: "drive",
+      }
+      this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
     },
 
     // 드롭 시 호출
@@ -867,9 +880,6 @@ export default {
     // 컴포넌트가 파괴되기 전 window 클릭 이벤트 제거
     window.removeEventListener("click", this.hideContextMenu);
     window.removeEventListener('click', this.clearSelection);
-
-    EventBus.off('drag-start');
-    EventBus.off('drag-end');
   },
 };
 </script>

@@ -80,8 +80,6 @@ import ThreadComponent from "@/components/thread/ThreadComponent.vue";
 import CanvasView from "@/views/canvas/CanvasView.vue";
 import FolderComponent from "@/components/drive/FolderComponent.vue";
 
-import { EventBus } from '@/eventBus/eventBus.js';
-
 export default {
   props: {
     channelId: {
@@ -96,14 +94,6 @@ export default {
     FolderComponent,
   },
   mounted(){
-    // EventBus로 drag-start 이벤트 감지
-    // EventBus.on('drag-start', (data) => {
-    //   console.error("@@@@@@@@@@@@@@@@DRAGSTART >>  split view data set :: " , data)
-    //   this.tcdDroppedData = data; // 드래그 데이터 저장
-    // });
-    // EventBus.on('drag-end', () => {
-    //   this.tcdDroppedData = null; // 드래그 종료 시 드롭 영역 숨김
-    // });
   },
   data() {
     return {
@@ -132,7 +122,6 @@ export default {
         console.error("잘못된 type")
         return false;
       }
-      EventBus.emit("tab-change"); // 드래그 종료 이벤트 전송
     },
     getComponentForTab(tab) {
       switch (tab) {

@@ -4,6 +4,7 @@ import workspace from './workspace';
 import canvas from './canvas';
 import blockFeIds from './blockFeIds';
 import notifications from './notifications';
+import tcdShare from './tcdShare';
 
 
 const store = createStore({
@@ -13,6 +14,7 @@ const store = createStore({
         canvas,
         notifications,
         blockFeIds,
+        tcdShare,
     }
 });
 

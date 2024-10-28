@@ -135,9 +135,7 @@ import axios from '@/services/axios'
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import { debounce } from "lodash";
-import { mapGetters } from 'vuex';
-
-import { EventBus } from '@/eventBus/eventBus.js';
+import { mapGetters, mapActions } from 'vuex';
 
 export default {
   props: ['id', 'threadId', 'parentThreadId'],
@@ -178,6 +176,20 @@ export default {
       draggingId: null,
     };
   },
+  watch: {
+    getAllTcdState: {
+      handler(newVal) {
+        console.error("tcd 값 감지. thread >>>> ", newVal);
+        if(newVal.isDragStatus){
+          this.tcdDroppedData = newVal; // 드래그 데이터 저장
+        }else{
+          this.tcdDroppedData = null;
+        }
+        
+      },
+      deep: true,
+    }
+  },
   async created() {
     this.roomId = this.id;
     this.workspaceId = this.$store.getters.getWorkspaceId;
@@ -193,14 +205,6 @@ export default {
     }
     this.getTagList();
     this.connect();
-
-    EventBus.on('drag-start', (data) => {
-      console.error("DRAGSTART >>  THREAD data set :: " , data)
-      this.tcdDroppedData = data; // 드래그 데이터 저장
-    });
-    EventBus.on('drag-end', () => {
-      this.tcdDroppedData = null; // 드래그 종료 시 드롭 영역 숨김
-    });
   },
   mounted() {
     this.$refs.messageList.addEventListener("scroll", this.debouncedScrollPagination);
@@ -222,11 +226,12 @@ export default {
       });
     }
 
-    EventBus.off('drag-start');
-    EventBus.off('drag-end');
   },
   computed: {
-    ...mapGetters(['getWorkspaceId', 'getWorkspaceName']),
+    ...mapGetters(['getWorkspaceId', 'getWorkspaceName',
+      // tcd용
+      "getAllTcdState",
+    ]),
     filteredMessages() {
       if (this.tagFilter.length === 0) {
         return this.messages; // 필터가 없으면 전체 메시지를 반환
@@ -243,6 +248,9 @@ export default {
   },
 
   methods: {
+    ...mapActions([
+      "setTcdStateAllDataActions",
+    ]),
     moveToThread(threadId) {
       // threadId가 제공된 경우에만 실행
       console.log("@@@threadId: ",threadId);
@@ -927,12 +935,22 @@ export default {
 
           // 드래그 시작 시 전송할 데이터 로그 출력
           console.error("드래그 시작 - 전송할 데이터 thread:", dataToTransfer);
-          EventBus.emit("drag-start", dataToTransfer); // drag-start 이벤트 발생
+          const setInfoObj = {
+            isDragStatus: true,
+            dragStartPage: "thread",
+            result: dataToTransfer,
+          }
+          this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
         }
       },
       handleDragEnd() {
         this.draggingId = null;
-        EventBus.emit("drag-end"); // 드래그 종료 이벤트 전송
+
+        const setInfoObj = {
+          isDragStatus: false,
+          dragStartPage: "thread",
+        }
+        this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
       },
   },
 };
