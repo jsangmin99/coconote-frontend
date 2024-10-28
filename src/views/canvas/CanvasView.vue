@@ -282,7 +282,7 @@ export default {
     // 실제 socket에 message를 전송하는 영역
     sendMessageCanvas() {
       if (this.ws && this.ws.connected) {
-        const postMessage = this.getCanvasAllInfo;
+        const postMessage = {...this.getCanvasAllInfo};
         postMessage.channelId = this.channelId;
         if(postMessage.workspaceMemberId){
           postMessage.workspaceMemberId = this.getWorkspaceMemberId;
