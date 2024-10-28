@@ -45,7 +45,7 @@
     <div class="folder-list">
       <div v-for="folder in folderList" :key="folder.folderId" class="folder-item"
         :class="{ selected: selectedItems.includes(folder) }" draggable="true"
-        @dragstart="onDragStart($event, 'folder', folder)" @dragover.prevent @drop="onDrop($event, folder.folderId)"
+        @dragstart="tcdShareDragStart($event, 'folder', folder)" @dragover.prevent @drop="onDrop($event, folder.folderId)"
         @click="toggleSelection($event, 'folder', folder)" @dblclick="navigateToFolder(folder.folderId)"
         @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
         <img src="@/assets/images/folder-icon.png" alt="folder icon" class="folder-icon" />
@@ -58,7 +58,8 @@
       <div v-for="file in fileList" :key="file.fileId" class="file-item" draggable="true"
         :class="{ selected: selectedItems.includes(file) }"
         @click="toggleSelection($event, 'file', file); showFullFileName(file.fileId)"
-        @dragstart="onDragStart($event, 'file', file)" @dragover.prevent @drop="onDrop($event, null)"
+        @dragstart="tcdShareDragStart($event, 'file', file)" @dragover.prevent @drop="onDrop($event, null)"
+        @dragend="onDragEnd"
         @contextmenu.prevent="showContextMenu($event, 'file', file)" @dblclick="openPreviewModal(file)">
 
         <!-- 이미지 파일일 경우 -->
@@ -144,6 +145,7 @@
 <script>
 import axios from "@/services/axios";
 import CoconutLoader from "@/components/basic/CoconutLoader.vue";
+import { EventBus } from '@/eventBus/eventBus.js';
 
 
 export default {
@@ -266,16 +268,29 @@ export default {
     },
 
     // 드래그 시작 시 호출
-    onDragStart(event, type, item) {
+    // 스레드, 캔버스, 드라이브 공용사용 
+    tcdShareDragStart(event, type, item) {
+      let tcdSharedData = null;
       if (this.selectedItems.length === 0 || !this.selectedItems.includes(item)) {
         this.selectedItems = [item];
+        tcdSharedData = this.selectedItems;
+        tcdSharedData[0].type = "drive";
       }
-      const dataToTransfer = JSON.stringify(this.selectedItems);
-      event.dataTransfer.setData("items", dataToTransfer);
-      this.draggedType = type;
+      if(tcdSharedData != null){
+        console.error(tcdSharedData)
 
-      // 드래그 시작 시 전송할 데이터 로그 출력
-      console.log("드래그 시작 - 전송할 데이터:", dataToTransfer);
+        const dataToTransfer = JSON.stringify(tcdSharedData);
+        event.dataTransfer.setData("items", dataToTransfer);
+        this.draggedType = type;
+
+        // 드래그 시작 시 전송할 데이터 로그 출력
+        console.error("드래그 시작 - 전송할 데이터:", dataToTransfer);
+        EventBus.emit('drag-start', dataToTransfer); // drag-start 이벤트 발생
+      }
+    },
+    // 전역적으로 drag end 감지
+    onDragEnd(){
+      EventBus.emit('drag-end'); // 드래그 종료 이벤트 전송
     },
 
     // 드롭 시 호출
