@@ -21,7 +21,7 @@
   <div class="memberview-memberlist">
     <div v-for="member in workspaceMemberList" :key="member.workspaceMemberId">
       <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card" style="border-radius: 15px;">
-        <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" 
+        <img :src="member.profileImage && member.profileImage !== 'null' ? member.profileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" 
             alt="Profile Image" 
             class="memberview-memberlist-img"
             style="margin-bottom: 8px;"/>
@@ -50,7 +50,7 @@
                 <div class="member-detail-container">
                   <v-row>
                     <v-col cols="5">
-                      <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${this.memberImageId}.jpg`)" 
+                      <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? workspaceMemberInfo.profileImage : require(`@/assets/images/profile/profile${this.memberImageId}.jpg`)" 
                       alt="Profile Image" 
                       style="width: 100%; border-radius: 15px;"/>
                       
