@@ -24,19 +24,6 @@
           Strike
         </button>
         <button
-          @click="editor.chain().focus().toggleCode().run()"
-          :disabled="!editor.can().chain().focus().toggleCode().run()"
-          :class="{ 'is-active': editor.isActive('code') }"
-        >
-          Code
-        </button>
-        <button @click="editor.chain().focus().unsetAllMarks().run()">
-          Clear marks
-        </button>
-        <button @click="editor.chain().focus().clearNodes().run()">
-          Clear nodes
-        </button>
-        <button
           @click="editor.chain().focus().setParagraph().run()"
           :class="{ 'is-active': editor.isActive('paragraph') }"
         >
@@ -90,61 +77,24 @@
         >
           Ordered list
         </button>
-        <button
-          @click="editor.chain().focus().toggleCodeBlock().run()"
-          :class="{ 'is-active': editor.isActive('codeBlock') }"
-        >
-          Code block
-        </button>
-        <button
-          @click="editor.chain().focus().toggleBlockquote().run()"
-          :class="{ 'is-active': editor.isActive('blockquote') }"
-        >
-          Blockquote
-        </button>
-        <button @click="editor.chain().focus().setHorizontalRule().run()">
-          Horizontal rule
-        </button>
-        <button @click="editor.chain().focus().setHardBreak().run()">
-          Hard break
-        </button>
-        <button
-          @click="editor.chain().focus().undo().run()"
-          :disabled="!editor.can().chain().focus().undo().run()"
-        >
-          Undo
-        </button>
-        <button
-          @click="editor.chain().focus().redo().run()"
-          :disabled="!editor.can().chain().focus().redo().run()"
-        >
-          Redo
-        </button>
-        <button
-          @click="editor.chain().focus().setColor('#958DF1').run()"
-          :class="{
-            'is-active': editor.isActive('textStyle', { color: '#958DF1' }),
-          }"
-        >
-          Purple
-        </button>
+        <!-- 이미지 업로드 버튼 -->
+        <button @click="triggerFileInput">image</button>
       </div>
     </div>
-    <!-- 이미지 업로드 버튼 -->
-    <div class="image-upload-container">
-      <input type="file" ref="fileInput" @change="handleImageUpload" hidden />
-      <v-btn @click="triggerFileInput" color="primary">이미지 업로드</v-btn>
-    </div>
+    <input type="file" ref="fileInput" @change="handleImageUpload" hidden />
+
     <div id="editorArea">
-      <div class="placeholder" id="placeholder">내용을 입력하세요.</div>
+      <div class="placeholder editorPlaceholder" id="editorPlaceholder">
+        내용을 입력하세요.
+      </div>
       <editor-content :editor="editor" />
     </div>
-    <div style="width: 100%; margin-top: 30px">
+    <!-- <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
-    </div>
+    </div> -->
     <div
       class="tcd-drop-area"
       v-if="tcdDroppedData"
@@ -257,17 +207,16 @@ export default {
     getAllTcdState: {
       handler(newVal) {
         console.error("tcd 값 감지. canvas >>>> ", newVal);
-        if(newVal.isDragStatus){
+        if (newVal.isDragStatus) {
           this.tcdDroppedData = newVal; // 드래그 데이터 저장
-        }else{
+        } else {
           this.tcdDroppedData = null;
         }
       },
       deep: true,
-    }
+    },
   },
-  created(){
-  },
+  created() {},
   mounted() {
     this.editor = new Editor({
       extensions: [
@@ -407,7 +356,7 @@ export default {
             if (removedIds.length > 0) {
               this.$parent.deleteBlock(removedIds[0]);
               if (updateAfterNodes == 0) {
-                const plel = document.querySelector(".placeholder");
+                const plel = document.querySelector("#editorPlaceholder");
                 if (plel) {
                   if (plel.classList.contains("hidden")) {
                     plel.classList.remove("hidden");
@@ -653,15 +602,13 @@ export default {
     window.addEventListener("indentExecuted", this.onIndentExecuted);
     window.addEventListener("outdentExecuted", this.onOutdentExecuted);
 
-    console.error("@@@@@@@@@@@@@@@", this.defaultContent);
-    if (this.defaultContent?.content?.length > 0) {
-      // const plel = document.getElementsByClassName("placeholder");
-      const plel = document.querySelector(".placeholder");
-      // const plel2 = document.getElementById("placeholder");
-      console.log("plel >>> ", plel);
-      // if (plel) {
-      //   plel.classList.add("hidden");
-      // }
+    if (this.defaultContent.length > 1) {
+      setTimeout(() => {
+        const plel = document.getElementById("editorPlaceholder");
+        if (plel) {
+          plel.classList.add("hidden");
+        }
+      }, 100);
     }
   },
   methods: {
@@ -671,7 +618,6 @@ export default {
       "appendBlockFeIdsAfterPrevActions",
 
       // tcd용
-
     ]),
     updateDataEditorAfterEvent(
       updateBlockID,
@@ -817,7 +763,7 @@ export default {
               this.nodeLength
             );
             if (this.nodeLength <= 0) {
-              const plel = document.querySelector(".placeholder");
+              const plel = document.querySelector("#editorPlaceholder");
               if (plel) {
                 if (plel.classList.contains("hidden")) {
                   plel.classList.remove("hidden");
@@ -1225,20 +1171,20 @@ export default {
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             const dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
             if (dragedFile.type === "drive") {
-              if(dragedFile.driveType =="file"){
+              if (dragedFile.driveType == "file") {
                 console.log("드롭된 파일 ID:", dragedFile.fileId);
                 // 파일 업로드나 추가 작업을 수행할 로직 작성
 
                 // 에디터에 이미지 삽입
                 this.insertImageToEditor(dragedFile.fileUrl);
-              }else{
-                alert("드라이브에서는 [파일]만 drop할 수 있습니다.")
+              } else {
+                alert("드라이브에서는 [파일]만 drop할 수 있습니다.");
               }
             }
-          } else if(parsedData?.type === "canvas"){
-            alert("캔버스 끼리는 drop 할 수 없습니다.")
-          } else if(parsedData?.type === "thread"){
-            console.error("thread drop")
+          } else if (parsedData?.type === "canvas") {
+            alert("캔버스 끼리는 drop 할 수 없습니다.");
+          } else if (parsedData?.type === "thread") {
+            console.error("thread drop");
           } else {
             alert("옳지 않은 drop 방식 입니다.");
           }
@@ -1273,14 +1219,14 @@ export default {
 .tiptapWrap {
   position: relative;
 
-  .tcd-drop-area{
-    position:absolute;
+  .tcd-drop-area {
+    position: absolute;
     left: 0;
     right: 0;
     top: 0;
     bottom: 0;
     background-color: rgba($color: #000000, $alpha: 0.5);
-    color:#ffffff;
+    color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
