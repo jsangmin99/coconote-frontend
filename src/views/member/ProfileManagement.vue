@@ -29,22 +29,16 @@
                 prepend-inner-icon="mdi-domain" class="common-text-field rounded"></v-text-field>
               <v-text-field label="Position" v-model="profileData.position" clearable rounded variant="outlined"
                 prepend-inner-icon="mdi-briefcase-outline" class="common-text-field rounded"></v-text-field>
-              <v-text-field label="Rank" clearable rounded variant="outlined"
-                prepend-inner-icon="mdi-star-circle-outline" class="common-text-field rounded"></v-text-field>
             </v-col>
 
             <v-col cols="12" sm="6">
-              <v-text-field label="Email" readonly variant="outlined" rounded prepend-inner-icon="mdi-email"
-                class="common-text-field rounded"></v-text-field>
-              <v-text-field label="Phone Number" readonly variant="outlined" rounded prepend-inner-icon="mdi-phone"
-                class="common-text-field rounded"></v-text-field>
               <v-text-field label="Role" v-model="profileData.wsRole" readonly rounded variant="outlined"
                 prepend-inner-icon="mdi-account-supervisor" class="common-text-field rounded"></v-text-field>
             </v-col>
           </v-row>
-          <v-row>
+          <v-row style="margin-top: 0px;">
             <v-col>
-              <v-textarea label="Infomation" rounded variant="outlined" style="color: #6495ED;">
+              <v-textarea label="Infomation" rounded rows="2" variant="outlined" style="color: #6495ED;">
               </v-textarea>
             </v-col>
           </v-row>
@@ -134,7 +128,7 @@ body {
   /* 이미지의 가로 크기 */
   height: 150px;
   /* 이미지의 세로 크기 */
-  border-radius: 50%;
+  border-radius: 15px;
   /* 이미지를 동그랗게 만듦 */
   object-fit: cover;
   /* 이미지가 부모 요소 크기에 맞게 잘림 */

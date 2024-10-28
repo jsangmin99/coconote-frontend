@@ -109,7 +109,7 @@
               <v-icon>mdi-download</v-icon>
             </button>
             <button class="btn2" @click="deleteF(file.fileId)">
-              <v-icon>mdi-trash-can</v-icon>
+              <v-icon color="error">mdi-trash-can</v-icon>
             </button>
           </div>
         </div>
@@ -207,6 +207,11 @@ import axios from '@/services/axios';
         if (!this.tagName.trim()) {
           return;
         }
+        
+        if(this.tagList.some(t => t.name === this.tagName)) {
+          alert("이미 있는 태그 이름입니다!")
+          return;
+        }
         this.createAndAddTag(this.thread.id, this.tagName, this.getRandomColor());
         this.tagName = ""
         this.inputWidth = 35
@@ -225,6 +230,15 @@ import axios from '@/services/axios';
         }
         return color;
       },
+      // getRandomColor() {
+      //   const getRandomInt = () => Math.floor(Math.random() * 200);
+
+      //   const r = getRandomInt(0, 250); // R: 128~255
+      //   const g = getRandomInt(0, 250); // G: 128~255
+      //   const b = getRandomInt(0, 250); // B: 128~255
+
+      //   return `#${r+g+b}`;
+      // },
       handleKeydown(event) {
         if (event.isComposing) return;
 
@@ -390,7 +404,7 @@ import axios from '@/services/axios';
   /* 이미지의 가로 크기 */
   height: 50px;
   /* 이미지의 세로 크기 */
-  border-radius: 50%;
+  border-radius: 15px;
   /* 이미지를 동그랗게 만듦 */
   object-fit: cover;
 }
@@ -416,7 +430,6 @@ import axios from '@/services/axios';
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
   gap: 5px;
 }
 .tag-container {
@@ -424,9 +437,9 @@ import axios from '@/services/axios';
 }
 .tag {
   border-radius: 6px;
-  padding: 0 5px 1px 5px;
+  padding: 1px 9px 4px 9px;
   color: white;
-  font-size: 11px;
+  font-size: 13px;
 }
 .tag-container:hover .delete-tag {
   display: block;
@@ -525,7 +538,7 @@ import axios from '@/services/axios';
 }
 .btn2:hover {
   border-radius: 5px;
-  background-color: red;
+  background-color: #d6d6d6;
 }
 
 .hash-btn{

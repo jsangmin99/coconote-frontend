@@ -622,6 +622,7 @@ export default {
 
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             this.dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
+            
             if (this.dragedFile.type === "drive") {
               console.log("드롭된 파일 ID:", this.dragedFile.fileId);
               // 파일 업로드나 추가 작업을 수행할 로직 작성
@@ -777,13 +778,13 @@ export default {
     scrollToBottom() {
       console.log("밑으로");
 
-      setTimeout(() => {
+      this.$nextTick(() => {
         const container = document.getElementById("list-group");
 
         if (container) {
-          container.scrollTop = container.scrollHeight;
+            container.scrollTop = container.scrollHeight; 
         }
-      }, 1);
+      });
     },
 
     deleteImage(index) {

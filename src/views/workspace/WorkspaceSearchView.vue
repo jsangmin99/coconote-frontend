@@ -42,9 +42,9 @@ export default {
     async searchMyWorkspace() {
       // localStorage에 ws 정보 체크 후 분기처리
       const lsWsId = localStorage.getItem("workspaceId");
-      console.log("[WorkspaceSearchView] 생성 후 workspace로 이동 완료 >> ", lsWsId);
+      // console.log("[WorkspaceSearchView] 생성 후 workspace로 이동 완료 >> ", lsWsId);
       if (lsWsId != "" && lsWsId != undefined && lsWsId != null) {
-        console.log("[WorkspaceSearchView] 이미 workspace가 있음!!");
+        // console.log("[WorkspaceSearchView] 이미 workspace가 있음!!");
         this.workspaceId = lsWsId;
         const lsWsName = localStorage.getItem("workspaceName");
         await this.setWorkspaceInfoActions(lsWsId);
@@ -61,7 +61,7 @@ export default {
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/workspace/first`
       );
-      console.error("[WorkspaceSearchView] getMyFirstWorkspace().response", response);
+      // console.error("[WorkspaceSearchView] getMyFirstWorkspace().response", response);
       if (!response.data.result) {
         // 해당 유저의 workspace가 존재하지 않을 때
         this.dialog = true;

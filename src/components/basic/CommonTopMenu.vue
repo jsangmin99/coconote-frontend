@@ -8,35 +8,44 @@
   </v-app-bar>
 </template>
 
-<script setup>
-import { useStore } from 'vuex';
-import { onMounted, onBeforeUnmount, computed } from 'vue';
+<script>
+import { mapGetters, mapActions } from 'vuex';
 
-// Vuex 스토어 가져오기
-const store = useStore();
-
-// Vuex에서 getChannelId getter를 사용하여 채널 ID를 가져옴
-const workspaceId = computed(() => store.getters['getWorkspaceId']);
-console.log('qqqqqqqqqqqqqqqqqqqchannelId:', workspaceId.value);
-
-// 컴포넌트가 마운트될 때 SSE 구독 시작
-onMounted(() => {
-    if (workspaceId.value) {
-        store.dispatch('notifications/subscribeToNotifications', workspaceId.value);
+export default {
+  name: 'YourComponentName', // 컴포넌트 이름
+  computed: {
+    ...mapGetters('notifications', ['allNotifications']),
+  },
+  methods: {
+    ...mapActions([
+      "connectToSSE",
+      "disconnectSSE"
+    ]),
+  },
+  created() {
+    const workspaceId = localStorage.getItem('workspaceId');
+    if (workspaceId) {
+      console.log(`SSE 연결을 시작합니다. 워크스페이스 ID: ${workspaceId}`);
+      this.connectToSSE({ workspaceId }); // workspaceId 전달
+    } else {
+      console.warn('워크스페이스 ID를 찾을 수 없습니다. SSE 연결을 시작할 수 없습니다.');
     }
-});
-
-// // 채널 ID가 변경될 때마다 SSE 구독을 갱신
-// watch(channelId, (newChannelId, oldChannelId) => {
-//   if (newChannelId !== oldChannelId && newChannelId) {
-//     store.dispatch('notifications/subscribeToNotifications', newChannelId);
-//   }
-// });
-
-// 컴포넌트가 언마운트될 때 SSE 연결 닫기
-onBeforeUnmount(() => {
-  store.dispatch('notifications/closeEventSource'); // SSE 연결 닫기
-});
+  },
+  beforeUnmount() {
+    console.log('SSE 연결을 해제합니다.');
+    this.disconnectSSE();
+  },
+  watch: {
+    allNotifications: {
+      deep: true,
+      handler(newNotifications) {
+        if (newNotifications.length > 0) {
+          console.log('새로운 알림이 도착했습니다 @@@:', newNotifications[newNotifications.length - 1]);
+        }
+      },
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

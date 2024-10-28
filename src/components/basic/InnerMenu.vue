@@ -325,7 +325,7 @@ export default {
   width: 45px;
   /* 이미지 크기 45px x 45px로 설정 */
   height: 45px;
-  border-radius: 50%;
+  border-radius: 15px;
   object-fit: cover;
   margin: 0 auto;
   display: block;
@@ -344,6 +344,8 @@ export default {
   padding: 10px;
   z-index: 1005;
   top: 50px;
+  overflow-y: auto;
+  max-height: 400px;
 }
 
 .workspace-dropdown-menu ul {
