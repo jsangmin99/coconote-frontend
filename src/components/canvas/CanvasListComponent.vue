@@ -46,7 +46,6 @@
 import axios from "axios";
 import { mapGetters, mapActions } from "vuex";
 
-import { EventBus } from "@/eventBus/eventBus.js";
 
 export default {
   name: "CanvasListComponent",
@@ -123,7 +122,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction"]),
+    ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction", "setTcdStateAllDataActions"]),
     findAllRoom() {
       axios
         .get(
@@ -237,12 +236,23 @@ export default {
         // this.draggedType = type;
 
         // 드래그 시작 시 전송할 데이터 로그 출력
-        console.error("드래그 시작 - 전송할 데이터:", dataToTransfer);
-        EventBus.emit("drag-start", dataToTransfer); // drag-start 이벤트 발생
+        console.error("드래그 시작 - 전송할 데이터 canvas :", dataToTransfer);
+        const setInfoObj = {
+          isDragStatus: true,
+          dragStartPage: "canvas",
+          result: dataToTransfer,
+        }
+        this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
       }
     },
     handleDragEnd() {
-      EventBus.emit("drag-end"); // 드래그 종료 이벤트 전송
+      this.draggingId = null;
+      const setInfoObj = {
+        isDragStatus: false,
+        dragStartPage: "canvas",
+      }
+      this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
+      // EventBus.emit("drag-end"); // 드래그 종료 이벤트 전송
     },
   },
 };

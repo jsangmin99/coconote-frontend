@@ -59,7 +59,7 @@
           :is="getComponentForTab(leftTab)"
           :id="channelId"
           :splitCanvasId="canvasId"
-          @drag-start="emitDragStart"
+          :key="leftTab"
         />
       </div>
       <div class="rightPane">
@@ -67,7 +67,7 @@
           :is="getComponentForTab(rightTab)"
           :id="channelId"
           :splitCanvasId="canvasId"
-          @drag-start="emitDragStart"
+          :key="rightTab"
         />
       </div>
     </div>
@@ -75,8 +75,6 @@
 </template>
 
 <script>
-import { EventBus } from '@/eventBus/eventBus';
-
 import ChannelCommonMenu from "@/components/basic/ChannelCommonMenu.vue";
 import ThreadComponent from "@/components/thread/ThreadComponent.vue";
 import CanvasView from "@/views/canvas/CanvasView.vue";
@@ -96,10 +94,6 @@ export default {
     FolderComponent,
   },
   mounted(){
-    // EventBus로 drag-start 이벤트 감지
-    EventBus.on('drag-start', (data) => {
-      this.draggedData = data;
-    });
   },
   data() {
     return {
@@ -113,7 +107,7 @@ export default {
       },
 
       // 드래그
-      draggedData: null,
+      tcdDroppedData: null,
     };
   },
   methods: {
@@ -145,20 +139,8 @@ export default {
       this.canvasId = newCanvasId;
     },
 
-    // drag 영역
-    emitDragStart(data) {
-      // left 컴포넌트에서 drag-start 이벤트 발생 시 실행
-      this.draggedData = data;
-      EventBus.emit('drag-start', data);
-    },
-    handleDrop() {
-      // right 컴포넌트에서 drop 이벤트 발생 시 실행
-      EventBus.emit('drop', this.draggedData);
-      this.draggedData = null;
-    },
   },
   beforeUnmount(){
-    EventBus.off('drag-start');
   }
 };
 </script>

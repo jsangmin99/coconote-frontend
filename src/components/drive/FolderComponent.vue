@@ -46,6 +46,7 @@
       <div v-for="folder in folderList" :key="folder.folderId" class="folder-item"
         :class="{ selected: selectedItems.includes(folder) }" draggable="true"
         @dragstart="tcdShareDragStart($event, 'folder', folder)" @dragover.prevent @drop="onDrop($event, folder.folderId)"
+        @dragend="onDragEnd"
         @click="toggleSelection($event, 'folder', folder)" @dblclick="navigateToFolder(folder.folderId)"
         @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
         <img src="@/assets/images/folder-icon.png" alt="folder icon" class="folder-icon" />
@@ -145,8 +146,7 @@
 <script>
 import axios from "@/services/axios";
 import CoconutLoader from "@/components/basic/CoconutLoader.vue";
-import { EventBus } from '@/eventBus/eventBus.js';
-
+import { mapActions } from "vuex";
 
 export default {
   components: {
@@ -177,6 +177,10 @@ export default {
     };
   },
   methods: {
+    ...mapActions([
+      // tcd용
+      "setTcdStateAllDataActions"
+    ]),
     // 항목 선택 토글
     toggleSelection(event, type, item) {
       const itemList = [...this.folderList, ...this.fileList]; // 폴더와 파일 목록을 결합
@@ -275,6 +279,7 @@ export default {
         this.selectedItems = [item];
         tcdSharedData = this.selectedItems;
         tcdSharedData[0].type = "drive";
+        tcdSharedData[0].driveType = type;
       }
       if(tcdSharedData != null){
         console.error(tcdSharedData)
@@ -284,13 +289,24 @@ export default {
         this.draggedType = type;
 
         // 드래그 시작 시 전송할 데이터 로그 출력
-        console.error("드래그 시작 - 전송할 데이터:", dataToTransfer);
-        EventBus.emit('drag-start', dataToTransfer); // drag-start 이벤트 발생
+        console.error("드래그 시작 - 전송할 데이터 folder :", dataToTransfer);
+        const setInfoObj = {
+          isDragStatus: true,
+          dragStartPage: "drive",
+          result: dataToTransfer,
+        }
+        this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
       }
     },
     // 전역적으로 drag end 감지
     onDragEnd(){
-      EventBus.emit('drag-end'); // 드래그 종료 이벤트 전송
+      this.selectedItems = [];
+      
+      const setInfoObj = {
+        isDragStatus: false,
+        dragStartPage: "drive",
+      }
+      this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
     },
 
     // 드롭 시 호출
