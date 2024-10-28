@@ -1232,6 +1232,7 @@ export default {
     justify-content: center;
     font-size: 1.8rem;
     font-weight: bold;
+    z-index: 3;
   }
 }
 </style>

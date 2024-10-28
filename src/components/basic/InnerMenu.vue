@@ -71,7 +71,7 @@
           </li>
         </ul>
         <ul>
-          <li @click="showWorkspaceModal">+</li>
+          <li @click="showWorkspaceModal" class="createWsModal"> 워크스페이스 생성 </li>
         </ul>
       </div>
 
@@ -381,5 +381,16 @@ export default {
 
 .workspace-dropdown-menu ul li:hover {
   background-color: #f3f3f3;
+}
+.createWsModal{
+  font-size: 10px;
+  background: #3a446b;
+  border-radius: 4px;
+  color: #ffffff !important;
+  padding: 8px 0 !important;
+  text-align: center; 
+  &:hover{
+    background: #0a101d !important;
+  }
 }
 </style>

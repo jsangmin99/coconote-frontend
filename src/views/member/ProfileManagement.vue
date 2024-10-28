@@ -49,9 +49,6 @@
         <v-btn class="action-button" @click="saveProfile">
           저장
         </v-btn>
-        <v-btn class="action-button" @click="cancel">
-          취소
-        </v-btn>
       </v-card-actions>
 
 
