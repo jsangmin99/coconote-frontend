@@ -1,49 +1,48 @@
 <template>
   <div class="container tag_container">
-    <div :style="{margin: 5+'px'}">
-      <h2>Tags</h2>
-    </div>
-    <hr>
-    <h4>태그 리스트</h4>
-    <div class="tag-list">
-      <div class="tag-container" v-for="(tag, index) in tagList" :key="index" @contextmenu.prevent="showContextMenu(tag, $event)">
-        <strong v-if="!isUpdateTagName || selectedTag.id !== tag.id" class="tag"
-          :style="{ backgroundColor: selectedTags.some(selectedTag => selectedTag.id === tag.id)? tag.color: tag.color + '50' }" @click="selectTag(tag)" :class="{ highlight: selectedTags.some(selectedTag => selectedTag.id === tag.id) }">
-          {{ tag.name }}
-        </strong>
-        <input v-if="isUpdateTagName && selectedTag.id === tag.id" type="text" class="tag"
-          :style="{ backgroundColor: tag.color }" v-on:keypress.enter="updateTagName" :ref="'tagInput' + tag.id"
-          v-model="tagName">
-        <button class="menu-btn" @click="toggleTagMenu(tag, $event)">⚙️</button>
+    <div class="tag-list-container">
+      <h4 class="h4-tag"><span>#</span> 태그 리스트</h4>
+      <div class="tag-list">
+        <div class="tag-container" v-for="(tag, index) in tagList" :key="index" @contextmenu.prevent="showContextMenu(tag, $event)">
+          <strong v-if="!isUpdateTagName || selectedTag.id !== tag.id" class="tag"
+            :style="{ backgroundColor: selectedTags.some(selectedTag => selectedTag.id === tag.id)? tag.color: tag.color + '50' }" @click="selectTag(tag)" :class="{ highlight: selectedTags.some(selectedTag => selectedTag.id === tag.id) }">
+            {{ tag.name }}
+          </strong>
+          <input v-if="isUpdateTagName && selectedTag.id === tag.id" type="text" class="tag"
+            :style="{ backgroundColor: tag.color }" v-on:keypress.enter="updateTagName" :ref="'tagInput' + tag.id"
+            v-model="tagName">
+          <button class="menu-btn" @click="toggleTagMenu(tag, $event)">⚙️</button>
+        </div>
       </div>
     </div>
-
-    <hr>
-    <h4>검색 결과</h4>
-    <div class="filter-result">
-      <v-skeleton-loader v-if="isLoading" type="list-item-avatar, paragraph"></v-skeleton-loader>
-      <div v-if="!isLoading">
-        <div v-if="searchResults.length === 0" class="no-results">검색 결과가 없습니다.</div>
-        <ul v-else>
-          <li v-for="(result, index) in searchResults" :key="index" @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
-            <div class="result-content">
-              <img v-if="result.profileImageUrl" :src="result.profileImageUrl" alt="프로필 이미지" class="result-image" style="width: 50px; height: 50px">
-              <div class="result-details">
-                <strong class="result-title">{{ result.memberName }}</strong>
-                <p class="result-content-text">{{ result.content }}</p>
-                <div class="image-group">
-                  <div class="file-group" v-for="(file, index) in result.fileUrls" :key="index">
-                    <img :src="file" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover; border-radius:10px;">
+    
+    <div class="tag-result-container">
+      <h4 class="h4-tag"><span>#</span> 검색 결과</h4>
+      <div class="filter-result">
+        <v-skeleton-loader v-if="isLoading" type="list-item-avatar, paragraph"></v-skeleton-loader>
+        <div v-if="!isLoading">
+          <div v-if="searchResults.length === 0" class="no-results">검색 결과가 없습니다.</div>
+          <ul v-else>
+            <li v-for="(result, index) in searchResults" :key="index" @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
+              <div class="result-content">
+                <img v-if="result.profileImageUrl" :src="result.profileImageUrl" alt="프로필 이미지" class="result-image" style="width: 50px; height: 50px">
+                <div class="result-details">
+                  <strong class="result-title">{{ result.memberName }}</strong>
+                  <p class="result-content-text">{{ result.content }}</p>
+                  <div class="image-group">
+                    <div class="file-group" v-for="(file, index) in result.fileUrls" :key="index">
+                      <img :src="file" alt="image" @error="e => e.target.src = require('@/assets/images/file.png')"  style="height: 120px; width: 120px; object-fit: cover; border-radius:10px;">
+                    </div>
                   </div>
+                  <div class="result-tags">
+                    <span v-for="(tag, idx) in result.tags" :key="idx" class="result-tag">{{ tag }}</span>
+                  </div>
+                  <small class="result-date">{{ result.createdTime }}</small>
                 </div>
-                <div class="result-tags">
-                  <span v-for="(tag, idx) in result.tags" :key="idx" class="result-tag">{{ tag }}</span>
-                </div>
-                <small class="result-date">{{ result.createdTime }}</small>
               </div>
-            </div>
-          </li>
-        </ul>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
 
