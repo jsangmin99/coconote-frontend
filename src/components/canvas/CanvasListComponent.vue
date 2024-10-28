@@ -122,7 +122,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction", "setTcdStateAllDataActions"]),
+    ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction", "setTcdStateAllDataActions", "setTcdTabInfoMultiTargetAction"]),
     findAllRoom() {
       axios
         .get(
@@ -182,6 +182,13 @@ export default {
       if (sender) {
         this.canvasIdInList = canvasId;
         this.$emit("updateCanvasId", canvasId);
+        
+        const payload = {
+          canvasId: this.canvasIdInList,
+        };
+
+        // Vuex action 호출
+        this.setTcdTabInfoMultiTargetAction(payload);
         if (
           this.$route.name == "CanvasView" ||
           this.$route.name == "CanvasEmptyView"

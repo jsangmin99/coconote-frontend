@@ -88,6 +88,9 @@ export default {
   flex-wrap: nowrap;
   justify-content: flex-start;
   height: 100%;
+  .v-navigation-drawer__content{
+    max-height: 100vh;
+  }
 }
 .main-content {
   height: calc(100% - 40px);
