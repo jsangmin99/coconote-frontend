@@ -1,13 +1,19 @@
 <template>
   <v-list class="canvasLists h-100">
     <v-list-item
-      class="canvasListItem"
-      prepend-icon="mdi-note-text-outline"
       v-for="item in chatrooms"
       :key="item.id"
       :data-id="item.id"
       @click="changeCanvasId(item.id)"
-      :class="{ active: this.canvasIdInList == item.id }"
+      :class="{
+        active: canvasIdInList === item.id,
+        dragging: draggingId === item.id,
+      }"
+      class="canvasListItem"
+      prepend-icon="mdi-note-text-outline"
+      draggable="true"
+      @dragstart="tcdShareDragStart($event, 'canvas', item)"
+      @dragend="handleDragEnd"
     >
       {{ item.title }}
     </v-list-item>
@@ -39,6 +45,7 @@
 <script>
 import axios from "axios";
 import { mapGetters, mapActions } from "vuex";
+
 
 export default {
   name: "CanvasListComponent",
@@ -109,10 +116,13 @@ export default {
       getCanvasAllInfo_inList: null,
 
       isVisibleCreateTextarea: false, // 페이지 추가 버튼 용
+
+      // drag용
+      draggingId: null,
     };
   },
   methods: {
-    ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction"]),
+    ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction", "setTcdStateAllDataActions"]),
     findAllRoom() {
       axios
         .get(
@@ -211,6 +221,39 @@ export default {
         this.chatrooms.splice(targetIndex, 1);
       }
     },
+    tcdShareDragStart(event, type, item) {
+      console.error("canvas drag 시작", event, type, item);
+      this.draggingId = item.id; // 드래그 시작 시 아이템 ID 저장
+      event.dataTransfer.effectAllowed = "move";
+
+      let tcdSharedData = item;
+      if (tcdSharedData != null) {
+        tcdSharedData.type = "canvas";
+        console.error(tcdSharedData);
+
+        const dataToTransfer = JSON.stringify(tcdSharedData);
+        event.dataTransfer.setData("items", dataToTransfer);
+        // this.draggedType = type;
+
+        // 드래그 시작 시 전송할 데이터 로그 출력
+        console.error("드래그 시작 - 전송할 데이터 canvas :", dataToTransfer);
+        const setInfoObj = {
+          isDragStatus: true,
+          dragStartPage: "canvas",
+          result: dataToTransfer,
+        }
+        this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
+      }
+    },
+    handleDragEnd() {
+      this.draggingId = null;
+      const setInfoObj = {
+        isDragStatus: false,
+        dragStartPage: "canvas",
+      }
+      this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
+      // EventBus.emit("drag-end"); // 드래그 종료 이벤트 전송
+    },
   },
 };
 </script>
@@ -218,6 +261,9 @@ export default {
 <style lang="scss">
 [v-cloak] {
   display: none;
+}
+.canvasListItem.dragging {
+  opacity: 0.5; /* 드래그 중인 아이템을 반투명으로 */
 }
 .canvasLists {
   font-size: 12px;

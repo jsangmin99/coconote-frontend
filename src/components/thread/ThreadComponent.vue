@@ -1,4 +1,6 @@
 <template>
+<div class="threadWrap">
+
   <div v-if="!isComment" class="container">
     <!-- 필터 태그 -->
     <div class="tag-filter-container">
@@ -80,7 +82,14 @@
           :updateMessage="updateMessage" :deleteMessage="deleteMessage" :deleteFile="deleteFile"
           :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
           :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
-          :isDifferentMember="index === 0 || message.memberId != parentThread.childThreads[index - 1].memberId" />
+          :isDifferentMember="index === 0 || message.memberId != parentThread.childThreads[index - 1].memberId" 
+          :class="{
+            dragging: draggingId === thread.id,
+          }"
+          draggable="true"
+          @dragstart="tcdShareDragStart($event, 'thread', message)"
+          @dragend="handleDragEnd"
+          />
       </div>
     </div>
     <!-- 입력 그룹 -->
@@ -107,6 +116,17 @@
       </div>
     </div>
   </div>
+
+  <!-- drag drop 되는 부분 표시용 -->
+  <div
+      class="tcd-drop-area"
+      v-if="tcdDroppedData"
+      @dragover.prevent
+      @drop="handleDrop"
+    >
+    이 곳에 data를 drop 하세요
+  </div>
+</div>
 </template>
 
 <script>
@@ -115,7 +135,7 @@ import axios from '@/services/axios'
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import { debounce } from "lodash";
-import { mapGetters } from 'vuex';
+import { mapGetters, mapActions } from 'vuex';
 
 export default {
   props: ['id', 'threadId', 'parentThreadId'],
@@ -150,7 +170,25 @@ export default {
       parentThread: null,
       dragedFile: null,
       isCreated: false,
+
+      // drag 용
+      tcdDroppedData: null,
+      draggingId: null,
     };
+  },
+  watch: {
+    getAllTcdState: {
+      handler(newVal) {
+        console.error("tcd 값 감지. thread >>>> ", newVal);
+        if(newVal.isDragStatus){
+          this.tcdDroppedData = newVal; // 드래그 데이터 저장
+        }else{
+          this.tcdDroppedData = null;
+        }
+        
+      },
+      deep: true,
+    }
   },
   async created() {
     this.roomId = this.id;
@@ -187,9 +225,13 @@ export default {
         console.log("WebSocket connection closed.");
       });
     }
+
   },
   computed: {
-    ...mapGetters(['getWorkspaceId', 'getWorkspaceName']),
+    ...mapGetters(['getWorkspaceId', 'getWorkspaceName',
+      // tcd용
+      "getAllTcdState",
+    ]),
     filteredMessages() {
       if (this.tagFilter.length === 0) {
         return this.messages; // 필터가 없으면 전체 메시지를 반환
@@ -206,6 +248,9 @@ export default {
   },
 
   methods: {
+    ...mapActions([
+      "setTcdStateAllDataActions",
+    ]),
     moveToThread(threadId) {
       // threadId가 제공된 경우에만 실행
       console.log("@@@threadId: ",threadId);
@@ -578,9 +623,9 @@ export default {
       });
       this.files = null;
     },
-
     async handleDrop(event) {
       event.preventDefault();
+      console.error("@@@@@@@ handleDrop",event)
       const droppedData = event.dataTransfer.getData("items");
 
       // 드롭된 데이터 로그 출력
@@ -590,21 +635,30 @@ export default {
       if (droppedData && droppedData.trim() !== "") {
         try {
           const parsedData = JSON.parse(droppedData);
-          console.log("드롭된 데이터(parsed):", parsedData);
+          console.log("드롭된 데이터(parsed)222222222222:", parsedData);
 
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             this.dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
-            console.log("드롭된 파일 ID:", this.dragedFile.fileId);
-            if(!this.dragedFile.fileId) return;
-            // 파일 업로드나 추가 작업을 수행할 로직 작성
-            parsedData.map(dragedFile =>this.fileList.push({
-              fileId: dragedFile.fileId,
-              name: dragedFile.fileName,
-              imageUrl: dragedFile.fileUrl
-            }));
             
+            if (this.dragedFile.type === "drive") {
+              if(this.dragedFile.driveType =="file"){
+                console.log("드롭된 파일 ID:", this.dragedFile.fileId);
+                // 파일 업로드나 추가 작업을 수행할 로직 작성
+                parsedData.map(dragedFile =>this.fileList.push({
+                  fileId: dragedFile.fileId,
+                  name: dragedFile.fileName,
+                  imageUrl: dragedFile.fileUrl
+                }));
+              }else{
+                alert("드라이브에서는 [파일]만 drop할 수 있습니다.")
+              }
+            }
+          } else if(parsedData?.type === "canvas"){
+            console.error("캔버스 파일 드롭");
+          } else if(parsedData?.type === "thread"){
+            alert("쓰레드 끼리는 drop 할 수 없습니다.")
           } else {
-            console.log("드래그된 파일이 없습니다.");
+            alert("옳지 않은 drop 방식 입니다.");
           }
         } catch (error) {
           console.error("JSON 파싱 오류:", error);
@@ -612,6 +666,8 @@ export default {
       } else {
         console.log("드롭된 데이터가 없습니다.");
       }
+
+      this.tcdDroppedData = null;
     },
 
 
@@ -860,6 +916,42 @@ export default {
         textarea.style.overflowY = 'hidden'; // 스크롤바 숨기기
       }
     },
+
+    
+      // drag drop 용도
+      tcdShareDragStart(event, type, item) {
+        console.error("thread drag 시작", event, type, item);
+        this.draggingId = item.id; // 드래그 시작 시 아이템 ID 저장
+        event.dataTransfer.effectAllowed = "move";
+
+        let tcdSharedData = item;
+        if (tcdSharedData != null) {
+          tcdSharedData.type = "thread";
+          console.error(tcdSharedData);
+
+          const dataToTransfer = JSON.stringify(tcdSharedData);
+          event.dataTransfer.setData("items", dataToTransfer);
+          // this.draggedType = type;
+
+          // 드래그 시작 시 전송할 데이터 로그 출력
+          console.error("드래그 시작 - 전송할 데이터 thread:", dataToTransfer);
+          const setInfoObj = {
+            isDragStatus: true,
+            dragStartPage: "thread",
+            result: dataToTransfer,
+          }
+          this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
+        }
+      },
+      handleDragEnd() {
+        this.draggingId = null;
+
+        const setInfoObj = {
+          isDragStatus: false,
+          dragStartPage: "thread",
+        }
+        this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
+      },
   },
 };
 </script>
@@ -993,5 +1085,26 @@ textarea:focus {
 }
 .more-btn-file:hover{
   background: red;
+}
+</style>
+
+<style lang="scss">
+.threadWrap{
+  position:relative;
+
+  .tcd-drop-area{
+    position:absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba($color: #000000, $alpha: 0.5);
+    color:#ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+  }
 }
 </style>

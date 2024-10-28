@@ -64,11 +64,13 @@ export default {
             }
           } else if (
             this.getCanvasAllInfo_inDetail.method == "CREATE_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method ==
+              "HOT_UPDATE_CONTENTS_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "UPDATE_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "UPDATE_INDENT_BLOCK" ||
             this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
-            this.getCanvasAllInfo_inDetail.method == "CHANGE_ORDER_BLOCK" ||
-            this.getCanvasAllInfo_inDetail.method == "DELETE_BLOCK"
+            this.getCanvasAllInfo_inDetail.method == "DELETE_BLOCK" ||
+            this.getCanvasAllInfo_inDetail.method == "DEEP_DELETE_BLOCK"
           ) {
             this.recvMessage();
           } else {
@@ -102,6 +104,7 @@ export default {
   },
   data() {
     return {
+      isSendMessageLocked: false,
       room: {},
       sender: "",
       member: "",
@@ -177,72 +180,89 @@ export default {
     settingEditorContent() {
       let blockToEditorContentArr = [];
       for (const block of this.blocks) {
-        let tempBlockObj = {
-          type: block.type,
-          attrs: {
-            id: block.feId,
-            indent: block.indent,
-          },
-        };
-        if (block.content != null) {
-          if (block.type == "image") {
-            tempBlockObj.attrs.src = block.content;
-          } else {
-            tempBlockObj.content = [
-              {
-                type: "text",
-                text: block.content,
-              },
-            ];
-          }
-        }
+        let tempBlockHtml = block.content;
+        // if (block.content != null) {
+        //   if (block.type == "image") {
+        //     tempBlockObj.attrs.src = block.content;
+        //   } else {
+        //     tempBlockObj.content = [
+        //       {
+        //         type: "text",
+        //         text: block.content,
+        //       },
+        //     ];
+        //   }
+        // }
 
-        blockToEditorContentArr.push(tempBlockObj);
+        blockToEditorContentArr.push(tempBlockHtml);
       }
 
-      this.editorContent = {
-        type: "doc",
-        content: blockToEditorContentArr,
-      };
+      this.editorContent = blockToEditorContentArr;
     },
-    async sendMessage() {
-      const blockFeId = this.message.blockFeId;
-      const method = this.message.method;
+    async sendMessage(message) {
+      console.error("☺️☺️☺️", message);
+      while (this.isSendMessageLocked) {
+        await new Promise((resolve) => setTimeout(resolve, 50)); // 50ms 대기
+      }
+      console.error("👍👍👍👍", message);
+
+      // 함수 실행 시작
+      this.isSendMessageLocked = true;
+
+      try {
+        // 여기에 동기화된 작업을 수행합니다.
+        console.log("작업 시작");
+        await this.performTask(message); // 비동기 작업 예시
+        console.log("작업 완료");
+      } catch (error) {
+        console.error("작업 중 오류 발생:", error);
+      } finally {
+        // 작업이 끝난 후 잠금 해제
+        this.isSendMessageLocked = false;
+      }
+    },
+    async performTask(message) {
+      const blockFeId = message.blockFeId;
+      const method = message.method;
+      console.error("✖️✖️✖️✖️✖️✖️✖️ sendMessage >>>>", blockFeId, method);
       if (
         method == "CREATE_BLOCK" ||
+        method == "HOT_UPDATE_CONTENTS_BLOCK" || // 급히 내용만 update 해야하는 경우
         method == "CHANGE_ORDER_BLOCK" ||
-        method == "DELETE_BLOCK"
+        method == "DELETE_BLOCK" ||
+        method == "DEEP_DELETE_BLOCK"
       ) {
         console.error("✖️✖️✖️✖️ type 1");
         await this.clearTimeDebounceFun();
         await this.postSendMessage();
-        this.debounceMessage = { ...this.message };
+        this.debounceMessage = { ...message };
         await this.postSendMessage();
       } else if (
-        this.debounceMessage.blockFeId &&
-        blockFeId != this.debounceMessage.blockFeId
+        this.debounceMessage?.blockFeId &&
+        blockFeId != this.debounceMessage?.blockFeId
       ) {
         console.error("✖️✖️✖️✖️ type 2");
         await this.postSendMessage();
         await this.clearTimeDebounceFun();
-        await this.timerSendMessage();
+        await this.timerSendMessage(message);
       } else if (
         this.timeoutSendFun &&
-        blockFeId == this.debounceMessage.blockFeId &&
-        method == this.debounceMessage.method
+        blockFeId == this.debounceMessage?.blockFeId &&
+        method == this.debounceMessage?.method
       ) {
         console.error("✖️✖️✖️✖️ type 3");
-        this.debounceMessage = { ...this.message };
+        this.debounceMessage = { ...message };
       } else {
         console.error("✖️✖️✖️✖️ type 4");
-        if(this.timeoutSendFun){
+        if (this.timeoutSendFun) {
           this.clearTimeDebounceFun();
         }
-        await this.timerSendMessage();
+        await this.timerSendMessage(message);
       }
+      // resolve('작업 완료');
     },
-    timerSendMessage() {
-      this.debounceMessage = { ...this.message };
+    timerSendMessage(message) {
+      this.debounceMessage = { ...message };
       this.timeoutSendFun = setTimeout(() => {
         this.postSendMessage();
         this.clearTimeDebounceFun();
@@ -258,6 +278,7 @@ export default {
         ...this.debounceMessage,
       };
       this.$store.dispatch("setInfoMultiTargetAction", pageSetObj);
+      this.debounceMessage = null;
     },
     clearTimeDebounceFun() {
       clearTimeout(this.timeoutSendFun);
@@ -278,7 +299,7 @@ export default {
       this.deleteBlockTargetFeIdActions(blockFeId).then((isDeleteBlock) => {
         if (isDeleteBlock) {
           // 기존 값에 있어서 삭제했다면
-          this.message = {
+          const message = {
             postMessageType: "BLOCK", // 고정
             method: "DELETE_BLOCK",
             canvasId: this.canvasId,
@@ -290,15 +311,43 @@ export default {
             // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
           };
 
-          this.sendMessage();
+          this.sendMessage(message);
         }
       });
+    },
+    deepDeleteBlock(blockFeId) {
+      const prevBlockId = this.$store.getters.getTargetBlockPrevFeId(blockFeId); //삭제전 prev block id 검색
+      this.deleteBlockTargetFeIdActions(blockFeId);
+      // setTimeout(() => {
+      const message = {
+        postMessageType: "BLOCK", // 고정
+        method: "DEEP_DELETE_BLOCK",
+        canvasId: this.canvasId,
+        prevBlockId: prevBlockId,
+        parentBlockId: null,
+        blockContents: "",
+        blockType: "paragraph", //삭제여서 타입 관계 X
+        blockFeId: blockFeId,
+      };
+      this.sendMessage(message);
+      // }, 10);
+    },
+    patchBlock(blockFeId, blockContents) {
+      // 해당 id의 content만 수정하는 용도
+      const message = {
+        method: "HOT_UPDATE_CONTENTS_BLOCK",
+        blockFeId: blockFeId, // block id
+        blockContents: blockContents,
+      };
+
+      this.sendMessage(message);
     },
     updateBlock(
       blockFeId,
       blockElType,
-      blockContent,
+      blockContents,
       previousId,
+      nextId,
       parentId,
       blockIndent
     ) {
@@ -309,23 +358,27 @@ export default {
 
       this.activeBlockId = blockFeId;
 
-      const blockMethod = this.checkBlockMethod(blockFeId, blockContent);
-      this.message = {
+      const blockMethod = this.checkBlockMethod(blockFeId, blockContents);
+
+      console.error("💻💻💻💻💻", blockFeId, blockMethod);
+      const message = {
         method: blockMethod,
         blockFeId: blockFeId, // block id
         prevBlockId: previousId,
+        nextBlockId: nextId,
         canvasId: this.canvasId,
         // parentBlockId: parentId,
-        blockContents: blockContent,
+        blockContents: blockContents,
         blockType: blockElType,
         // member: this.sender, // 현재 접속한 user ⭐ 추후 변경
         blockIndent: blockIndent,
       };
 
-      this.sendMessage();
+      this.sendMessage(message);
     },
     checkBlockMethod(targetBlockFeId) {
       const found = this.getBlockFeId(targetBlockFeId);
+      console.error("found >>>>> ", found);
       if (found) {
         // block의 생성, 수정, 삭제 (create, update, delete)
         return "UPDATE_BLOCK";
@@ -334,20 +387,21 @@ export default {
         return "CREATE_BLOCK";
       }
     },
-    updateIndentBlock(nodeDataId, nodeIndent) {
+    updateIndentBlock(nodeDataId, nodeElOuterHtml, nodeIndent) {
       console.error("⭐⭐⭐⭐⭐", nodeDataId, nodeIndent);
-      this.message = {
+      const message = {
         canvasId: this.canvasId,
         method: "UPDATE_INDENT_BLOCK",
         blockFeId: nodeDataId,
         blockIndent: nodeIndent,
+        blockContents: nodeElOuterHtml,
       };
-      this.sendMessage();
+      this.sendMessage(message);
     },
     changeOrderBlock(changeOrderObj) {
       this.activeBlockId = changeOrderObj.feId;
 
-      this.message = {
+      const message = {
         canvasId: this.canvasId,
         method: "CHANGE_ORDER_BLOCK",
         blockFeId: changeOrderObj.feId,
@@ -357,7 +411,7 @@ export default {
         blockContents: changeOrderObj.contents,
       };
 
-      this.sendMessage();
+      this.sendMessage(message);
     },
     async changeCanvasName() {
       const pageSetObj = {

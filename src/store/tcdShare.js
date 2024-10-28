@@ -10,24 +10,27 @@ function initState() {
 const tcdShare = {
     state: initState(),
     mutations: {
-        setStateAllData(state, data) {
-            state = {...data};
+        setTcdStateAllData(state, data) {
+            Object.keys(data).forEach(key => {
+                state[key] = data[key];
+            });
         },
-        setIsDragStatus(state, data){
+        setIsTcdDragStatus(state, data){
             state.isDragStatus = data;
         }
     },
     actions: {
-        setStateAllDataActions({ commit }, data) {
-            commit('setStateAllData', data);
+        setTcdStateAllDataActions({ commit }, data) {
+            commit('setTcdStateAllData', data);
+            console.error("tcd test.. ", data)
         },
-        setIsDragStatusActions({ commit }, data) {
-            commit('setIsDragStatus', data);
+        setIsTcdDragStatusActions({ commit }, data) {
+            commit('setIsTcdDragStatus', data);
         },
     },
     getters: {
-        getAllBlockFeIds: state => state,
-        getsetIsDragStatus: state => state.isDragStatus,
+        getAllTcdState: state => state,
+        getsetIsTcdDragStatus: state => state.isDragStatus,
         // getBlockFeIdIndex: (state) => (targetId) => {
         //     return state.defaultBlockFeIds.indexOf(targetId);
         // },

@@ -217,7 +217,7 @@ export default {
   },
   created() {
     // Debounce 처리된 자동완성 함수 설정
-    this.fetchAutocomplete = debounce(this.fetchAutocomplete, 300);
+    this.fetchAutocomplete = debounce(this.fetchAutocomplete, 500);
   },
   mounted() {
     document.addEventListener('click', this.handleClickOutside);
@@ -227,7 +227,9 @@ export default {
   },
   watch: {
     activeTab() {
-      this.search(); // 자동으로 검색을 트리거
+      if (this.keyword.length >= 2) {
+        this.search();
+      }
     }
   },
   methods: {
@@ -237,7 +239,9 @@ export default {
         return; // 검색어가 없거나 2글자 미만일 경우 검색하지 않음
       }
       this.loading = true;
-      this.autocompleteSuggestions = []; // 검색 시 자동완성 리스트 닫기
+      this.closeAutocomplete(); // 검색 시 자동완성 리스트 닫기
+      this.fetchAutocomplete.cancel(); // debounce를 취소해 자동완성 요청 방지
+
 
       let url = `${process.env.VUE_APP_API_BASE_URL}/search`;
       if (this.activeTab !== 'ALL') {
@@ -309,20 +313,22 @@ export default {
         this.loading = false;
       }
     },
-
     handleEnter() {
-      // 자동완성 리스트에서 선택된 항목이 있을 때
+      // 자동완성에서 항목이 선택된 경우
       if (this.suggestionIndex !== -1 && this.autocompleteSuggestions[this.suggestionIndex]) {
         this.selectSuggestion(this.autocompleteSuggestions[this.suggestionIndex]);
       } else {
-        // 선택된 항목이 없으면 그냥 검색
+        // 선택된 항목이 없으면 검색하고 자동완성 창 닫기
         this.search();
+        this.closeAutocomplete();  // 자동완성 창 닫기
+        this.autocompleteSuggestions = [];  // 자동완성 데이터 비우기
+        this.$refs.searchInput.blur(); // 검색 후 입력창 포커스 해제
       }
     },
 
     // 자동완성 데이터 가져오기
     async fetchAutocomplete() {
-      if (this.keyword.length < 2) {
+      if (!this.keyword || this.keyword.length < 2) {
         this.autocompleteSuggestions = [];
         return;
       }
@@ -394,7 +400,7 @@ export default {
       try {
         // presigned URL 가져오기
         const response = await axios.get(
-          `http://localhost:8080/api/v1/files/${fileId}/download`
+          `${process.env.VUE_APP_API_BASE_URL}/files/${fileId}/download`
         );
 
         const presignedUrl = response.data.result; // presigned URL 가져오기
@@ -466,10 +472,8 @@ export default {
       const searchInput = this.$refs.searchInput;
 
       // autocomplete 목록이나 search input을 클릭했는지 여부를 체크
-      if (
-        (autocomplete && !autocomplete.contains(event.target)) &&
-        (searchInput && !searchInput.contains(event.target))
-      ) {
+      if (autocomplete && searchInput && !autocomplete.contains(event.target) && !searchInput.contains(event.target)) {
+
         this.autocompleteSuggestions = [];
       }
     },

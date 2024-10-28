@@ -45,7 +45,8 @@
     <div class="folder-list">
       <div v-for="folder in folderList" :key="folder.folderId" class="folder-item"
         :class="{ selected: selectedItems.includes(folder) }" draggable="true"
-        @dragstart="onDragStart($event, 'folder', folder)" @dragover.prevent @drop="onDrop($event, folder.folderId)"
+        @dragstart="tcdShareDragStart($event, 'folder', folder)" @dragover.prevent @drop="onDrop($event, folder.folderId)"
+        @dragend="onDragEnd"
         @click="toggleSelection($event, 'folder', folder)" @dblclick="navigateToFolder(folder.folderId)"
         @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
         <img src="@/assets/images/folder-icon.png" alt="folder icon" class="folder-icon" />
@@ -58,7 +59,8 @@
       <div v-for="file in fileList" :key="file.fileId" class="file-item" draggable="true"
         :class="{ selected: selectedItems.includes(file) }"
         @click="toggleSelection($event, 'file', file); showFullFileName(file.fileId)"
-        @dragstart="onDragStart($event, 'file', file)" @dragover.prevent @drop="onDrop($event, null)"
+        @dragstart="tcdShareDragStart($event, 'file', file)" @dragover.prevent @drop="onDrop($event, null)"
+        @dragend="onDragEnd"
         @contextmenu.prevent="showContextMenu($event, 'file', file)" @dblclick="openPreviewModal(file)">
 
         <!-- 이미지 파일일 경우 -->
@@ -144,7 +146,7 @@
 <script>
 import axios from "@/services/axios";
 import CoconutLoader from "@/components/basic/CoconutLoader.vue";
-
+import { mapActions } from "vuex";
 
 export default {
   components: {
@@ -175,6 +177,10 @@ export default {
     };
   },
   methods: {
+    ...mapActions([
+      // tcd용
+      "setTcdStateAllDataActions"
+    ]),
     // 항목 선택 토글
     toggleSelection(event, type, item) {
       const itemList = [...this.folderList, ...this.fileList]; // 폴더와 파일 목록을 결합
@@ -266,16 +272,41 @@ export default {
     },
 
     // 드래그 시작 시 호출
-    onDragStart(event, type, item) {
+    // 스레드, 캔버스, 드라이브 공용사용 
+    tcdShareDragStart(event, type, item) {
+      let tcdSharedData = null;
       if (this.selectedItems.length === 0 || !this.selectedItems.includes(item)) {
         this.selectedItems = [item];
+        tcdSharedData = this.selectedItems;
+        tcdSharedData[0].type = "drive";
+        tcdSharedData[0].driveType = type;
       }
-      const dataToTransfer = JSON.stringify(this.selectedItems);
-      event.dataTransfer.setData("items", dataToTransfer);
-      this.draggedType = type;
+      if(tcdSharedData != null){
+        console.error(tcdSharedData)
 
-      // 드래그 시작 시 전송할 데이터 로그 출력
-      console.log("드래그 시작 - 전송할 데이터:", dataToTransfer);
+        const dataToTransfer = JSON.stringify(tcdSharedData);
+        event.dataTransfer.setData("items", dataToTransfer);
+        this.draggedType = type;
+
+        // 드래그 시작 시 전송할 데이터 로그 출력
+        console.error("드래그 시작 - 전송할 데이터 folder :", dataToTransfer);
+        const setInfoObj = {
+          isDragStatus: true,
+          dragStartPage: "drive",
+          result: dataToTransfer,
+        }
+        this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
+      }
+    },
+    // 전역적으로 drag end 감지
+    onDragEnd(){
+      this.selectedItems = [];
+      
+      const setInfoObj = {
+        isDragStatus: false,
+        dragStartPage: "drive",
+      }
+      this.$store.dispatch("setTcdStateAllDataActions", setInfoObj);
     },
 
     // 드롭 시 호출
@@ -506,7 +537,7 @@ export default {
       try {
         // presigned URL 가져오기
         const response = await axios.get(
-          `http://localhost:8080/api/v1/files/${fileId}/download`
+          `${process.env.VUE_APP_API_BASE_URL}/files/${fileId}/download`
         );
 
         const presignedUrl = response.data.result; // presigned URL 가져오기
