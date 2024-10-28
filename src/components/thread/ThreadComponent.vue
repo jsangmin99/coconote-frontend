@@ -83,7 +83,7 @@
           :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
           :isDifferentMember="index === 0 || message.memberId != parentThread.childThreads[index - 1].memberId" 
           :class="{
-            dragging: draggingId === thread.id,
+            dragging: draggingId === message.id,
           }"
           draggable="true"
           @dragstart="tcdShareDragStart($event, 'thread', message)"
@@ -284,6 +284,7 @@ export default {
       }
     },
     commentIn(thread) {
+      console.error("comment In Thread >>>>>>", thread)
       this.isComment = !this.isComment
       this.parentThread = thread
     },
