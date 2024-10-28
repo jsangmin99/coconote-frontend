@@ -51,7 +51,7 @@ export default {
     isInnerMenuOnlyOutsidePage() {
       // 좌측 메뉴 중 1번째 메뉴만 보이는 화면인지 확인 (좌측메뉴 사이즈 조정용)
       // router 이름으로 검색
-      const routePageNames = ["SEARCH", "MemberView"];
+      const routePageNames = ["SEARCH", "MemberView", "INVITATION","HOME"];
       console.error("this.$route.name >> ",this.$route.name)
       return routePageNames.includes(this.$route.name);
     },
