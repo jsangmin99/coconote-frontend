@@ -255,18 +255,18 @@ export default {
       deep: true, // 객체 내부의 변경사항도 감지
     },
   },
-  mounted() {
+  created(){
+    EventBus.off("drag-start");
+    EventBus.off("drag-end");
     EventBus.on("drag-start", (data) => {
-      console.error("tiptap data set :: " , data)
-      const parseData = JSON.parse(data)
-      if(parseData && parseData?.type == "thread" || parseData[0]?.type == "drive"){
-        this.tcdDroppedData = data; // 드래그 데이터 저장
-      }
+      console.error("DRAGSTART >>  tiptap data set :: " , data)
+      this.tcdDroppedData = data; // 드래그 데이터 저장
     });
     EventBus.on('drag-end', () => {
       this.tcdDroppedData = null; // 드래그 종료 시 드롭 영역 숨김
     });
-
+  },
+  mounted() {
     this.editor = new Editor({
       extensions: [
         Image.configure({
@@ -1220,14 +1220,22 @@ export default {
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             const dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
             if (dragedFile.type === "drive") {
-              console.log("드롭된 파일 ID:", dragedFile.fileId);
-              // 파일 업로드나 추가 작업을 수행할 로직 작성
+              if(dragedFile.driveType =="file"){
+                console.log("드롭된 파일 ID:", dragedFile.fileId);
+                // 파일 업로드나 추가 작업을 수행할 로직 작성
 
-              // 에디터에 이미지 삽입
-              this.insertImageToEditor(dragedFile.fileUrl);
+                // 에디터에 이미지 삽입
+                this.insertImageToEditor(dragedFile.fileUrl);
+              }else{
+                alert("드라이브에서는 [파일]만 drop할 수 있습니다.")
+              }
             }
+          } else if(parsedData?.type === "canvas"){
+            alert("캔버스 끼리는 drop 할 수 없습니다.")
+          } else if(parsedData?.type === "thread"){
+            console.error("thread drop")
           } else {
-            console.log("드래그된 파일이 없습니다.");
+            alert("옳지 않은 drop 방식 입니다.");
           }
         } catch (error) {
           console.error("JSON 파싱 오류:", error);
@@ -1263,13 +1271,19 @@ export default {
 .tiptapWrap {
   position: relative;
 
-  .tcd-drop-area {
-    position: absolute;
+  .tcd-drop-area{
+    position:absolute;
     left: 0;
     right: 0;
     top: 0;
     bottom: 0;
     background-color: rgba($color: #000000, $alpha: 0.5);
+    color:#ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
   }
 }
 </style>

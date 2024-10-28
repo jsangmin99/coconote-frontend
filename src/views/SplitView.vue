@@ -59,7 +59,7 @@
           :is="getComponentForTab(leftTab)"
           :id="channelId"
           :splitCanvasId="canvasId"
-          @drag-start="emitDragStart"
+          :key="leftTab"
         />
       </div>
       <div class="rightPane">
@@ -67,7 +67,7 @@
           :is="getComponentForTab(rightTab)"
           :id="channelId"
           :splitCanvasId="canvasId"
-          @drag-start="emitDragStart"
+          :key="rightTab"
         />
       </div>
     </div>
@@ -75,12 +75,12 @@
 </template>
 
 <script>
-import { EventBus } from '@/eventBus/eventBus';
-
 import ChannelCommonMenu from "@/components/basic/ChannelCommonMenu.vue";
 import ThreadComponent from "@/components/thread/ThreadComponent.vue";
 import CanvasView from "@/views/canvas/CanvasView.vue";
 import FolderComponent from "@/components/drive/FolderComponent.vue";
+
+import { EventBus } from '@/eventBus/eventBus.js';
 
 export default {
   props: {
@@ -97,9 +97,13 @@ export default {
   },
   mounted(){
     // EventBus로 drag-start 이벤트 감지
-    EventBus.on('drag-start', (data) => {
-      this.draggedData = data;
-    });
+    // EventBus.on('drag-start', (data) => {
+    //   console.error("@@@@@@@@@@@@@@@@DRAGSTART >>  split view data set :: " , data)
+    //   this.tcdDroppedData = data; // 드래그 데이터 저장
+    // });
+    // EventBus.on('drag-end', () => {
+    //   this.tcdDroppedData = null; // 드래그 종료 시 드롭 영역 숨김
+    // });
   },
   data() {
     return {
@@ -113,7 +117,7 @@ export default {
       },
 
       // 드래그
-      draggedData: null,
+      tcdDroppedData: null,
     };
   },
   methods: {
@@ -128,6 +132,7 @@ export default {
         console.error("잘못된 type")
         return false;
       }
+      EventBus.emit("tab-change"); // 드래그 종료 이벤트 전송
     },
     getComponentForTab(tab) {
       switch (tab) {
@@ -145,20 +150,8 @@ export default {
       this.canvasId = newCanvasId;
     },
 
-    // drag 영역
-    emitDragStart(data) {
-      // left 컴포넌트에서 drag-start 이벤트 발생 시 실행
-      this.draggedData = data;
-      EventBus.emit('drag-start', data);
-    },
-    handleDrop() {
-      // right 컴포넌트에서 drop 이벤트 발생 시 실행
-      EventBus.emit('drop', this.draggedData);
-      this.draggedData = null;
-    },
   },
   beforeUnmount(){
-    EventBus.off('drag-start');
   }
 };
 </script>

@@ -46,6 +46,7 @@
       <div v-for="folder in folderList" :key="folder.folderId" class="folder-item"
         :class="{ selected: selectedItems.includes(folder) }" draggable="true"
         @dragstart="tcdShareDragStart($event, 'folder', folder)" @dragover.prevent @drop="onDrop($event, folder.folderId)"
+        @dragend="onDragEnd"
         @click="toggleSelection($event, 'folder', folder)" @dblclick="navigateToFolder(folder.folderId)"
         @contextmenu.prevent="showContextMenu($event, 'folder', folder)">
         <img src="@/assets/images/folder-icon.png" alt="folder icon" class="folder-icon" />
@@ -275,6 +276,7 @@ export default {
         this.selectedItems = [item];
         tcdSharedData = this.selectedItems;
         tcdSharedData[0].type = "drive";
+        tcdSharedData[0].driveType = type;
       }
       if(tcdSharedData != null){
         console.error(tcdSharedData)
@@ -284,12 +286,13 @@ export default {
         this.draggedType = type;
 
         // 드래그 시작 시 전송할 데이터 로그 출력
-        console.error("드래그 시작 - 전송할 데이터:", dataToTransfer);
+        console.error("드래그 시작 - 전송할 데이터 folder :", dataToTransfer);
         EventBus.emit('drag-start', dataToTransfer); // drag-start 이벤트 발생
       }
     },
     // 전역적으로 drag end 감지
     onDragEnd(){
+      this.selectedItems = [];
       EventBus.emit('drag-end'); // 드래그 종료 이벤트 전송
     },
 
@@ -864,6 +867,9 @@ export default {
     // 컴포넌트가 파괴되기 전 window 클릭 이벤트 제거
     window.removeEventListener("click", this.hideContextMenu);
     window.removeEventListener('click', this.clearSelection);
+
+    EventBus.off('drag-start');
+    EventBus.off('drag-end');
   },
 };
 </script>

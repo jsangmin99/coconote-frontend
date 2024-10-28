@@ -237,11 +237,12 @@ export default {
         // this.draggedType = type;
 
         // 드래그 시작 시 전송할 데이터 로그 출력
-        console.error("드래그 시작 - 전송할 데이터:", dataToTransfer);
+        console.error("드래그 시작 - 전송할 데이터 canvas :", dataToTransfer);
         EventBus.emit("drag-start", dataToTransfer); // drag-start 이벤트 발생
       }
     },
     handleDragEnd() {
+      this.draggingId = null;
       EventBus.emit("drag-end"); // 드래그 종료 이벤트 전송
     },
   },
