@@ -27,6 +27,7 @@
           :deleteFile="deleteFile" :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag"
           :removeTag="removeTag" :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
           :commentIn="commentIn"
+          draggable="true" @dragover.prevent
           :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index - 1].memberId || (index > 0 && this.isDifferentDay(message.createdTime, filteredMessages.slice().reverse()[index - 1].createdTime))" />
       </div>
       <v-skeleton-loader v-if="currentBottomPage > 0" type="list-item-avatar, paragraph"></v-skeleton-loader>
@@ -95,7 +96,7 @@
     <div class="input-group" @dragover.prevent @drop="handleDrop">
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
-          <button class="more-btn-file" type="button" @click="deleteImage(index)">삭제</button>
+          <button class="more-btn-file" type="button" @click="deleteImage(index)"><v-icon color="error">mdi-trash-can</v-icon></button>
           <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
             style="height: 120px; width: 120px; object-fit: cover; border-radius:5px;">
           <p class="custom-contents">{{ file.name }}</p>
@@ -968,7 +969,7 @@ export default {
 }
 .container {
   padding: 0 0 0 24px;
-  height: 100%;
+  height: 100vh;
 }
 
 .list-group {
@@ -1090,10 +1091,12 @@ textarea:focus {
   z-index: 2;
   border-radius: 5px;
 }
-.more-btn-file:hover{
+.more-btn-file:hover {
   background: red;
+  
 }
+
 </style>
-<style lang="scss">
+<!-- <style lang="scss">
 @import "@/assets/css/thread.scss";
-</style>
+</style> -->
