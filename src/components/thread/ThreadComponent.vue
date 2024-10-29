@@ -40,6 +40,13 @@
 
     <!-- 입력 그룹 -->
     <div class="input-group" @dragover.prevent @drop="handleDrop">
+      <div class="canvas-group">
+        <div class="canvas" v-for="(canvas,index) in canvasList" :key="index">
+          <v-icon>mdi-file-document</v-icon>
+          <div class="title">{{canvas.title}}</div>
+          <div class="subtitle">캔버스</div>
+        </div>
+      </div>
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
           <button class="more-btn-file" type="button" @click="deleteImage(index)">
@@ -1103,10 +1110,38 @@ textarea:focus {
   border-radius: 5px;
 }
 .more-btn-file:hover {
-  background: red;
-  
+  background: red; 
 }
-
+.canvas-group{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.canvas{
+  display: flex;
+  flex-direction: row;
+  width: 200px;
+  height: 70px;
+  justify-content: center;
+  align-items: center;
+  justify-content: space-evenly;
+  border: 1px solid;
+  border-radius: 5px;
+  gap: 5px;
+}
+.title {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+}
+.subtitle {
+  color: #aaa;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+}
 </style>
 <!-- <style lang="scss">
 @import "@/assets/css/thread.scss";
