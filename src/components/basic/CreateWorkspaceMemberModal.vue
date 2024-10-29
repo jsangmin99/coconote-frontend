@@ -1,21 +1,30 @@
 <template>
   <v-dialog max-width="500px">
     <v-card>
-      <v-card-title class="text-h5 text-center">
-        워크스페이스 회원 초대하기</v-card-title
-      ><br />
-      <v-card-text v-if="isLoading">
+      <v-card-title class="text-h5" style="padding: 24px; position: relative;">
+          {{ getWorkspaceName }}(으)로 사용자 초대
+        <v-icon @click="closeModal" class="close-button" style="position: absolute; top: 20px; right: 18px;">mdi-close</v-icon>
+      </v-card-title>
+      <v-card-subtitle style="margin: 8px;">
+        초대 받을 사람:
+      </v-card-subtitle>
+      <v-card-text v-if="isLoading" style="padding-top: 3px;">
+        
         <v-form @submit.prevent="sendMail">
           <v-text-field
-            label="email"
+            variant="outlined"
+            placeholder="email"
             v-model="email"
-            prepend-icon="mdi-email"
             type="email"
             required
           >
+          <template v-slot:prepend>
+            <v-icon style="font-size: 40px;">mdi-email</v-icon>
+          </template>
+          <template v-slot:append>
+            <v-icon style="font-size: 40px;" @click="sendMail">mdi-send</v-icon>
+          </template>
           </v-text-field>
-          <v-btn type="submit" color="blue">전송</v-btn>
-          <v-btn color="grey" @click="closeModal">닫기</v-btn>
         </v-form>
       </v-card-text>
       <v-card-text v-else style="width:100%; display:flex; align-items:center; font-size:14px; color:#69a0f2;">
@@ -28,6 +37,8 @@
 
 <script>
 import axios from 'axios'
+import { mapGetters } from 'vuex'
+
 export default {
   props: {
     selectedValue: {
@@ -39,6 +50,9 @@ export default {
           email:"",
           isLoading: true,
       }
+  },
+    computed: {
+    ...mapGetters(["getWorkspaceName"])
   },
   methods: {
     async sendMail() {
@@ -62,3 +76,27 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+
+.invite-button-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: 20px;
+}
+
+.invite-button {
+  padding: 5px 10px;
+  background-color: #3a8bcd;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.invite-button:hover {
+  background-color: #3a8bcd;
+}
+
+</style>

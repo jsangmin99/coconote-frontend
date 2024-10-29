@@ -332,7 +332,7 @@ export default {
 
 .invite-button {
   padding: 5px 10px;
-  background-color: #4caf50;
+  background-color: #3a8bcd;
   color: white;
   border: none;
   border-radius: 5px;
@@ -340,7 +340,7 @@ export default {
 }
 
 .invite-button:hover {
-  background-color: #45a049;
+  background-color: #3a8bcd
 }
 
 .search-bar input {

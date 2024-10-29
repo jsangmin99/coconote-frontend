@@ -3,13 +3,14 @@
 
   <!-- MemberView 헤더 부분 -->
   <div class="memberview-header" style="margin: 20px; padding-left: 30px;">
-    <h1>모든 회원</h1>
+    <h2>모든 회원</h2>
   </div>
   
   <!-- 중간에 상자 부분 -->
   <div class="memberview-banner" style="background-color: #000435; color: white; padding: 50px; margin-top: 20px;">
     <br>
     <br>
+    <h1>COCONOTE로 팀 초대</h1>
     <p>팀 멤버를 COCONOTE에 참여시켜 더 나은 환경에서 작업할 수 있습니다. 이메일로 초대장을 보내거나 간단한 링크를 보내 공유할 수 있습니다.</p>
     <br>
     <v-btn @click="showMailSender" color="#3a8bcd" text="회원 초대"></v-btn>
@@ -39,10 +40,10 @@
 <!-- 회원 카드 상세 보기 -->
     <v-dialog v-model="workspaceMemberModal" max-width="600px" class="workspaceMemberModal">
        <v-card>
-        <v-card-title class="text-h5" style="padding : 24px;">
+        <v-card-title class="text-h5" style="padding : 24px; position: relative;">
           <h2>프로필 
           <v-icon color="grey" v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)" size="20">mdi-cog</v-icon></h2>
-
+          <v-icon @click="workspaceMemberModal=false" class="close-button" style="position: absolute; top: 20px; right: 18px;">mdi-close</v-icon>
         </v-card-title>
         <v-card-text>
             <v-row justify="center">
@@ -145,8 +146,9 @@
             </v-col>
         </v-row>
         </v-card-text>
+        <br />
 
-      <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn>
+      <!-- <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn> -->
     </v-card>
 
     </v-dialog>
