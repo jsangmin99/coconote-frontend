@@ -40,22 +40,25 @@
             <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }" tabindex="0">
               <div 
               v-for="(tag,index) in filteredTagList" 
-              :key="index" class="tag-list" 
-              :class="{ 'active': index === focusedIndex }" 
+              :key="index" 
+              class="tag-list" 
               @click="addT(tag.id)"
+              :class="{ 'active': index === focusedIndex }" 
               ref="tagRefs"
               >
                 <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
               </div>
-              <strong 
+
+              <!-- <strong 
                 class="tag-create" 
                 :class="{ 'active': focusedIndex === filteredTagList.length }"
                 @click="createTag"
                 ref="createTagRef"
               >
                 + Create "{{tagName}}"
-              </strong>
-              <span class="tag-create" @click="createTag">태그 생성 : "{{tagName}}"</span>
+              </strong> -->
+
+              <span class="tag-create" @click="createTag" :class="{ 'active': focusedIndex === filteredTagList.length }" ref="createTagRef">태그 생성 : "{{tagName}}"</span>
             </div>
           </div>
         </div>
@@ -64,11 +67,11 @@
       <!-- 내용 -->
       <div class="content-group">
         <!-- 내용 태그 -->
-        <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
+        <!-- <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
           <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
             <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
             <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
-          </div>
+          </div> 
           <div class="hash-btn">
             <button @click="toggleTagMenu">#</button>
           </div>
@@ -104,8 +107,8 @@
               </strong>
             </div>
           </div>
-        </div>
-        <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
+        </div> 
+        <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>-->
         <div v-if="isUpdate" class="update-group">
           <textarea
             type="text"
@@ -136,18 +139,25 @@
                   v-if="isTagMenuVisible"
                   type="text"
                   class="tag-input"
-                  placeholder="tags"
+                  placeholder="태그를 입력해주세요"
                   v-model="tagName"
-                  v-on:keypress.enter="createTag"
                   v-on:input="adjustWidth"
+                  @keydown="tagHandleKeydown"
                   ref="tagInput"
                   :style="{ width: inputWidth + 'px'}"
                 >
-                <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
-                  <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
+                <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }" tabindex="0">
+                  <div 
+                  v-for="(tag,index) in filteredTagList" 
+                  :key="index" 
+                  class="tag-list" 
+                  @click="addT(tag.id)"
+                  :class="{ 'active': index === focusedIndex }" 
+                  ref="tagRefs"
+                  >
                     <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
                   </div>
-                  <span class="tag-create" @click="createTag">태그 생성 :  "{{tagName}}"</span>
+                  <span class="tag-create" @click="createTag" :class="{ 'active': focusedIndex === filteredTagList.length }" ref="createTagRef">태그 생성 : "{{tagName}}"</span>
                 </div>
               </div>
             </div>
@@ -356,7 +366,7 @@ import axios from '@/services/axios';
         const screenHeight = window.innerHeight;
         const buttonPosition = event.target.getBoundingClientRect().bottom;
 
-        this.tagMenuPosition = (screenHeight / 1.9 > buttonPosition) ? 'top' : 'bottom';
+        this.tagMenuPosition = (screenHeight / 1.7 > buttonPosition) ? 'top' : 'bottom';
 
         this.$nextTick(() => {
           if (this.isTagMenuVisible) {
@@ -453,6 +463,7 @@ import axios from '@/services/axios';
   };
 </script>
 
+<style scoped>
 .more-btn {
   display: none;
   position: absolute;
@@ -711,6 +722,7 @@ textarea:focus {
   background-color: #e0e0e0; /* 포커스된 Create 태그의 배경 색 */
 }
 </style>
+
 <style lang="scss">
 @import "@/assets/css/thread.scss";
 </style>
