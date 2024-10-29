@@ -30,17 +30,31 @@
               v-if="isTagMenuVisible"
               type="text"
               class="tag-input"
-              placeholder="tags"
+              placeholder="태그를 입력해주세요"
               v-model="tagName"
-              v-on:keypress.enter="createTag"
               v-on:input="adjustWidth"
+              @keydown="tagHandleKeydown"
               ref="tagInput"
               :style="{ width: inputWidth + 'px'}"
             >
-            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
-              <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
+            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }" tabindex="0">
+              <div 
+              v-for="(tag,index) in filteredTagList" 
+              :key="index" class="tag-list" 
+              :class="{ 'active': index === focusedIndex }" 
+              @click="addT(tag.id)"
+              ref="tagRefs"
+              >
                 <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
               </div>
+              <strong 
+                class="tag-create" 
+                :class="{ 'active': focusedIndex === filteredTagList.length }"
+                @click="createTag"
+                ref="createTagRef"
+              >
+                + Create "{{tagName}}"
+              </strong>
               <span class="tag-create" @click="createTag">태그 생성 : "{{tagName}}"</span>
             </div>
           </div>
@@ -49,6 +63,49 @@
 
       <!-- 내용 -->
       <div class="content-group">
+        <!-- 내용 태그 -->
+        <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
+          <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
+            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+          </div>
+          <div class="hash-btn">
+            <button @click="toggleTagMenu">#</button>
+          </div>
+          <div class="tag-toggle">
+            <input
+              v-if="isTagMenuVisible"
+              type="text"
+              class="tag-input"
+              placeholder="태그를 입력해주세요"
+              v-model="tagName"
+              v-on:input="adjustWidth"
+              @keydown="tagHandleKeydown"
+              ref="tagInput"
+              :style="{ width: inputWidth + 'px'}"
+            >
+            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }" tabindex="0">
+              <div 
+              v-for="(tag,index) in filteredTagList" 
+              :key="index" class="tag-list" 
+              :class="{ 'active': index === focusedIndex }" 
+              @click="addT(tag.id)"
+              ref="tagRefs"
+              >
+                <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+              </div>
+              <strong 
+                class="tag-create" 
+                :class="{ 'active': focusedIndex === filteredTagList.length }"
+                @click="createTag"
+                ref="createTagRef"
+              >
+                + Create "{{tagName}}"
+              </strong>
+            </div>
+          </div>
+        </div>
+        <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>
         <div v-if="isUpdate" class="update-group">
           <textarea
             type="text"
@@ -154,8 +211,9 @@ import axios from '@/services/axios';
             isUpdate: false,
             tagName: "",
             tagColor: "",
-            inputWidth: 35,
+            inputWidth: 150,
             isTagMenuVisible: false,
+            focusedIndex: 0, // 현재 포커스된 인덱스
         };
     },
     computed: {
@@ -219,6 +277,7 @@ import axios from '@/services/axios';
       },
       addT(tagId){
         this.addTag(this.thread.id, tagId)
+        this.tagName = "";
       },
       deleteTag(tagId, threadTagId){
         this.removeTag(this.thread.id,tagId,threadTagId)
@@ -287,7 +346,7 @@ import axios from '@/services/axios';
         const screenHeight = window.innerHeight;
         const buttonPosition = event.target.getBoundingClientRect().bottom;
 
-        this.contextMenuPosition = (screenHeight / 1.7 > buttonPosition) ? '10' : '-120';
+        this.contextMenuPosition = (screenHeight / 1.7 > buttonPosition) ? '10' : '-110';
       },
       toggleTagMenu(event) {
         event.stopPropagation(); // 클릭 이벤트 전파 방지
@@ -361,10 +420,297 @@ import axios from '@/services/axios';
           textarea.style.overflowY = 'hidden'; // 스크롤바 숨기기
         }
       },
+      tagHandleKeydown(event) {
+        const { key } = event;
+
+        if (key === 'ArrowDown') {
+          this.focusedIndex = (this.focusedIndex + 1) % (this.filteredTagList.length + 1);
+        } else if (key === 'ArrowUp') {
+          this.focusedIndex = (this.focusedIndex - 1 + this.filteredTagList.length + 1) % (this.filteredTagList.length + 1);
+        } else if (key === 'Enter') {
+          if (this.focusedIndex < this.filteredTagList.length) {
+            this.addT(this.filteredTagList[this.focusedIndex].id);
+          } else {
+            this.createTag();
+          }
+        }
+
+        // 포커스된 태그가 보이도록 스크롤 조정
+        this.$nextTick(() => {
+          if (this.focusedIndex < this.filteredTagList.length) {
+            const tagElements = this.$refs.tagRefs;
+            if (tagElements[this.focusedIndex]) {
+              const element = tagElements[this.focusedIndex];
+              element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          } else {
+            // Create 태그로 스크롤 조정
+            this.$refs.createTagRef.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        });
+      },
     },
   };
 </script>
 
+.more-btn {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 20px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  z-index: 2;
+}
+.context-btn{
+  padding: 2px;
+  border-radius: 5px;
+}
+.context-btn:hover {
+  background-color: #f8f8f8;
+}
+.thread-wrapper:hover {
+  background-color: #f8f8f8;
+}
+.thread-wrapper:hover .more-btn {
+  display: block;
+}
+.image {
+  width: 50px;
+  /* 이미지의 가로 크기 */
+  margin: 0 10px;
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+}
+.profile-image{
+  width: 50px;
+  /* 이미지의 가로 크기 */
+  height: 50px;
+  /* 이미지의 세로 크기 */
+  border-radius: 15px;
+  /* 이미지를 동그랗게 만듦 */
+  object-fit: cover;
+}
+.thread-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+}
+.title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.nickName {
+
+}
+.createdTime {
+  
+}
+.tag-group {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.tag-container {
+  position: relative;
+}
+.tag {
+  border-radius: 6px;
+  padding: 1px 9px 4px 9px;
+  color: white;
+  font-size: 13px;
+}
+.tag-container:hover .delete-tag {
+  display: block;
+}
+.delete-tag{
+  display: none;
+  position: absolute;
+  top: -6px;
+  right: -3px;
+  z-index: 3;
+}
+.tag-toggle{
+  z-index: 3;
+  position: relative;
+}
+.tag-list{
+  justify-content: center;
+  align-items: center;
+}
+.tag-list:hover {
+  background-color: #f0f0f0;
+}
+.tag-create:hover {
+  background-color: #f0f0f0;
+}
+.more-tag{
+  position: absolute;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.content-group{
+  gap: 10px;
+}
+.content {
+  white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */
+}
+.files {
+    
+}
+.context-menu {
+  position: absolute;
+  right: 50px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  z-index: 10;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0); /* 반투명 배경 */
+  z-index: 2; /* 컨텍스트 메뉴보다 아래에 위치 */
+}
+.image-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.file-group{
+  position: relative;
+}
+.file-group:hover .more-btn-file {
+  display: block;
+}
+.file-group:hover .more-btn-file2 {
+  display: block;
+}
+.more-btn-file{
+  background: #f8f8f8;
+  display: none;
+  position: absolute;
+  top: 5px;
+  right: 5px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  z-index: 2;
+  border-radius: 5px;
+}
+.btn1:hover {
+  border-radius: 5px;
+  background-color: #d6d6d6;
+}
+.btn2:hover {
+  border-radius: 5px;
+  background-color: #d6d6d6;
+}
+
+.hash-btn{
+  display: flex;
+  border: 0.5px solid;
+  border-radius: 5px;
+  border-color: #f0f0f0;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+}
+.hash-btn:hover {
+  border-radius: 5px;
+  background-color: #d6d6d6;
+}
+.more-btn-file2{
+  background: #f8f8f8;
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  z-index: 2;
+}
+.custom-contents{
+  max-width: 120px; /* 제목의 최대 너비를 설정 */
+  overflow: hidden; /* 내용이 넘칠 경우 숨김 처리 */
+  text-overflow: ellipsis !important; /* 넘치는 텍스트에 '...' 추가 (이거 적용안됨 이후 수정필요)*/
+  white-space: nowrap; /* 텍스트 줄 바꿈 방지 */
+}
+.comment {
+  color: blue;
+}
+.update-group{
+  background-color: white;
+  /* 배경색 설정 */
+  border: 1px solid;
+  border-radius: 5px;
+  width: 90%;
+}
+.form-control {
+  resize: none;
+  width: 99%;
+  height: 20vh;
+  overflow-y: auto;
+  margin-left: 5px;
+}
+.tagButton{
+  height: fit-content;
+}
+.tag-input-group{
+  position: relative;
+}
+input:focus {
+  outline: none;
+}
+textarea:focus {
+  outline: none;
+}
+.update-group-footer{
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  padding: 5px 5px;
+}
+.btn{
+  min-width: 56px;
+  height: 28px;
+  padding: 0 12px 1px;
+  font-size: 13px;
+  background-color: white;
+  border: 1px solid black;
+  color: black;
+  font-weight: 700;
+  background-clip: padding-box;
+  transition: all 80ms linear;
+
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: center;
+  white-space: nowrap;
+  justify-content: center;
+  align-items: center;
+  margin-left: 5px;
+}
+.tag-list.active {
+  background-color: #f0f0f0; /* 포커스된 태그의 배경 색 */
+}
+.tag-create.active {
+  background-color: #e0e0e0; /* 포커스된 Create 태그의 배경 색 */
+}
+</style>
 <style lang="scss">
 @import "@/assets/css/thread.scss";
 </style>
