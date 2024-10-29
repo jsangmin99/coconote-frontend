@@ -14,7 +14,7 @@
       <div v-if="isLastPage" class="enter-title">
         <h1>🥰 환영합니다!</h1>
       </div>
-      <v-skeleton-loader v-if="!isLastPage" type="list-item-avatar, paragraph"></v-skeleton-loader>
+      <v-skeleton-loader v-if="!isLastPage" type="list-item-avatar, paragraph,list-item-avatar, paragraph,list-item-avatar, paragraph"></v-skeleton-loader>
       <div class="list-group-item" v-for="(message, index) in filteredMessages.slice().reverse()" :key="message.id">
         <div
           v-if="index === 0 || (index > 0 && this.isDifferentDay(message.createdTime, filteredMessages.slice().reverse()[index - 1].createdTime))">
@@ -27,6 +27,7 @@
           :deleteFile="deleteFile" :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag"
           :removeTag="removeTag" :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
           :commentIn="commentIn"
+          draggable="true" @dragover.prevent
           :isDifferentMember="index === 0 || message.memberId != filteredMessages.slice().reverse()[index - 1].memberId || (index > 0 && this.isDifferentDay(message.createdTime, filteredMessages.slice().reverse()[index - 1].createdTime))" />
       </div>
       <v-skeleton-loader v-if="currentBottomPage > 0" type="list-item-avatar, paragraph"></v-skeleton-loader>
@@ -61,7 +62,7 @@
 
   <!-- 댓글 부분 -->
   <div v-if="isComment" class="container">
-    <div class="comment-group">
+    <div class="comment-group" id="comment-group">
       <div class="thread-title">
         <button @click="commentOut">
           <img :src="require('@/assets/images/left-icon.png')" alt="back" style="height: 30px; width: 30px; margin-top: 2px;">
@@ -80,7 +81,7 @@
         <ThreadLineComponent :thread="message" :createdTime="this.getTime(message.createdTime)"
           :updateMessage="updateMessage" :deleteMessage="deleteMessage" :deleteFile="deleteFile"
           :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
-          :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
+          :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter" :isComment="isComment"
           :isDifferentMember="index === 0 || message.memberId != parentThread.childThreads[index - 1].memberId" 
           :class="{
             dragging: draggingId === message.id,
@@ -95,7 +96,7 @@
     <div class="input-group" @dragover.prevent @drop="handleDrop">
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
-          <button class="more-btn-file" type="button" @click="deleteImage(index)">삭제</button>
+          <button class="more-btn-file" type="button" @click="deleteImage(index)"><v-icon color="error">mdi-trash-can</v-icon></button>
           <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
             style="height: 120px; width: 120px; object-fit: cover; border-radius:5px;">
           <p class="custom-contents">{{ file.name }}</p>
@@ -801,9 +802,15 @@ export default {
 
       this.$nextTick(() => {
         const container = document.getElementById("list-group");
+        const container2 = document.getElementById("comment-group");
 
         if (container) {
-            container.scrollTop = container.scrollHeight; 
+          container.scrollTop = container.scrollHeight; 
+          console.log("밑으로111");
+        }
+        if (container2) {
+          container2.scrollTop = container2.scrollHeight; 
+          console.log("밑으로222");
         }
       });
     },
@@ -956,6 +963,140 @@ export default {
 };
 </script>
 
-<style lang="scss">
-@import "@/assets/css/thread.scss";
+<style scoped>
+.enter-title{
+  margin-top: 40px;
+}
+.container {
+  padding: 0 0 0 24px;
+  height: 100vh;
+}
+
+.list-group {
+  overflow-y: auto;
+  /* 세로 스크롤 가능 */
+  height: 100%;
+  max-height: calc(100vh - 230px);
+}
+
+.list-group-item {
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.input-group {
+  position: fixed;
+  bottom: 0;
+  /* 하단에 고정 */
+  background-color: white;
+  /* 배경색 설정 */
+  border: 1px solid;
+  border-radius: 5px;
+  margin-right: 24px;
+  margin-bottom: 10px;
+  max-height: 70vh;
+  overflow-y: auto;
+  width: 80%;
+  z-index: 5;
+}
+
+.image-group {
+  display: flex;
+  flex-wrap: wrap;
+  overflow-y: auto;
+}
+
+.custom-contents {
+  max-width: 120px;
+  /* 제목의 최대 너비를 설정 */
+  overflow: hidden;
+  /* 내용이 넘칠 경우 숨김 처리 */
+  text-overflow: ellipsis !important;
+  /* 넘치는 텍스트에 '...' 추가*/
+  white-space: nowrap;
+  /* 텍스트 줄 바꿈 방지 */
+}
+
+.text-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  padding: 5px 3px;
+}
+
+.form-control {
+  resize: none;
+  width: 100%;
+  max-height: 40vh;
+  overflow-y: auto;
+  margin-left: 5px;
+}
+
+.tag-filter-container {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.tag {
+  border-radius: 5px;
+  padding: 0 5px 1px 5px;
+  color: white;
+  font-size: 11px;
+}
+
+.thread-title {
+  display: flex;
+  flex-direction: row;
+}
+
+.comment-group {
+  overflow-y: auto;
+  height: 100%;
+  max-height: calc(100vh - 230px);
+}
+
+input:focus {
+  outline: none;
+}
+
+textarea:focus {
+  outline: none;
+}
+
+.highlight {
+  background-color: #e8ca93;
+  /* 강조할 배경 색 */
+  transition: background-color 0.5s ease;
+  /* 부드러운 전환 효과 */
+}
+
+.fade-out {
+  background-color: transparent;
+  /* 투명 상태 */
+}
+.input-group-append{
+  display: flex;
+}
+.send-btn{
+  width: 20px;
+  height: 20px;
+}
+.more-btn-file{
+  background: #f8f8f8;
+  position: absolute;
+  top: 5px;
+  right: 5px; /* 버튼의 절반이 thread에 걸쳐 보이도록 설정 */
+  z-index: 2;
+  border-radius: 5px;
+}
+.more-btn-file:hover {
+  background: red;
+  
+}
+
 </style>
+<!-- <style lang="scss">
+@import "@/assets/css/thread.scss";
+</style> -->
