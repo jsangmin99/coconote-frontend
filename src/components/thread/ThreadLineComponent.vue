@@ -168,11 +168,11 @@
       
       <!-- 캔버스 -->
       <div class="canvas-group" v-if="thread.canvasTitle">
-        <div class="canvas">
+        <button class="canvas" @click="moveToCanvas">
           <v-icon>mdi-file-document</v-icon>
           <div class="title2">{{thread.canvasTitle}}</div>
           <div class="subtitle">캔버스</div>
-        </div>
+        </button>
       </div>
 
       <!-- 파일 -->
@@ -467,6 +467,10 @@ import axios from '@/services/axios';
             this.$refs.createTagRef.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
         });
+      },
+      moveToCanvas(){
+        const channelId = localStorage.getItem('channelId');
+        this.$router.push(`/channel/${channelId}/canvas/view/${this.thread.canvasId}`);
       },
     },
   };
