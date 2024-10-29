@@ -155,6 +155,9 @@ export default {
       ],
       channelAccessDialog: false,
       currentAccessLevel: null,
+
+      // splitView 용도
+      tcdTabs : null,
     };
   },
   computed: {
@@ -166,6 +169,9 @@ export default {
       "getIsBookmark",
       "getWorkspaceId",
       "getWorkspaceName",
+
+      // tcd splitview 용도
+      "getTcdSplitTab",
     ]),
   },
   watch: {
@@ -175,6 +181,13 @@ export default {
       },
       deep: true,
     },
+    getTcdSplitTab: {
+      handler(newVal) {
+        console.error("tcd tab 변경~!~!~! >>> ", newVal)
+        this.tcdTabs = newVal;
+      },
+      deep: true,
+    }
   },
   mounted() {
     this.loadChannelMembers(); // 컴포넌트가 마운트되면 채널 멤버를 불러옴
@@ -243,6 +256,7 @@ export default {
     },
     closeSplitView(splitName) {
       console.log(splitName, " 화면 닫으려고 함!!");
+      console.log(this.tcdTabs, " 화면 닫으려고 함!!222");
 
       let objKey = "";
       if (splitName == "left") {
@@ -257,12 +271,19 @@ export default {
       }
 
       let routerUrl = "";
+      let routeQuery = "";
       if (this.splitActiveTab[objKey] == "thread") {
         routerUrl = `/channel/${this.getChannelId}/thread/view`;
       } else if (this.splitActiveTab[objKey] == "canvas") {
-        routerUrl = `/channel/${this.getChannelId}/canvas/view`;
+        if(this.tcdTabs.canvasId){
+          routeQuery = `/${this.tcdTabs.canvasId}`;
+        }
+        routerUrl = `/channel/${this.getChannelId}/canvas/view${routeQuery}`;
       } else if (this.splitActiveTab[objKey] == "drive") {
-        routerUrl = `/channel/${this.getChannelId}/drive/view`;
+        if(this.tcdTabs.driveFolderId){
+          routeQuery = `/${this.tcdTabs.driveFolderId}`;
+        }
+        routerUrl = `/channel/${this.getChannelId}/drive/view${routeQuery}`;
       } else {
         console.error("잘못된 objKey 요청입니다.");
         return false;

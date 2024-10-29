@@ -168,7 +168,6 @@ export default {
     font-size: 14px;
     &.active {
       font-weight: bold;
-      text-decoration: underline;
     }
   }
 }
@@ -178,19 +177,6 @@ export default {
   display: flex;
   flex-direction: row; /* 가로로 정렬 */
   align-items: flex-start;
-}
-
-.splitTabs button {
-  padding: 5px;
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-size: 14px;
-}
-
-.splitTabs button.active {
-  font-weight: bold;
-  text-decoration: underline;
 }
 
 .splitContent {

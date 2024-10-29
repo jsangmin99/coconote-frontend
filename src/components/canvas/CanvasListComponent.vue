@@ -36,7 +36,7 @@
         variant="underlined"
         v-model="canvasName"
         label="캔버스 명"
-        @keyup.enter="createCanvas"
+        @keypress.enter="createCanvas"
       ></v-text-field>
     </v-list-item>
   </v-list>
@@ -122,7 +122,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction", "setTcdStateAllDataActions"]),
+    ...mapActions(["setCanvasAllInfoAction", "setInfoMultiTargetAction", "setTcdStateAllDataActions", "setTcdTabInfoMultiTargetAction"]),
     findAllRoom() {
       axios
         .get(
@@ -144,9 +144,9 @@ export default {
         });
     },
     async createCanvas() {
-      if (this.canvasName === "") {
+      if (this.canvasName == "") {
         alert("캔버스 제목을 입력해 주십시요.");
-        return;
+        return false;
       } else {
         try {
           let prevCanvasId = null;
@@ -182,6 +182,13 @@ export default {
       if (sender) {
         this.canvasIdInList = canvasId;
         this.$emit("updateCanvasId", canvasId);
+        
+        const payload = {
+          canvasId: this.canvasIdInList,
+        };
+
+        // Vuex action 호출
+        this.setTcdTabInfoMultiTargetAction(payload);
         if (
           this.$route.name == "CanvasView" ||
           this.$route.name == "CanvasEmptyView"

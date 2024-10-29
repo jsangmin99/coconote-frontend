@@ -765,6 +765,10 @@ export default {
 .header-container {
   display: flex;
   align-items: center;
+  >button{
+    display: flex;
+    font-size: 10px;
+  }
   /* 텍스트와 버튼의 수직 정렬을 맞춤 */
 }
 

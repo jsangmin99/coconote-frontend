@@ -179,7 +179,8 @@ export default {
   methods: {
     ...mapActions([
       // tcd용
-      "setTcdStateAllDataActions"
+      "setTcdStateAllDataActions",
+      "setTcdTabInfoMultiTargetAction"
     ]),
     // 항목 선택 토글
     toggleSelection(event, type, item) {
@@ -820,6 +821,12 @@ export default {
         }
 
         this.currentFolderId = folderId;
+        const payload = {
+          driveFolderId: this.currentFolderId,
+        };
+
+        // Vuex action 호출
+        this.setTcdTabInfoMultiTargetAction(payload);
         this.folderList = data.folderListDto || [];
         this.fileList = data.fileListDto || [];
       } catch (error) {
@@ -860,6 +867,12 @@ export default {
     this.currentFolderId = this.$props.folderId || this.rootFolderId;
     if (this.currentFolderId) {
       this.navigateToFolder(this.currentFolderId);
+      const payload = {
+        driveFolderId: this.currentFolderId,
+      };
+
+      // Vuex action 호출
+      this.setTcdTabInfoMultiTargetAction(payload);
     }
     // URL에서 전달된 fileId로 파일 강조 표시
     const fileId = this.$props.fileId;

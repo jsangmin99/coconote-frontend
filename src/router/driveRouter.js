@@ -8,4 +8,10 @@ export const driveRouter = [
         component: DriveView,
         props: true
     },
+    {
+        path: '/channel/:channelId/drive/view',
+        name: 'DriveEmptyView',
+        component: DriveView,
+        props: true
+    },
 ];

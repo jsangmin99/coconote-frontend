@@ -1,5 +1,5 @@
 /* Basic editor styles */
-.container {
+.tiptapWrap {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -9,9 +9,13 @@
       display: flex;
       flex-direction: row;
       flex-wrap: wrap;
+      font-size: 12px;
+      gap: 4px 2px;
       button{
-        border: 1px solid #aaa;
-        padding:4px 12px;
+        border: 1px solid #e1e4ef;
+        padding: 4px 12px;
+        border-radius: 30px;
+        background: #f4f7ff;
       }
     }
   }
