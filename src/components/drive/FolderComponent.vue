@@ -198,6 +198,7 @@ export default {
         this.lastSelectedIndex = currentIndex; // 마지막 선택된 인덱스를 업데이트
       } else if (event.shiftKey) {
         // Shift 키를 눌렀을 때 범위 선택
+        console.error("shift toggle")
         if (this.lastSelectedIndex !== null) {
           const start = Math.min(this.lastSelectedIndex, currentIndex);
           const end = Math.max(this.lastSelectedIndex, currentIndex);
@@ -275,15 +276,15 @@ export default {
     // 드래그 시작 시 호출
     // 스레드, 캔버스, 드라이브 공용사용 
     tcdShareDragStart(event, type, item) {
-      let tcdSharedData = null;
-      if (this.selectedItems.length === 0 || !this.selectedItems.includes(item)) {
+      let tcdSharedData = [];
+      if (this.selectedItems.length == 0 || !this.selectedItems.includes(item)) {
         this.selectedItems = [item];
-        tcdSharedData = this.selectedItems;
+      }
+      tcdSharedData = [...this.selectedItems];
+      
+      if(tcdSharedData != null){
         tcdSharedData[0].type = "drive";
         tcdSharedData[0].driveType = type;
-      }
-      if(tcdSharedData != null){
-        console.error(tcdSharedData)
 
         const dataToTransfer = JSON.stringify(tcdSharedData);
         event.dataTransfer.setData("items", dataToTransfer);
@@ -316,6 +317,8 @@ export default {
         alert("유효한 폴더 ID를 입력하세요.");
         return;
       }
+
+      console.error("onDrop >>> ", event.dataTransfer.getData("items"))
 
       const draggedItems = JSON.parse(event.dataTransfer.getData("items"));
       const draggedFolders = draggedItems.filter(item => item.folderId);
