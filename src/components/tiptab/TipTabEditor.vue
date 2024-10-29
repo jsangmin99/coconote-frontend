@@ -1,6 +1,6 @@
 <template>
-  <div v-if="editor" class="container">
-    <!-- <div class="control-group">
+  <div v-if="editor" class="container tiptapWrap">
+    <div class="control-group">
       <div class="button-group">
         <button
           @click="editor.chain().focus().toggleBold().run()"
@@ -22,19 +22,6 @@
           :class="{ 'is-active': editor.isActive('strike') }"
         >
           Strike
-        </button>
-        <button
-          @click="editor.chain().focus().toggleCode().run()"
-          :disabled="!editor.can().chain().focus().toggleCode().run()"
-          :class="{ 'is-active': editor.isActive('code') }"
-        >
-          Code
-        </button>
-        <button @click="editor.chain().focus().unsetAllMarks().run()">
-          Clear marks
-        </button>
-        <button @click="editor.chain().focus().clearNodes().run()">
-          Clear nodes
         </button>
         <button
           @click="editor.chain().focus().setParagraph().run()"
@@ -90,60 +77,31 @@
         >
           Ordered list
         </button>
-        <button
-          @click="editor.chain().focus().toggleCodeBlock().run()"
-          :class="{ 'is-active': editor.isActive('codeBlock') }"
-        >
-          Code block
-        </button>
-        <button
-          @click="editor.chain().focus().toggleBlockquote().run()"
-          :class="{ 'is-active': editor.isActive('blockquote') }"
-        >
-          Blockquote
-        </button>
-        <button @click="editor.chain().focus().setHorizontalRule().run()">
-          Horizontal rule
-        </button>
-        <button @click="editor.chain().focus().setHardBreak().run()">
-          Hard break
-        </button>
-        <button
-          @click="editor.chain().focus().undo().run()"
-          :disabled="!editor.can().chain().focus().undo().run()"
-        >
-          Undo
-        </button>
-        <button
-          @click="editor.chain().focus().redo().run()"
-          :disabled="!editor.can().chain().focus().redo().run()"
-        >
-          Redo
-        </button>
-        <button
-          @click="editor.chain().focus().setColor('#958DF1').run()"
-          :class="{
-            'is-active': editor.isActive('textStyle', { color: '#958DF1' }),
-          }"
-        >
-          Purple
-        </button>
+        <!-- 이미지 업로드 버튼 -->
+        <button @click="triggerFileInput">image</button>
       </div>
-    </div> -->
-    <!-- 이미지 업로드 버튼 -->
-    <div class="image-upload-container">
-      <input type="file" ref="fileInput" @change="handleImageUpload" hidden />
-      <v-btn @click="triggerFileInput" color="primary">이미지 업로드</v-btn>
     </div>
+    <input type="file" ref="fileInput" @change="handleImageUpload" hidden />
+
     <div id="editorArea">
-      <div class="placeholder" id="placeholder">내용을 입력하세요.</div>
+      <div class="placeholder editorPlaceholder" id="editorPlaceholder">
+        내용을 입력하세요.
+      </div>
       <editor-content :editor="editor" />
     </div>
-    <div style="width: 100%; margin-top: 30px">
+    <!-- <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
+    </div> -->
+    <div
+      class="tcd-drop-area"
+      v-if="tcdDroppedData"
+      @dragover.prevent
+      @drop="handleDrop"
+    >
+      이 곳에 data를 drop 하세요
     </div>
   </div>
 </template>
@@ -176,7 +134,7 @@ export default {
   },
   props: {
     initialContent: {
-      type: Object,
+      type: Array,
       required: true, // 부모로부터 받아야 하는 값
     },
     parentUpdateEditorContent: {
@@ -190,6 +148,9 @@ export default {
       "getBlockFeIdIndex",
       "getTargetBlockPrevFeId",
       "getTargetBlockPrevFeIdIndex",
+
+      // tcd용
+      "getAllTcdState",
     ]),
   },
 
@@ -229,6 +190,9 @@ export default {
 
       // 현재 보내는 이벤트 구분용
       currentEvent: null,
+
+      // drag 용
+      tcdDroppedData: null,
     };
   },
   watch: {
@@ -240,7 +204,19 @@ export default {
       },
       deep: true, // 객체 내부의 변경사항도 감지
     },
+    getAllTcdState: {
+      handler(newVal) {
+        console.error("tcd 값 감지. canvas >>>> ", newVal);
+        if (newVal.isDragStatus) {
+          this.tcdDroppedData = newVal; // 드래그 데이터 저장
+        } else {
+          this.tcdDroppedData = null;
+        }
+      },
+      deep: true,
+    },
   },
+  created() {},
   mounted() {
     this.editor = new Editor({
       extensions: [
@@ -250,14 +226,21 @@ export default {
           },
         }),
         StarterKit.configure({
-          bulletList: false, // ol, ul, li 형식 허용 X
-          orderedList: false,
-          listItem: false,
+          bulletList: true, // ol, ul, li 형식 허용 X
+          orderedList: true,
+          listItem: true,
         }),
         CustomBlock,
         DraggableItem,
         UniqueID.configure({
-          types: ["heading", "paragraph", "image"],
+          types: [
+            "heading",
+            "paragraph",
+            "image",
+            "bulletList",
+            "orderedList",
+            "listItem",
+          ],
         }),
         NodeRange.configure({
           key: null,
@@ -312,19 +295,7 @@ export default {
             // Do something with the node
           },
         }),
-        Indent.configure({
-          // onNodeChange: async (options) => {
-          //   this.currentEvent = "indent";
-          //   const node = options?.nodes[0];
-          //   const nodeDataId = node?.node?.attrs?.id;
-          //   const nodeIndent = node?.node?.attrs?.indent;
-          //   console.error("indent update >>> ", options);
-
-          //   if (nodeDataId && nodeIndent >= 0) {
-          //     await this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
-          //   }
-          // },
-        }),
+        Indent.configure({}),
         // Placeholder.configure({
         //   placeholder: "내용을 작성하세요.",
         //   // Use different placeholders depending on the node type:
@@ -341,7 +312,7 @@ export default {
           mode: "all",
         }),
       ],
-      autofocus: true,
+      // autofocus: true,
       onUpdate: () => {
         if (this.isRecvUpdate) {
           console.error("흠...........................2222222222");
@@ -353,8 +324,8 @@ export default {
           console.error("흠...........................3333333");
           return false;
         }
-        console.error("흠...........................");
         const selectedNode = this.editor.state.selection;
+        console.error("흠...........................", selectedNode);
         let isReturn = true;
 
         if (!selectedNode) {
@@ -385,7 +356,7 @@ export default {
             if (removedIds.length > 0) {
               this.$parent.deleteBlock(removedIds[0]);
               if (updateAfterNodes == 0) {
-                const plel = document.querySelector(".placeholder");
+                const plel = document.querySelector("#editorPlaceholder");
                 if (plel) {
                   if (plel.classList.contains("hidden")) {
                     plel.classList.remove("hidden");
@@ -402,11 +373,138 @@ export default {
           return false;
         }
         const updateBlockIndent = selectedNode?.$head?.path[3]?.attrs?.indent;
-        const updateContent =
-          selectedNode?.$head?.path[3]?.content?.content[0]?.text;
+
+        const updateEl = document.querySelector(`[data-id="${updateBlockID}"]`);
+        let updateElOuterHtml = "";
+        if (updateEl) {
+          // 요소 복제 (true는 자식 요소까지 모두 복제)
+          const clonedElement = updateEl.cloneNode(true);
+
+          // 복제된 요소에서 class 속성 제거
+          clonedElement.removeAttribute("class");
+
+          // 복제된 요소 안에서 <br class="ProseMirror-trailingBreak"> 태그 제거
+          const trailingBreaks = clonedElement.querySelectorAll(
+            "br.ProseMirror-trailingBreak"
+          );
+          trailingBreaks.forEach((br) => br.remove());
+
+          // 수정된 outerHTML 가져오기
+          updateElOuterHtml = clonedElement.outerHTML;
+
+          // const tagNames = ["OL", "UL", "H1", "H2", "H3", "H4", "H5", "H6"];
+          console.error("🍆🍆🍆", updateEl, updateEl.tagName.toUpperCase());
+          console.error("🍆🍆", updateElOuterHtml);
+          // const tagIncludeIndex = tagNames.indexOf(
+          //   updateEl.tagName.toUpperCase()
+          // );
+          if (
+            //update 한 element가 ol이나 ul 이라면, 기존에 생성된 p태그는 ul태그 안으로 들어감 (p 태그의 아이디 중복 발생)
+            updateEl.tagName.toUpperCase() === "OL" || // () 추가
+            updateEl.tagName.toUpperCase() === "UL"
+          ) {
+            console.error("🍆🍆🍆🍆🍆🍆 This element is an ol or ul tag.");
+            const targetElement = updateEl.querySelector(
+              `[data-id="${this.lastSendMsgObj.blockFeId}"]`
+            );
+            if (targetElement) {
+              this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // 따라서 기존 p 태그 DB상에서 삭제함
+            }
+          } else if (
+            updateEl.tagName.toUpperCase() === "P" ||
+            updateEl.tagName.toUpperCase().startsWith("H")
+          ) {
+            console.error("👀👀👀", updateEl, updateEl.tagName.toUpperCase());
+            // 바뀐게 p 태그라면, 이전 element 분기 타서 이전 것 삭제해줘야함
+            if (this.lastSendMsgObj.blockContents) {
+              const tempDiv = document.createElement("div");
+              tempDiv.innerHTML = this.lastSendMsgObj.blockContents;
+
+              // 첫 번째 자식을 가져옵니다.
+              const prevUpdateElType = tempDiv.firstElementChild;
+              if (
+                prevUpdateElType.tagName.toUpperCase() === "OL" ||
+                prevUpdateElType.tagName.toUpperCase() === "UL"
+              ) {
+                //이전에 update 한 element 가 ol이나 ul 이고 현재 update 된 태그가 p태그 라면
+                const isInsideEl = prevUpdateElType.querySelector(
+                  `[data-id="${updateBlockID}"]`
+                );
+                if (isInsideEl) {
+                  // 현재 update 하는 p태그가 이전 update 부분에 포함되어 있다면
+                  console.error(
+                    "😭😭😭😭😭",
+                    `현재 업데이트 하려는 ${updateBlockID}는 ${this.lastSendMsgObj.blockFeId}에 포함되어있다`
+                  );
+
+                  // prevUpdateElType 내 자식 요소들이 isInsideEl 값만 있는지 확인
+                  const allPTags = prevUpdateElType.querySelectorAll("p");
+
+                  if (allPTags.length === 1 && allPTags[0] === isInsideEl) {
+                    console.log(
+                      "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다.",
+                      this.lastSendMsgObj.blockFeId
+                    );
+                    this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // ul 태그 deep 삭제 보내기
+                    // p 태그 생성하기
+                  } else {
+                    console.log(
+                      "❌ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 있습니다."
+                    );
+                    // ul태그 [현재 상태값] update로 값 보내기
+                    const nowListStatusHtml = document.querySelector(
+                      `[data-id="${this.lastSendMsgObj.blockFeId}"]`
+                    );
+                    if (nowListStatusHtml) {
+                      const nowListStatusHtmlOuter =
+                        nowListStatusHtml.outerHTML;
+                      this.$parent.patchBlock(
+                        this.lastSendMsgObj.blockFeId,
+                        nowListStatusHtmlOuter
+                      );
+                    }
+                    // p 태그 생성하기
+                  }
+                  // 위 if에서 임시로 저장해서 다 끝나고 보내기 p태그 create. ⭐⭐⭐⭐⭐⭐⭐⭐
+                  this.updateDataEditorAfterEvent(
+                    updateBlockID,
+                    updateElOuterHtml,
+                    updateBlockIndent
+                  );
+                  // 이 값들은 다른 장소에서 update 보내주도록 함
+                  return false;
+                }
+              } else if (
+                // 이전 값이 h태그 이거나 p 태그이고
+                (prevUpdateElType.tagName.toUpperCase().startsWith("H") ||
+                  prevUpdateElType.tagName.toUpperCase() === "P") &&
+                prevUpdateElType.tagName != updateEl.tagName // 이전 태그와 현재 태그가 다를 때
+              ) {
+                const prevChangeTagEl = document.querySelector(
+                  `[data-id="${this.lastSendMsgObj.blockFeId}"]`
+                );
+                console.error("오나용...", prevChangeTagEl);
+                if (!prevChangeTagEl) {
+                  console.error("오나용...222222ㅠㅠ");
+                  //이전값이 없으면, 다른 동기화 화면에서도 지우고 h태그 생성되도록 진행
+
+                  this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // 이전 태그 deep 삭제 보내기
+
+                  this.updateDataEditorAfterEvent(
+                    updateBlockID,
+                    updateElOuterHtml,
+                    updateBlockIndent
+                  );
+                  // 이 값들은 다른 장소에서 update 보내주도록 함
+                  return false;
+                }
+              }
+            }
+          }
+        }
 
         if (
-          this.lastSendMsgObj.updateContent == updateContent &&
+          this.lastSendMsgObj.updateElOuterHtml == updateElOuterHtml &&
           this.lastSendMsgObj.blockFeId == updateBlockID
         ) {
           return false;
@@ -415,29 +513,23 @@ export default {
         console.log(
           "⭐ Node:",
           updateBlockID,
-          updateContent,
+          updateElOuterHtml,
           this.editor.view?.trackWrites?.dataset?.id,
-          updateContent == "",
           this.editor.view?.trackWrites?.data,
-          updateContent == undefined,
           updateBlockIndent
         );
 
         if (this.localJSON.content == undefined) {
           this.isFirstAndNullContent = true;
-          this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateContent 값 비교 시 무조건 같은 값
+          this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateElOuterHtml 값 비교 시 무조건 같은 값
         }
 
-        // 내용 차이 확인
-        const filteredItems = this.localJSON?.content.filter(
-          (item) => item.attrs.id === updateBlockID
-        );
-        console.log("filteredItems >> ", filteredItems);
-        if (filteredItems.length > 0) {
+        const filterEl = document.querySelector(`[data-id="${updateBlockID}"]`);
+        if (filterEl) {
+          const filterElOuterHtml = filterEl.outerHTML;
           if (
             !this.isFirstAndNullContent &&
-            filteredItems[0].content != undefined &&
-            filteredItems[0].content[0].text == updateContent
+            filterElOuterHtml == updateElOuterHtml
           ) {
             isReturn = false; // 값이 동일하다면 보내지 않음
           }
@@ -454,17 +546,17 @@ export default {
         this.nodeLength = this.localJSON.content.length;
 
         // element 위치 감지
-        const searchElAndPrevEl = this.findPreviousId(
+        const searchElAndPrevEl = this.selectedNodePrevAndNext(
           this.localJSON.content,
           updateBlockID
         );
 
-        if (searchElAndPrevEl == undefined || searchElAndPrevEl.length <= 0) {
+        if (searchElAndPrevEl == undefined) {
           return false;
         }
 
-        const previousId = searchElAndPrevEl[0];
-        const targetElType = searchElAndPrevEl[1];
+        // const previousId = searchElAndPrevEl.prevBlockId;
+        // const targetElType = searchElAndPrevEl.type;
 
         // console.error("➡️prev➡️➡️", previousId);
 
@@ -473,23 +565,24 @@ export default {
         // 여기서 감지해서 보내기
         this.$parent.updateBlock(
           updateBlockID,
-          targetElType,
-          updateContent == "" ? "" : updateContent,
-          previousId,
+          searchElAndPrevEl.type,
+          updateElOuterHtml,
+          searchElAndPrevEl.prevBlockId,
+          searchElAndPrevEl.nextBlockId,
           parentId,
           updateBlockIndent
         );
 
         this.lastSendMsgObj.blockFeId = updateBlockID;
         this.lastSendMsgObj.blockIndent = updateBlockIndent;
-        this.lastSendMsgObj.blockContents = updateContent;
+        this.lastSendMsgObj.blockContents = updateElOuterHtml;
       },
       content:
         this.defaultContent == "" ||
-        this.defaultContent?.content?.length <= 0 ||
+        this.defaultContent?.length <= 0 ||
         this.defaultContent == undefined
           ? ""
-          : this.defaultContent,
+          : this.defaultContent.join(""),
     });
 
     this.editor.on("create", ({ editor }) => {
@@ -509,15 +602,13 @@ export default {
     window.addEventListener("indentExecuted", this.onIndentExecuted);
     window.addEventListener("outdentExecuted", this.onOutdentExecuted);
 
-    console.error("@@@@@@@@@@@@@@@", this.defaultContent);
-    if (this.defaultContent?.content?.length > 0) {
-      // const plel = document.getElementsByClassName("placeholder");
-      const plel = document.querySelector(".placeholder");
-      // const plel2 = document.getElementById("placeholder");
-      console.log("plel >>> ",plel);
-      // if (plel) {
-      //   plel.classList.add("hidden");
-      // }
+    if (this.defaultContent.length > 1) {
+      setTimeout(() => {
+        const plel = document.getElementById("editorPlaceholder");
+        if (plel) {
+          plel.classList.add("hidden");
+        }
+      }, 100);
     }
   },
   methods: {
@@ -525,7 +616,76 @@ export default {
       "pushBlockFeIdsActions",
       "deleteBlockTargetFeIdActions",
       "appendBlockFeIdsAfterPrevActions",
+
+      // tcd용
     ]),
+    updateDataEditorAfterEvent(
+      updateBlockID,
+      updateElOuterHtml,
+      updateBlockIndent
+    ) {
+      // editor onupdate 이벤트와 동일하게 복사해옴
+      let isReturn = true;
+
+      if (this.localJSON.content == undefined) {
+        this.isFirstAndNullContent = true;
+        this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateElOuterHtml 값 비교 시 무조건 같은 값
+      }
+
+      const filterEl = document.querySelector("updateBlockID");
+      if (filterEl) {
+        const filterElOuterHtml = filterEl.outerHTML;
+        if (
+          !this.isFirstAndNullContent &&
+          filterElOuterHtml == updateElOuterHtml
+        ) {
+          isReturn = false; // 값이 동일하다면 보내지 않음
+        }
+      }
+
+      // 삭제 method를 보내지 않았다면
+      if (!isReturn) {
+        return false;
+      }
+
+      this.localHTML = this.editor.getHTML();
+      this.localJSON = this.editor.getJSON();
+
+      this.nodeLength = this.localJSON.content.length;
+
+      // element 위치 감지
+      const searchElAndPrevEl = this.selectedNodePrevAndNext(
+        this.localJSON.content,
+        updateBlockID
+      );
+
+      if (searchElAndPrevEl == undefined) {
+        return false;
+      }
+
+      // const previousId = searchElAndPrevEl.prevBlockId;
+      // const targetElType = searchElAndPrevEl.type;
+
+      console.error("➡️➡️➡️➡️prev➡️➡️", searchElAndPrevEl);
+      // alert(JSON.stringify(searchElAndPrevEl))
+
+      const parentId = null;
+
+      // 여기서 감지해서 보내기
+      this.$parent.updateBlock(
+        updateBlockID,
+        searchElAndPrevEl.type,
+        updateElOuterHtml,
+        searchElAndPrevEl.prevBlockId,
+        searchElAndPrevEl.nextBlockId,
+        parentId,
+        updateBlockIndent
+      );
+
+      this.lastSendMsgObj.blockFeId = updateBlockID;
+      this.lastSendMsgObj.blockIndent = updateBlockIndent;
+      this.lastSendMsgObj.blockContents = updateElOuterHtml;
+    },
     findPreviousId(obj, targetId) {
       return this.recursiveSearch(obj, targetId);
     },
@@ -545,16 +705,16 @@ export default {
         }
 
         // 하위 content가 있으면 재귀적으로 검색
-        if (item.content && Array.isArray(item.content)) {
-          const found = this.recursiveSearch(
-            item.content,
-            targetId,
-            previousId
-          );
-          if (found) {
-            return found; // 값을 찾았으면 반환
-          }
-        }
+        // if (item.content && Array.isArray(item.content)) {
+        //   const found = this.recursiveSearch(
+        //     item.content,
+        //     targetId,
+        //     previousId
+        //   );
+        //   if (found) {
+        //     return found; // 값을 찾았으면 반환
+        //   }
+        // }
       }
 
       return null; // 찾지 못했을 때
@@ -566,15 +726,28 @@ export default {
       );
       this.isRecvUpdate = newContent.isRecvMessage;
 
-      let targetElement = document.querySelector(
-        `#editorArea [data-id="${newContent.blockFeId}"]`
-      );
+      this.localHTML = this.editor.getHTML();
+      this.localJSON = this.editor.getJSON();
 
-      if (newContent.method == "DELETE_BLOCK") {
+      let targetElements = document.querySelectorAll(
+        `#editorArea [data-id="${newContent.blockFeId}"]`
+      ); // 이거 querySelector라서 첫번째 하나만 갖고와서 문제
+
+      if (
+        newContent.method == "DELETE_BLOCK" ||
+        newContent.method == "DEEP_DELETE_BLOCK"
+      ) {
+        console.error("삭제합니다. :: 부모 컴포넌트로부터 받은 값");
         // 삭제한 경우
-        if (targetElement) {
+        console.error("⭐⭐targetElements⭐⭐", targetElements);
+        if (targetElements.length > 0) {
           // ⭐ 자식 생각 필요
-          targetElement.remove();
+          targetElements.forEach((element) => {
+            // p -> ul 변경 시, p에도 하나, ul 내부 p 에도 동일 id가 발생하여 for로 진행
+            console.error("실제 삭제 중");
+            element.parentNode.removeChild(element); // 부모 노드에서 해당 element 삭제
+            console.error("실제 삭제 완료");
+          });
         }
         // defaultFeId 중 해당 아이디 삭제
         this.deleteBlockTargetFeIdActions(newContent.blockFeId).then(
@@ -590,7 +763,7 @@ export default {
               this.nodeLength
             );
             if (this.nodeLength <= 0) {
-              const plel = document.querySelector(".placeholder");
+              const plel = document.querySelector("#editorPlaceholder");
               if (plel) {
                 if (plel.classList.contains("hidden")) {
                   plel.classList.remove("hidden");
@@ -599,30 +772,40 @@ export default {
             }
           }
         );
-      } else if (newContent.method == "UPDATE_INDENT_BLOCK") {
-        const indentNode = document.querySelector(
+      } else if (
+        newContent.method == "UPDATE_INDENT_BLOCK" ||
+        newContent.method == "HOT_UPDATE_CONTENTS_BLOCK"
+      ) {
+        console.error(
+          "인덴트를 바꾸거나, 내용만 변경합니다. :: 부모 컴포넌트로부터 받은 값"
+        );
+        const changeNode = document.querySelector(
           `[data-id="${newContent.blockFeId}"]`
         );
-        if (!indentNode) {
+        if (!changeNode) {
           return false;
         }
-        // 새로운 요소 생성
-        const newElement = indentNode.cloneNode(true); // 기존 요소를 복사
 
-        // margin-left 스타일만 새롭게 추가
-        newElement.style.marginLeft = `${newContent.blockIndent}px`;
+        if (newContent.method == "UPDATE_INDENT_BLOCK") {
+          // 새로운 요소 생성
+          const newElement = changeNode.cloneNode(true); // 기존 요소를 복사
+          // margin-left 스타일만 새롭게 추가
+          newElement.style.marginLeft = `${newContent.blockIndent}px`;
+          // 기존 요소를 교체
+          changeNode.parentNode.replaceChild(newElement, changeNode);
+        } else if (newContent.method == "HOT_UPDATE_CONTENTS_BLOCK") {
+          const newElement = document.createElement("div"); // 새로운 div 요소 생성
+          newElement.innerHTML = newContent.blockContents; // HTML 문자열을 DOM 요소로 변환
 
-        // 기존 요소를 교체
-        indentNode.parentNode.replaceChild(newElement, indentNode);
-        // console.error("indent recv >>> ", indentNode, newContent.blockIndent);
-        // indentNode.style.setProperty('margin-left', `${newContent.blockIndent}px`, 'important');
-        // indentNode.setAttribute(
-        //   "style",
-        //   `margin-left: ${newContent.blockIndent}px !important;`
-        // );
+          // 변환된 DOM 요소의 첫 번째 자식을 기존 노드와 교체
+          changeNode.parentNode.replaceChild(
+            newElement.firstElementChild,
+            changeNode
+          );
+        }
       } else if (newContent.method == "CHANGE_ORDER_BLOCK") {
+        console.error("순서변경합니다. :: 부모 컴포넌트로부터 받은 값");
         // 순서변경의 경우
-        console.log("부모로부터 순서변경 감지!!! ");
         const changeNode = document.querySelector(
           `[data-id="${newContent.blockFeId}"]`
         );
@@ -662,50 +845,53 @@ export default {
         }
       } else {
         // 생성이나, 현재 targetElement가 없는 update의 경우
-        if (targetElement) {
+        console.error(
+          "생성이나, targetElement가 없는 update :: 부모 컴포넌트로부터 받은 값"
+        );
+        console.error("💻💻💻💻💻", newContent.blockContents);
+        if (targetElements.length > 0) {
+          console.error("💻💻💻💻💻💻 이미 있는 내용 변경", targetElements);
           // 이미 있는 내용 변경
-          // 해당 요소의 텍스트를 변경
-          targetElement.textContent = newContent.blockContents;
+          // 해당 요소의 html을 전체 변경
+
+          // 부모가 따로 없는지 확인하고, 태그가 p>ul로 변경된것이 아닌지 확인 후 내용 변경
+
+          targetElements[0].outerHTML = newContent.blockContents;
+          console.error(
+            "@@@ newContent.blockContents",
+            targetElements[0].outerHTML,
+            newContent.blockContents
+          );
+          const targetEl2 = document.querySelector(
+            `#editorArea [data-id="${newContent.blockFeId}"]`
+          );
+          if (targetEl2.outerHTML != newContent.blockContents) {
+            targetEl2.outerHTML = newContent.blockContents;
+          }
         } else {
-          const typeEl = {
-            heading: "h",
-            paragraph: "p",
-            orderedList: "ol",
-            bulletList: "ul",
-            listItem: "li",
-            image: "img",
-          };
-
-          let elTagType = typeEl[newContent.blockType];
-          if (elTagType === "h") {
-            elTagType += "1";
-          }
-
-          let newElement = document.createElement(elTagType);
-          newElement.setAttribute("data-id", newContent.blockFeId);
-          if (elTagType == "img") {
-            newElement.src = newContent.blockContents;
-          } else {
-            newElement.textContent = newContent.blockContents;
-          }
-
+          console.error("💻💻💻💻💻💻 222", newContent.method);
+          const newElement = newContent.blockContents;
+          console.error(newElement);
           if (newContent.method == "CREATE_BLOCK") {
             // 생성인 경우 store 개수 늘리기
             this.appendBlockFeIdsAfterPrevActions(
               newContent.blockFeId,
               newContent.prevBlockId
             );
-            console.error("이전 nodeLength", this.nodeLength);
             this.nodeLength = this.localJSON.content.length;
-            console.error("이후 nodeLength", this.nodeLength);
-            console.log("zzz>> ", newContent.method, this.nodeLength);
           }
 
           if (newContent.prevBlockId != null) {
             let prevElement = document.querySelector(
               `#editorArea [data-id="${newContent.prevBlockId}"]`
             );
-            prevElement.insertAdjacentElement("afterend", newElement);
+            prevElement.insertAdjacentHTML("afterend", newElement);
+            return false;
+          } else if (newContent.nextBlockId != null) {
+            let nextElement = document.querySelector(
+              `#editorArea [data-id="${newContent.nextBlockId}"]`
+            );
+            nextElement.insertAdjacentHTML("beforebegin", newElement);
             return false;
           } else if (newContent.parentBlockId != null) {
             let parentElement = document.querySelector(
@@ -715,13 +901,14 @@ export default {
             return false;
           } else {
             // parent, prev null 이어서 insert
-            let elementString = newElement.outerHTML;
-            console.error("editor에 추가", newElement, elementString);
+            let elementString = newElement;
             this.editor.commands.insertContent(elementString);
           }
         }
-        return false;
       }
+
+      this.localHTML = this.editor.getHTML();
+      this.localJSON = this.editor.getJSON();
     },
 
     // drag 시, 변경된 순서 갖고오는 메소드
@@ -762,6 +949,7 @@ export default {
         nextBlockId: null,
         feId: targetId,
         parentBlockId: null, // 부모블록. 사용X
+        type: null,
       };
       for (let i = 0; i < editorJson.length; i++) {
         if (editorJson[i].attrs?.id == targetId) {
@@ -770,6 +958,7 @@ export default {
             i < editorJson.length - 1 ? editorJson[i + 1].attrs.id : null;
 
           idGroupObj.contents = editorJson[i]?.content?.text;
+          idGroupObj.type = editorJson[i]?.content?.type;
           break;
         }
       }
@@ -873,14 +1062,20 @@ export default {
             if (foundImageEl != undefined && foundImageEl != "") {
               // 여기서 parent update 메소드 호출 -> image는 update 시, 기존 update 로직 활성화 X
               const imagePrevNode = foundImageEl.previousSibling;
+              const imageNextNode = foundImageEl.nextSibling;
+              const foundImageElOuterHtml = foundImageEl.outerHTML;
               // const imageNextNode = foundImageEl.nextSibling;
               this.$parent.updateBlock(
                 foundImageEl.getAttribute("data-id"),
                 "image",
-                foundImageEl.getAttribute("src"),
+                foundImageElOuterHtml,
                 imagePrevNode != null
                   ? imagePrevNode.getAttribute("data-id")
                   : null,
+                imageNextNode != null
+                  ? imageNextNode.getAttribute("data-id")
+                  : null,
+                null,
                 null
               );
             }
@@ -909,17 +1104,17 @@ export default {
         // el.removeAttribute("tabindex");
       }
     },
-    noneContentFunc() {
-      const thisuuId = this.generateUUID();
-      this.$parent.updateBlock(
-        thisuuId,
-        "paragraph",
-        "", // updateContent
-        null,
-        null
-      );
-      return `<p class='is-empty is-editor-empty' data-placeholder='내용을 작성하세요.' data-id='${thisuuId}'></p>`;
-    },
+    // noneContentFunc() {
+    //   const thisuuId = this.generateUUID();
+    //   this.$parent.updateBlock(
+    //     thisuuId,
+    //     "paragraph",
+    //     "", // updateElOuterHtml
+    //     null,
+    //     null
+    //   );
+    //   return `<p class='is-empty is-editor-empty' data-placeholder='내용을 작성하세요.' data-id='${thisuuId}'></p>`;
+    // },
     generateUUID() {
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
         /[xy]/g,
@@ -936,11 +1131,12 @@ export default {
       // const node = options?.nodes[0];
       const nodeDataId = node.attrs?.id;
       let nodeIndent = node.attrs?.indent;
-      nodeIndent = (nodeIndent < 210) ? nodeIndent + 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
-      
+      nodeIndent = nodeIndent < 210 ? nodeIndent + 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
+      const nodeEl = document.querySelector(`[data-id="${nodeDataId}"]`);
 
-      if (nodeDataId && nodeIndent >= 0) {
-        this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
+      if (nodeEl) {
+        const nodeElOuterHtml = nodeEl.outerHTML;
+        this.$parent.updateIndentBlock(nodeDataId, nodeElOuterHtml, nodeIndent);
       }
     },
     onOutdentExecuted(event) {
@@ -949,12 +1145,57 @@ export default {
       // const node = options?.nodes[0];
       const nodeDataId = node.attrs?.id;
       let nodeIndent = node.attrs?.indent;
-      nodeIndent = (nodeIndent > 0) ? nodeIndent - 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
-      
+      nodeIndent = nodeIndent > 0 ? nodeIndent - 30 : 0; // 변경된 indent 값이 넘어오지 않아 강제로 작업
+      const nodeEl = document.querySelector(`[data-id="${nodeDataId}"]`);
 
-      if (nodeDataId && nodeIndent >= 0) {
-        this.$parent.updateIndentBlock(nodeDataId, nodeIndent);
+      if (nodeEl) {
+        const nodeElOuterHtml = nodeEl.outerHTML;
+        this.$parent.updateIndentBlock(nodeDataId, nodeElOuterHtml, nodeIndent);
       }
+    },
+
+    // drag용 이벤트
+    async handleDrop(event) {
+      event.preventDefault();
+      const droppedData = event.dataTransfer.getData("items");
+
+      // 드롭된 데이터 로그 출력
+      console.log("드롭된 데이터2222(raw):", droppedData);
+
+      // 드롭된 데이터가 유효한지 확인합니다.
+      if (droppedData && droppedData.trim() !== "") {
+        try {
+          const parsedData = JSON.parse(droppedData);
+          console.log("드롭된 데이터(parsed):", parsedData);
+
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            const dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
+            if (dragedFile.type === "drive") {
+              if (dragedFile.driveType == "file") {
+                console.log("드롭된 파일 ID:", dragedFile.fileId);
+                // 파일 업로드나 추가 작업을 수행할 로직 작성
+
+                // 에디터에 이미지 삽입
+                this.insertImageToEditor(dragedFile.fileUrl);
+              } else {
+                alert("드라이브에서는 [파일]만 drop할 수 있습니다.");
+              }
+            }
+          } else if (parsedData?.type === "canvas") {
+            alert("캔버스 끼리는 drop 할 수 없습니다.");
+          } else if (parsedData?.type === "thread") {
+            console.error("thread drop");
+          } else {
+            alert("옳지 않은 drop 방식 입니다.");
+          }
+        } catch (error) {
+          console.error("JSON 파싱 오류:", error);
+        }
+      } else {
+        console.log("드롭된 데이터가 없습니다.");
+      }
+
+      this.tcdDroppedData = null;
     },
   },
   beforeUnmount() {
@@ -964,7 +1205,7 @@ export default {
     window.removeEventListener("indentExecuted", this.onIndentExecuted);
     window.removeEventListener("outdentExecuted", this.onOutdentExecuted);
     // if (typeof window !== "undefined") {
-      
+
     // }
   },
 };
@@ -972,4 +1213,26 @@ export default {
 
 <style lang="scss">
 @import "@/assets/css/tiptapCustom.scss";
+</style>
+
+<style lang="scss">
+.tiptapWrap {
+  position: relative;
+
+  .tcd-drop-area {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba($color: #000000, $alpha: 0.5);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    z-index: 3;
+  }
+}
 </style>

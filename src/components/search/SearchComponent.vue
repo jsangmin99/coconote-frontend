@@ -64,6 +64,9 @@
                 <img :src="result.fileUrl" alt="File Preview" class="file-preview" />
                 <div class="file-details">
                   <h3 class="file-name">{{ result.fileName || '파일 이름 없음' }}</h3>
+                  <span class="result-channel" style="margin-left: auto;">
+                      채널: {{ result.channelName || '채널 없음' }}
+                    </span>
                   <p class="file-link">
                     <button @click.stop.prevent="downloadFile(result.fileId)"
                       style="color: blue; background: none; border: none; cursor: pointer; text-decoration: underline;">Download</button>
@@ -92,16 +95,34 @@
             <h3>쓰레드 검색 결과 ({{ totalThreads }})</h3>
             <div v-for="(result, index) in results.threads" :key="index" class="result-card"
               @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
+              <img v-if="result.profileImageUrl" :src="result.profileImageUrl" alt="프로필 이미지" class="result-image" style="width: 50px; height: 50px">
               <h3>{{ result.content || '내용 없음' }}</h3>
+              <span class="result-channel" style="margin-left: auto;">
+                채널: {{ result.channelName || '채널 없음' }}
+              </span>
               <p class="metadata">Posted by: {{ result.memberName }} | {{ result.createdTime }}</p>
             </div>
           </div>
 
           <div v-if="results.canvasBlocks.length > 0" class="category-section">
-            <h3>캔버스 & 블록 검색 결과 ({{ totalCanvasBlocks }})</h3>
-            <div v-for="(result, index) in results.canvasBlocks" :key="index" class="result-card">
-              <h3>{{ result.canvasTitle || '제목 없음' }} (Canvas & Block)</h3>
-              <p>{{ result.blockContents || '내용 없음' }}</p>
+            <h3 class="category-title">캔버스 & 블록 검색 결과 ({{ totalCanvasBlocks }})</h3>
+            <div v-for="(result, index) in results.canvasBlocks" :key="index" class="canvas-block-result-card">
+
+              <div class="result-header">
+                <v-chip :color="result.type === 'canvas' ? 'success' : 'primary'" dark small class="type-badge">
+                  {{ result.type === 'canvas' ? '캔버스' : '블록' }}
+                </v-chip>
+
+                <span class="result-channel">
+                  채널: {{ result.channelName || '채널 없음' }}
+                </span>
+              </div>
+              <h4 class="result-title">
+                {{ result.canvasTitle || '제목 없음' }}
+              </h4>
+              <p v-if="result.type === 'block'" class="block-contents">
+                {{ result.blockContents || '내용 없음' }}
+              </p>
             </div>
           </div>
         </div>
@@ -124,6 +145,9 @@
                 <img :src="result.fileUrl" alt="File Preview" class="file-preview" />
                 <div class="file-details">
                   <h3 class="file-name">{{ result.fileName || '파일 이름 없음' }}</h3>
+                  <span class="result-channel" style="margin-left: auto;">
+                      채널: {{ result.channelName || '채널 없음' }}
+                    </span>
                   <p class="file-link">
                     <button @click.stop.prevent="downloadFile(result.fileId)"
                       style="color: blue; background: none; border: none; cursor: pointer; text-decoration: underline;">Download</button>
@@ -152,29 +176,46 @@
             <h3>쓰레드 검색 결과 ({{ totalThreads }})</h3>
             <div v-for="(result, index) in results" :key="index" class="result-card"
               @click="moveToThread(result.channelId, result.threadId, result.parentThreadId)">
+              <img v-if="result.profileImageUrl" :src="result.profileImageUrl" alt="프로필 이미지" class="result-image" style="width: 50px; height: 50px">
               <h3>{{ result.content || '내용 없음' }}</h3>
+              <span class="result-channel" style="margin-left: auto;">
+                채널: {{ result.channelName || '채널 없음' }}
+              </span>
               <p class="metadata">Posted by: {{ result.memberName }} | {{ result.createdTime }}</p>
             </div>
           </div>
 
-          <div v-if="activeTab === 'CANVAS_BLOCK' && results.length > 0" class="category-section">
-            <h3>캔버스 & 블록 검색 결과 ({{ totalCanvasBlocks }})</h3>
-            <div v-for="(result, index) in results" :key="index" class="result-card">
-              <h3>{{ result.canvasTitle || '제목 없음' }} (Canvas & Block)</h3>
-              <p>{{ result.blockContents || '내용 없음' }}</p>
+          <div v-if="activeTab === 'CANVASBLOCK' && results.length > 0" class="category-section">
+            <h3 class="category-title">캔버스 & 블록 검색 결과 ({{ totalCanvasBlocks }})</h3>
+            <div v-for="(result, index) in results" :key="index" class="canvas-block-result-card">
+              <div class="result-header">
+                <v-chip :color="result.type === 'canvas' ? 'success' : 'primary'" dark small class="type-badge">
+                  {{ result.type === 'canvas' ? '캔버스' : '블록' }}
+                </v-chip>
+
+                <span class="result-channel" style="margin-left: auto;"> <!-- 오른쪽 정렬 -->
+                  채널: {{ result.channelName || '채널 없음' }}
+                </span>
+              </div>
+              <h4 class="result-title">
+                {{ result.canvasTitle || '제목 없음' }}
+              </h4>
+              <p v-if="result.type === 'block'" class="block-contents">
+                {{ result.blockContents || '내용 없음' }}
+              </p>
             </div>
           </div>
         </template>
 
+        <div v-if="!loading && totalAll === 0" class="no-results-message">No results found.</div>
+
         <!-- 페이징 -->
-        <div class="pagination">
+        <div v-else class="pagination">
           <button @click="previousPage" :disabled="currentPage === 1">Previous</button>
           <span>Page {{ currentPage }} of {{ totalPages }}</span>
           <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
         </div>
       </div>
-
-      <div v-if="!loading && totalAll === 0" class="no-results-message">No results found.</div>
     </div>
   </div>
 </template>
@@ -217,7 +258,7 @@ export default {
   },
   created() {
     // Debounce 처리된 자동완성 함수 설정
-    this.fetchAutocomplete = debounce(this.fetchAutocomplete, 300);
+    this.fetchAutocomplete = debounce(this.fetchAutocomplete, 500);
   },
   mounted() {
     document.addEventListener('click', this.handleClickOutside);
@@ -227,7 +268,9 @@ export default {
   },
   watch: {
     activeTab() {
-      this.search(); // 자동으로 검색을 트리거
+      if (this.keyword.length >= 2) {
+        this.search();
+      }
     }
   },
   methods: {
@@ -237,7 +280,9 @@ export default {
         return; // 검색어가 없거나 2글자 미만일 경우 검색하지 않음
       }
       this.loading = true;
-      this.autocompleteSuggestions = []; // 검색 시 자동완성 리스트 닫기
+      this.closeAutocomplete(); // 검색 시 자동완성 리스트 닫기
+      this.fetchAutocomplete.cancel(); // debounce를 취소해 자동완성 요청 방지
+
 
       let url = `${process.env.VUE_APP_API_BASE_URL}/search`;
       if (this.activeTab !== 'ALL') {
@@ -309,20 +354,22 @@ export default {
         this.loading = false;
       }
     },
-
     handleEnter() {
-      // 자동완성 리스트에서 선택된 항목이 있을 때
+      // 자동완성에서 항목이 선택된 경우
       if (this.suggestionIndex !== -1 && this.autocompleteSuggestions[this.suggestionIndex]) {
         this.selectSuggestion(this.autocompleteSuggestions[this.suggestionIndex]);
       } else {
-        // 선택된 항목이 없으면 그냥 검색
+        // 선택된 항목이 없으면 검색하고 자동완성 창 닫기
         this.search();
+        this.closeAutocomplete();  // 자동완성 창 닫기
+        this.autocompleteSuggestions = [];  // 자동완성 데이터 비우기
+        this.$refs.searchInput.blur(); // 검색 후 입력창 포커스 해제
       }
     },
 
     // 자동완성 데이터 가져오기
     async fetchAutocomplete() {
-      if (this.keyword.length < 2) {
+      if (!this.keyword || this.keyword.length < 2) {
         this.autocompleteSuggestions = [];
         return;
       }
@@ -394,7 +441,7 @@ export default {
       try {
         // presigned URL 가져오기
         const response = await axios.get(
-          `http://localhost:8080/api/v1/files/${fileId}/download`
+          `${process.env.VUE_APP_API_BASE_URL}/files/${fileId}/download`
         );
 
         const presignedUrl = response.data.result; // presigned URL 가져오기
@@ -466,10 +513,8 @@ export default {
       const searchInput = this.$refs.searchInput;
 
       // autocomplete 목록이나 search input을 클릭했는지 여부를 체크
-      if (
-        (autocomplete && !autocomplete.contains(event.target)) &&
-        (searchInput && !searchInput.contains(event.target))
-      ) {
+      if (autocomplete && searchInput && !autocomplete.contains(event.target) && !searchInput.contains(event.target)) {
+
         this.autocompleteSuggestions = [];
       }
     },
@@ -535,8 +580,8 @@ export default {
   background-color: #fff;
   color: #333;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   height: 90vh;
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
   /* 화면의 90% 높이로 설정 */
 }
 
@@ -678,6 +723,46 @@ h3 {
 
 p {
   color: #666;
+}
+
+/* 캔버스 & 블록 검색 결과 카드 스타일 */
+.canvas-block-result-card {
+  background-color: #fff;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.canvas-block-result-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 결과 헤더 */
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.result-type {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #3a8bcd;
+}
+
+.channel-name {
+  font-size: 0.9em;
+  color: #888;
+}
+
+/* 블록 내용 */
+.block-contents {
+  color: #666;
+  font-size: 1em;
+  line-height: 1.5;
 }
 
 /* 페이징 스타일 */

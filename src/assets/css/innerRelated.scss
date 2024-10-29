@@ -8,7 +8,11 @@ $font-size-sm: 0.5rem;
   position: static !important;
   height: 100% !important;
   font-size: 1.1rem;
-
+  .v-navigation-drawer__content{
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
   * {
     color: #ffffff;
   }

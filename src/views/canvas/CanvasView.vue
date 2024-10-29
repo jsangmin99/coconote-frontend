@@ -68,8 +68,11 @@
             indeterminate
             color="primary"
           ></v-progress-circular>
-          <div v-else-if="canvasId == null">
-            <h1>캔버스가 없습니다.</h1>
+          <div class="nodataWrap" v-else-if="canvasId == null">
+            <div>
+              <img src="@/assets/images/logo_coconote.png" alt="coconote logo" />
+              <h1>캔버스가 없습니다.</h1>
+            </div>
           </div>
           <CanvasDetailComponent v-else :canvasId="canvasId" :key="canvasId" />
         </v-col>
@@ -192,6 +195,8 @@ export default {
 
           if (newVal.method == "CREATE_BLOCK") {
             this.sendMessageCanvas();
+          } else if (newVal.method == "HOT_UPDATE_CONTENTS_BLOCK") {
+            this.sendMessageCanvas();
           } else if (newVal.method == "UPDATE_BLOCK") {
             this.sendMessageCanvas();
           } else if (newVal.method == "UPDATE_INDENT_BLOCK") {
@@ -200,6 +205,9 @@ export default {
             console.log("CHANGE_ORDER_BLOCK 예정");
             this.sendMessageCanvas();
           } else if (newVal.method == "DELETE_BLOCK") {
+            //삭제 캔버스
+            this.sendMessageCanvas();
+          } else if (newVal.method == "DEEP_DELETE_BLOCK") {
             //삭제 캔버스
             this.sendMessageCanvas();
           } else {
@@ -277,7 +285,7 @@ export default {
     // 실제 socket에 message를 전송하는 영역
     sendMessageCanvas() {
       if (this.ws && this.ws.connected) {
-        const postMessage = this.getCanvasAllInfo;
+        const postMessage = {...this.getCanvasAllInfo};
         postMessage.channelId = this.channelId;
         if(postMessage.workspaceMemberId){
           postMessage.workspaceMemberId = this.getWorkspaceMemberId;
@@ -343,10 +351,13 @@ export default {
         }
       } else if (
         recv.method == "CREATE_BLOCK" ||
+        recv.method == "HOT_UPDATE_CONTENTS_BLOCK" || // content만 변경
         recv.method == "UPDATE_BLOCK" ||
+        // recv.method == "PATCH_BLOCK" || // 일부 정보만 업데이트
         recv.method == "UPDATE_INDENT_BLOCK" ||
         recv.method == "CHANGE_ORDER_BLOCK" ||
-        recv.method == "DELETE_BLOCK"
+        recv.method == "DELETE_BLOCK" || 
+        recv.method == "DEEP_DELETE_BLOCK" 
       ) {
         if (recv.canvasId != this.canvasId) {
           return false;
@@ -437,6 +448,19 @@ export default {
   .canvasDetailContainer {
     height: 100%;
     overflow: auto;
+  }
+  .nodataWrap{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    height: 100%;
+    color: #435088;
+    text-align: center;
+    img{
+      width: 80vw;
+      max-width: 120px;
+    }
   }
 }
 </style>

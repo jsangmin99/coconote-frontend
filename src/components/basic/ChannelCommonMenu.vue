@@ -155,6 +155,9 @@ export default {
       ],
       channelAccessDialog: false,
       currentAccessLevel: null,
+
+      // splitView 용도
+      tcdTabs : null,
     };
   },
   computed: {
@@ -166,6 +169,9 @@ export default {
       "getIsBookmark",
       "getWorkspaceId",
       "getWorkspaceName",
+
+      // tcd splitview 용도
+      "getTcdSplitTab",
     ]),
   },
   watch: {
@@ -175,6 +181,13 @@ export default {
       },
       deep: true,
     },
+    getTcdSplitTab: {
+      handler(newVal) {
+        console.error("tcd tab 변경~!~!~! >>> ", newVal)
+        this.tcdTabs = newVal;
+      },
+      deep: true,
+    }
   },
   mounted() {
     this.loadChannelMembers(); // 컴포넌트가 마운트되면 채널 멤버를 불러옴
@@ -189,7 +202,7 @@ export default {
     this.fetchChannelInfo(this.getChannelId);
   },
   methods: {
-    ...mapActions(["setWorkspaceInfoActions"]),
+    ...mapActions(["setWorkspaceInfoActions", "setChannelNameInfoActions", "setChannelDescInfoActions"]),
             handleClickOutside(event) {
       // 드롭다운 버튼을 클릭한 경우는 무시
       const dropdownToggle = this.$el.querySelector(".mdi-dots-vertical");
@@ -243,6 +256,7 @@ export default {
     },
     closeSplitView(splitName) {
       console.log(splitName, " 화면 닫으려고 함!!");
+      console.log(this.tcdTabs, " 화면 닫으려고 함!!222");
 
       let objKey = "";
       if (splitName == "left") {
@@ -257,12 +271,19 @@ export default {
       }
 
       let routerUrl = "";
+      let routeQuery = "";
       if (this.splitActiveTab[objKey] == "thread") {
         routerUrl = `/channel/${this.getChannelId}/thread/view`;
       } else if (this.splitActiveTab[objKey] == "canvas") {
-        routerUrl = `/channel/${this.getChannelId}/canvas/view`;
+        if(this.tcdTabs.canvasId){
+          routeQuery = `/${this.tcdTabs.canvasId}`;
+        }
+        routerUrl = `/channel/${this.getChannelId}/canvas/view${routeQuery}`;
       } else if (this.splitActiveTab[objKey] == "drive") {
-        routerUrl = `/channel/${this.getChannelId}/drive/view`;
+        if(this.tcdTabs.driveFolderId){
+          routeQuery = `/${this.tcdTabs.driveFolderId}`;
+        }
+        routerUrl = `/channel/${this.getChannelId}/drive/view${routeQuery}`;
       } else {
         console.error("잘못된 objKey 요청입니다.");
         return false;
@@ -336,14 +357,19 @@ export default {
         channelInfo: this.updateChannelInfo.channelInfo,
       };
       try {
-        await axios.patch(
+        const response = await axios.patch(
           `${process.env.VUE_APP_API_BASE_URL}/channel/update/${this.getChannelId}`,
           data
         );
         alert("채널 수정이 완료되었습니다.");
-        this.$router.push("/workspace").then(() => {
-          location.reload(); // URL 변경 후 페이지 새로고침
-        });
+        // this.$router.push("/workspace").then(() => {
+        //   location.reload(); // URL 변경 후 페이지 새로고침
+        // })
+        const result = response.data.result;
+        this.setChannelNameInfoActions(result.channelName);
+        this.setChannelDescInfoActions(result.channelInfo);
+        this.channelDialog = false;
+        this.$router.push(`/channel/${this.getChannelId}/thread/view`);
       } catch (error) {
         console.error("채널 수정 에러", error);
       }
@@ -401,7 +427,7 @@ export default {
         this.channelAccessDialog = false;
         this.$router.push("/workspace").then(() => {
           location.reload(); // URL 변경 후 페이지 새로고침
-        });
+      });
       } catch (error) {
         console.error("채널 공개 범위 수정 중 오류 발생", error);
       }

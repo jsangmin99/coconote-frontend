@@ -71,7 +71,7 @@
           </li>
         </ul>
         <ul>
-          <li @click="showWorkspaceModal">+</li>
+          <li @click="showWorkspaceModal" class="createWsModal"> 워크스페이스 생성 </li>
         </ul>
       </div>
 
@@ -118,6 +118,9 @@ export default {
       "getNickname",
       "getProfileImage",
       "getWorkspaceMemberId",
+
+      // menu 확인용
+      "getActiveInnerMenu"
     ]),
   },
   name: "InnerMenu",
@@ -139,6 +142,17 @@ export default {
       channelId: null,
       createWorkspace: false,
     };
+  },
+  watch: {
+    getActiveInnerMenu: {
+      handler(newVal) {
+        console.log("getActiveInnerMenu 변경됨 >> ", newVal); // 값이 변경될 때마다 로그로 확인
+        if (newVal && newVal != this.selectedMenu) {
+          this.changeSelectedMenu(newVal)
+        }
+      },
+      deep: true,
+    },
   },
   mounted() {
 
@@ -211,6 +225,7 @@ export default {
         await this.setWorkspaceInfoActions(wsInfo.data.result.workspaceId);
         await this.setWorkspaceNameInfoActions(wsInfo.data.result.name);
         this.$router.push("/workspace");
+        console.error("머지머지")
       } catch (e) {
         console.log(e);
       }
@@ -347,6 +362,10 @@ export default {
   overflow-y: auto;
   max-height: 400px;
 }
+// 스크롤바 숨기기
+.workspace-dropdown-menu::-webkit-scrollbar {
+  display: none; /* 웹킷 브라우저 (크롬, 사파리)에서 스크롤바 숨기기 */
+}
 
 .workspace-dropdown-menu ul {
   list-style: none;
@@ -362,5 +381,16 @@ export default {
 
 .workspace-dropdown-menu ul li:hover {
   background-color: #f3f3f3;
+}
+.createWsModal{
+  font-size: 10px;
+  background: #3a446b;
+  border-radius: 4px;
+  color: #ffffff !important;
+  padding: 8px 0 !important;
+  text-align: center; 
+  &:hover{
+    background: #0a101d !important;
+  }
 }
 </style>

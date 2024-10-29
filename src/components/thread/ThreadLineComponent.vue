@@ -12,7 +12,7 @@
       <div class="title">
 
         <!-- 닉네임 생성일 -->
-        <strong v-if="isDifferentMember" class="nickName">{{thread.memberName}}</strong>
+        <span v-if="isDifferentMember" class="nickName">{{thread.memberName}}</span>
         <div v-if="isDifferentMember" class="createdTime">{{createdTime}}</div>
 
         <!-- 태그 -->
@@ -55,6 +55,7 @@
               >
                 + Create "{{tagName}}"
               </strong>
+              <span class="tag-create" @click="createTag">태그 생성 : "{{tagName}}"</span>
             </div>
           </div>
         </div>
@@ -119,6 +120,40 @@
             <button class="btn" @click="update" style="background: green; color: white;">저장</button>
           </div>
         </div>
+        <div v-if="!isUpdate">
+          <!-- 내용 태그 -->
+          <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
+            <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
+              <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+              <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
+            </div>
+            <div class="hash-btn">
+              <button @click="toggleTagMenu">#</button>
+            </div>
+            <div class="tag-toggle">
+              <div class="tag-input-group">
+                <input
+                  v-if="isTagMenuVisible"
+                  type="text"
+                  class="tag-input"
+                  placeholder="tags"
+                  v-model="tagName"
+                  v-on:keypress.enter="createTag"
+                  v-on:input="adjustWidth"
+                  ref="tagInput"
+                  :style="{ width: inputWidth + 'px'}"
+                >
+                <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }">
+                  <div v-for="(tag,index) in filteredTagList" :key="index" class="tag-list" @click="addT(tag.id)">
+                    <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
+                  </div>
+                  <span class="tag-create" @click="createTag">태그 생성 :  "{{tagName}}"</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="content" v-html="formattedContent"></div>
+        </div>
       </div>
       
       <!-- 파일 -->
@@ -141,6 +176,7 @@
       <div>
         <button v-if="!thread.parentThreadId && thread.childThreads && thread.childThreads.length !==0 && !isComment" @click="commentIn(thread)">
           <strong class="comment">
+            <v-icon icon="mdi-message-text" />
             {{ thread.childThreads && thread.childThreads.length > 0 ? `${thread.childThreads.length}개의 댓글` : '댓글' }}
           </strong>
         </button>
@@ -345,7 +381,7 @@ import axios from '@/services/axios';
       async downloadFile(fileId,fileName) {
         try {
           // presigned URL 가져오기
-          const response = await axios.get(`http://localhost:8080/api/v1/files/${fileId}/download`);
+          const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/files/${fileId}/download`);
 
           const presignedUrl = response.data.result; // presigned URL 가져오기
 
@@ -416,13 +452,6 @@ import axios from '@/services/axios';
     },
   };
 </script>
-<style scoped>
-.thread {
-  display: flex;
-}
-.thread-wrapper {
-  position: relative;
-}
 
 .more-btn {
   display: none;
@@ -682,6 +711,8 @@ textarea:focus {
   background-color: #e0e0e0; /* 포커스된 Create 태그의 배경 색 */
 }
 </style>
-
+<style lang="scss">
+@import "@/assets/css/thread.scss";
+</style>
 
   

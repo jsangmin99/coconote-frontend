@@ -28,6 +28,7 @@ export default {
   computed: {},
   mounted() {
     this.searchMyWorkspace();
+    console.error("workspaceSearch 이동")
   },
   methods: {
     ...mapActions([
@@ -38,19 +39,25 @@ export default {
       "setChannelNameInfoActions",
       "setChannelDescInfoActions",
       "setChannelRoleInfoActions",
+
+
+      "setActiveInnerMenuActions",
     ]),
     async searchMyWorkspace() {
       // localStorage에 ws 정보 체크 후 분기처리
       const lsWsId = localStorage.getItem("workspaceId");
-      console.log("[WorkspaceSearchView] 생성 후 workspace로 이동 완료 >> ", lsWsId);
+      console.error("workspaceSearch 이동22222222222", lsWsId)
+      // console.log("[WorkspaceSearchView] 생성 후 workspace로 이동 완료 >> ", lsWsId);
       if (lsWsId != "" && lsWsId != undefined && lsWsId != null) {
-        console.log("[WorkspaceSearchView] 이미 workspace가 있음!!");
+        // console.log("[WorkspaceSearchView] 이미 workspace가 있음!!");
         this.workspaceId = lsWsId;
         const lsWsName = localStorage.getItem("workspaceName");
+        console.error("workspaceSearch 이동 3333", lsWsName)
         await this.setWorkspaceInfoActions(lsWsId);
         await this.setWorkspaceNameInfoActions(lsWsName);
         await this.getMyFirstChannelInWorkspace();
         await this.getWorkspaceMemberInfo(this.workspaceId);
+        await this.getMyFirstChannelInWorkspace();
       } else {
         console.error("새로운 workspace~~");
         this.getMyFirstWorkspace();
@@ -61,7 +68,7 @@ export default {
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/workspace/first`
       );
-      console.error("[WorkspaceSearchView] getMyFirstWorkspace().response", response);
+      // console.error("[WorkspaceSearchView] getMyFirstWorkspace().response", response);
       if (!response.data.result) {
         // 해당 유저의 workspace가 존재하지 않을 때
         this.dialog = true;
@@ -132,6 +139,8 @@ export default {
       //   path: `/channel/${response.data.result.channelId}`,
       //   query: { t: response.data.result.channelId }, // 새로운 query 추가로 새로운 key처럼 작동
       // });
+      
+      this.$store.dispatch("setActiveInnerMenuActions", 'home');
     },
     async getChannelMemberInfo(channelId) {
       const result = await fetchChannelMemberInfo(channelId); // 모듈로 함수 호출

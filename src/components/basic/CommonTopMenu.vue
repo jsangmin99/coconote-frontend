@@ -1,6 +1,8 @@
 <template>
   <v-app-bar :elevation="2" class="topMenu" height="40">
-    <v-app-bar-title class="title"> COCONOTE </v-app-bar-title>
+    <v-app-bar-title class="title apptitleCustom"> 
+      <img src="@/assets/images/logo_coconote_w.png" alt="coconote icon" />
+    </v-app-bar-title>
     <template v-slot:append>
       <div class="d-flex align-center justify-end" style="width: 100%;">
       </div>
@@ -61,6 +63,11 @@ export default {
   .title {
     font-size: 0.9rem;
     /* v-app-bar-title의 폰트 크기 설정 */
+    &.apptitleCustom{
+      img{
+        max-height: 11px;
+      }
+    }
   }
 }
 </style>

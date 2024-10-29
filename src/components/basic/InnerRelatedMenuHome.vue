@@ -1,9 +1,10 @@
 <template>
   <v-navigation-drawer permanent class="innerSubMenu" :absolute="false">
+
+    <!-- 워크스페이스 이름, 워크스페이스 관리 -->
     <div class="header-container" @contextmenu.prevent="showContextMenu($event, 'workspace', workpsace)">
       <h1>{{ this.getWorkspaceName }}</h1>
       <v-btn v-if="getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn">
-
         <v-icon class="icon-cog">mdi-cog</v-icon>
         <v-menu activator="parent">
           <v-list>
@@ -20,6 +21,7 @@
 
     <v-list>
 
+      <!-- 즐겨찾기 -->
       <v-list-subheader class="section-title">
         <v-icon icon="mdi-star" color="#ffbb00" />
         즐겨찾기
@@ -633,6 +635,8 @@ export default {
       }
     },
     isMember(id) {
+      this.myChannels.some((channel) => channel === id);
+      console.log("내가 속한 채널들 확인", this.myChannels);
       return this.myChannels.some((channel) => channel === id);
     },
 
@@ -761,6 +765,10 @@ export default {
 .header-container {
   display: flex;
   align-items: center;
+  >button{
+    display: flex;
+    font-size: 10px;
+  }
   /* 텍스트와 버튼의 수직 정렬을 맞춤 */
 }
 

@@ -59,6 +59,7 @@
           :is="getComponentForTab(leftTab)"
           :id="channelId"
           :splitCanvasId="canvasId"
+          :key="leftTab"
         />
       </div>
       <div class="rightPane">
@@ -66,6 +67,7 @@
           :is="getComponentForTab(rightTab)"
           :id="channelId"
           :splitCanvasId="canvasId"
+          :key="rightTab"
         />
       </div>
     </div>
@@ -91,6 +93,8 @@ export default {
     CanvasView,
     FolderComponent,
   },
+  mounted(){
+  },
   data() {
     return {
       leftTab: "thread", // 기본 왼쪽 탭
@@ -101,6 +105,9 @@ export default {
         leftTab: "thread",
         rightTab: "drive",
       },
+
+      // 드래그
+      tcdDroppedData: null,
     };
   },
   methods: {
@@ -131,7 +138,10 @@ export default {
     updateCanvasId(newCanvasId) {
       this.canvasId = newCanvasId;
     },
+
   },
+  beforeUnmount(){
+  }
 };
 </script>
 
@@ -158,7 +168,6 @@ export default {
     font-size: 14px;
     &.active {
       font-weight: bold;
-      text-decoration: underline;
     }
   }
 }
@@ -168,19 +177,6 @@ export default {
   display: flex;
   flex-direction: row; /* 가로로 정렬 */
   align-items: flex-start;
-}
-
-.splitTabs button {
-  padding: 5px;
-  cursor: pointer;
-  border: none;
-  background: none;
-  font-size: 14px;
-}
-
-.splitTabs button.active {
-  font-weight: bold;
-  text-decoration: underline;
 }
 
 .splitContent {

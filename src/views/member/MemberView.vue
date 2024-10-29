@@ -1,5 +1,5 @@
 <template>
-<v-container class="memberview-container" style="margin: 0px; padding: 0px">
+<v-sheet class="memberview-container" style="margin: 0px; padding: 0px">
 
   <!-- MemberView 헤더 부분 -->
   <div class="memberview-header" style="margin: 20px; padding-left: 30px;">
@@ -21,7 +21,7 @@
   <div class="memberview-memberlist">
     <div v-for="member in workspaceMemberList" :key="member.workspaceMemberId">
       <v-card @click="fetchWorkspaceMemberDetail(member.workspaceMemberId)" class="hover-card custom-padding-card" style="border-radius: 15px;">
-        <img :src="member.profileImage && member.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" 
+        <img :src="member.profileImage && member.profileImage !== 'null' ? member.profileImage : require(`@/assets/images/profile/profile${member.workspaceMemberId % 10}.jpg`)" 
             alt="Profile Image" 
             class="memberview-memberlist-img"
             style="margin-bottom: 8px;"/>
@@ -34,7 +34,7 @@
       </v-card>
     </div>
   </div>
-</v-container>
+</v-sheet>
   
 <!-- 회원 카드 상세 보기 -->
     <v-dialog v-model="workspaceMemberModal" max-width="600px" class="workspaceMemberModal">
@@ -50,7 +50,7 @@
                 <div class="member-detail-container">
                   <v-row>
                     <v-col cols="5">
-                      <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? getProfileImage : require(`@/assets/images/profile/profile${this.memberImageId}.jpg`)" 
+                      <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? workspaceMemberInfo.profileImage : require(`@/assets/images/profile/profile${this.memberImageId}.jpg`)" 
                       alt="Profile Image" 
                       style="width: 100%; border-radius: 15px;"/>
                       
