@@ -166,6 +166,15 @@
         </div>
       </div>
       
+      <!-- 캔버스 -->
+      <div class="canvas-group" v-if="thread.canvasTitle">
+        <div class="canvas">
+          <v-icon>mdi-file-document</v-icon>
+          <div class="title2">{{thread.canvasTitle}}</div>
+          <div class="subtitle">캔버스</div>
+        </div>
+      </div>
+
       <!-- 파일 -->
       <div class="image-group">
         <div class="file-group" v-for="(file, index) in thread.files" :key="index">
@@ -720,6 +729,30 @@ textarea:focus {
 }
 .tag-create.active {
   background-color: #e0e0e0; /* 포커스된 Create 태그의 배경 색 */
+}
+.canvas{
+  display: flex;
+  flex-direction: row;
+  width: 200px;
+  height: 70px;
+  justify-content: center;
+  align-items: center;
+  justify-content: space-evenly;
+  border: 1px solid;
+  border-radius: 5px;
+  gap: 5px;
+}
+.title2 {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+}
+.subtitle {
+  color: #aaa;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
 }
 </style>
 

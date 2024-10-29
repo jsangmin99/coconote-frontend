@@ -40,6 +40,7 @@
 
     <!-- 입력 그룹 -->
     <div class="input-group" @dragover.prevent @drop="handleDrop">
+
       <div class="canvas-group">
         <div class="canvas" v-for="(canvas,index) in canvasList" :key="index">
           <v-icon>mdi-file-document</v-icon>
@@ -47,6 +48,7 @@
           <div class="subtitle">캔버스</div>
         </div>
       </div>
+
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
           <button class="more-btn-file" type="button" @click="deleteImage(index)">
@@ -64,7 +66,7 @@
           @keydown="handleKeydown" ref="textarea"/>
         <div class="input-group-append">
           <button class="send-btn" type="button" @click="sendMessage"
-            :disabled="!message && fileList && fileList.length === 0">
+            :disabled="!message && fileList && fileList.length === 0 && canvasList && canvasList.length === 0">
             <img :src="require('@/assets/images/send_icon.png')" alt="보내기" style="height: 20px; width: 20px;">
           </button>
         </div>
@@ -121,7 +123,7 @@
           @keydown="handleKeydown" ref="textarea"/>
         <div class="input-group-append">
           <button class="send-btn" type="button" @click="sendMessage"
-            :disabled="!message && fileList && fileList.length === 0">
+            :disabled="!message && fileList && fileList.length === 0 && canvasList && canvasList.length === 0">
             <img :src="require('@/assets/images/send_icon.png')" alt="보내기" style="height: 20px; width: 20px;">
           </button>
         </div>
@@ -435,6 +437,8 @@ export default {
             createdTime: recv.createdTime,
             files: recv.files,
             memberId: recv.memberId,
+            canvasId: recv.canvasId,
+            canvasTitle: recv.canvasTitle,
           });
         }
 
@@ -523,7 +527,7 @@ export default {
     async sendMessage() {
       if(!this.ws) return
       // 메시지가 비어있거나 공백 문자만 포함된 경우
-      if (!this.message.trim() && this.fileList.length === 0) {
+      if (!this.message.trim() && this.fileList.length === 0 && this.canvasList.length === 0) {
         return; // 함수 종료
       }
       const authToken = localStorage.getItem('accessToken');
@@ -565,6 +569,8 @@ export default {
           senderId: this.sender,
           parentId: (this.parentThread ? this.parentThread.id : null),
           content: this.message,
+          canvasId: (this.canvasList[0] ? this.canvasList[0].id: null),
+          canvasTitle: (this.canvasList[0] ? this.canvasList[0].title: null),
           workspaceId: this.workspaceId,
           files: this.filesRes?.map(file => ({ fileId: file.id, fileName: file.fileName, fileURL: file.fileUrl }))
         })
@@ -578,6 +584,7 @@ export default {
       this.fileList = [];
       this.uploadProgress = [];
       this.filesRes = null;
+      this.canvasList=[];
     },
     async getPresignedURL() {
       const reqFiles = this.fileList.map(file => ({ fileName: file.name, fileSize: file.size }))
@@ -923,6 +930,7 @@ export default {
             }
           } else if(parsedData?.type === "canvas"){
             console.log("캔버스 파일 드롭");
+            this.canvasList=[];
             this.canvasList.push(parsedData);
             console.log("this.canvasList: ",this.canvasList);
             
