@@ -1,5 +1,5 @@
 <template>
-  <node-view-wrapper class="tiptap-thread" :data-id="node.attrs.id"> <!-- :data-id 속성 추가 -->
+  <node-view-wrapper class="tiptap-thread" :data-id="node.attrs.id">
     <label>쓰레드</label>
     <span class="content">
       <span class="text" v-html="node.attrs.content"></span>

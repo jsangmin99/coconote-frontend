@@ -232,7 +232,15 @@ export default {
           orderedList: true,
           listItem: true,
         }),
-        TipTapThread,
+        TipTapThread.configure({
+          onNodeChange: async (options) => {
+            this.isRecvUpdate = false;
+
+            const node = options?.nodes[0];
+            const nodeDataId = node?.node?.attrs?.id;
+            console.error("tiptapThread >>> ", options, nodeDataId, )
+          },
+        }),
         DraggableItem,
         UniqueID.configure({
           types: [
@@ -367,7 +375,18 @@ export default {
           }
         }
 
-        const updateBlockID = selectedNode?.$head?.path[3]?.attrs?.id;
+        console.error("😭😭😭😭",selectedNode, selectedNode?.node?.type, selectedNode?.node?.type?.name)
+        
+        let tempUpdateBId = null
+        if(selectedNode?.node?.type?.name == "tiptapthreadComponent"){
+          tempUpdateBId = selectedNode.node?.attrs?.id
+        }else{
+          tempUpdateBId = selectedNode?.$head?.path[3]?.attrs?.id;
+        }
+        const updateBlockID = tempUpdateBId;
+
+        console.error("😭😭😭😭222",updateBlockID)
+
         if (!updateBlockID) {
           return false;
         }
@@ -600,6 +619,8 @@ export default {
     //   }
     window.addEventListener("indentExecuted", this.onIndentExecuted);
     window.addEventListener("outdentExecuted", this.onOutdentExecuted);
+
+    console.error("this.defaultContent >>> ",this.defaultContent, this.defaultContent.join(""))
 
     if (this.defaultContent.length > 1) {
       setTimeout(() => {
@@ -1207,7 +1228,11 @@ export default {
       let elementString = `
         <div class="tiptap-thread" data-id="${threadData.id}">
           <label>쓰레드</label>
-          <span class="content"><span class="text">${threadData.content}</span><button>${threadData.id}로 이동하기 </button>
+          <span class="content">
+            <span class="text">${threadData.content}</span>
+            <button>
+              <v-icon icon="mdi-arrow-right"></v-icon>
+            </button>
           </span>
         </div>`;
       this.editor.commands.insertContent(elementString);
