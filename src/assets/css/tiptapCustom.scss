@@ -48,6 +48,43 @@
 .tiptap {
   height: 100%;
   min-height: 40vh;
+
+  .tiptap-link{
+    display: flex;
+    border: 1px solid #d5d9e4;
+    border-radius: 8px;
+    background-color: #fafbff;
+    font-size: 12px;
+    padding: 4px 12px !important;
+    margin: 0 !important;
+    cursor: pointer;
+    text-decoration: none;
+    align-items: center;
+    &:visited {
+      color: inherit;
+    }
+
+    &:hover {
+      font-weight: bold;
+    }
+
+    &::before{
+      content: '쓰레드';
+      display: flex;
+      font-weight: bold;
+      color: #7f8696;
+      border-right: 1px solid #f3f4f4;
+      padding: 8px;
+      align-items: center;
+    }
+    &::after{
+      font-family: 'Material Design Icons'; /* Vuetify에서 사용하는 MDI 폰트 패밀리 */
+      content: "\f004"; /* MDI 아이콘의 유니코드 */
+      display: inline-block;
+      font-size: 10px;
+    }
+  }
+
   :first-child {
     margin-top: 0;
   }

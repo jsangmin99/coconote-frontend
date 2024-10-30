@@ -127,6 +127,8 @@ import { Indent } from "@/components/tiptab/indent";
 
 // Thread drag&drop 용
 import TipTapThread from "@/components/tiptab/thread/TipTapThreadExtension.js";
+// import CustomLink from '@/components/tiptab/thread/CustomLink.js'
+import Link from "@tiptap/extension-link";
 
 import { mapGetters, mapActions } from "vuex";
 
@@ -241,6 +243,15 @@ export default {
             console.error("tiptapThread >>> ", options, nodeDataId, )
           },
         }),
+        
+        Link.configure({
+          openOnClick: true,
+          HTMLAttributes: {
+            class: 'tiptap-link',
+            'data-thread-id': null, // 초기값은 null
+          },
+        }),
+        // CustomLink,
         DraggableItem,
         UniqueID.configure({
           types: [
@@ -1223,30 +1234,11 @@ export default {
     },
     // tiptap에 thread drag 요소 추가하는 용도
     addThreadInTipTap(threadData) {
-      console.error(threadData);
+      const threadId = threadData.id; // threadData에서 ID 가져오기
+      const content = `<p><a href="/channel/${this.$store.getters.getChannelId}/thread/view?threadId=${threadId}" data-thread-id="${threadId}">${threadData.content}</a></p>`; // HTML 문자열 생성
 
-      let elementString = `
-        <div class="tiptap-thread" data-id="${threadData.id}">
-          <label>쓰레드</label>
-          <span class="content">
-            <span class="text">${threadData.content}</span>
-            <button>
-              <v-icon icon="mdi-arrow-right"></v-icon>
-            </button>
-          </span>
-        </div>`;
-      this.editor.commands.insertContent(elementString);
-
-      // 노드 데이터로 구성된 객체 생성
-      // const nodeData = {
-      //   id: threadData.id || null, // threadData에서 ID를 가져오거나 null
-      //   content: threadData.content || '쓰레드 내용', // 내용 가져오기
-      // };
-
-      // this.editor.commands.insertContent({
-      //   type: 'vueComponent', // 사용하고 있는 노드 이름
-      //   attrs: nodeData,
-      // });
+      // Tiptap의 `commands`를 사용하여 HTML을 삽입
+      this.editor.commands.insertContent(content);
     },
   },
   beforeUnmount() {
