@@ -280,7 +280,7 @@ export default {
         }
         routerUrl = `/channel/${this.getChannelId}/canvas/view${routeQuery}`;
       } else if (this.splitActiveTab[objKey] == "drive") {
-        if(this.tcdTabs.driveFolderId){
+        if(this.tcdTabs && this.tcdTabs.driveFolderId){
           routeQuery = `/${this.tcdTabs.driveFolderId}`;
         }
         routerUrl = `/channel/${this.getChannelId}/drive/view${routeQuery}`;

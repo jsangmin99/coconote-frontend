@@ -108,9 +108,20 @@
     </div>
     <!-- 입력 그룹 -->
     <div class="input-group" @dragover.prevent @drop="handleDrop">
+
+      <div class="canvas-group">
+        <div class="canvas" v-for="(canvas,index) in canvasList" :key="index">
+          <v-icon>mdi-file-document</v-icon>
+          <div class="title">{{canvas.title}}</div>
+          <div class="subtitle">캔버스</div>
+        </div>
+      </div>
+
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
-          <button class="more-btn-file" type="button" @click="deleteImage(index)"><v-icon color="error">mdi-trash-can</v-icon></button>
+          <button class="more-btn-file" type="button" @click="deleteImage(index)">
+            <v-icon>mdi-trash-can</v-icon>
+          </button>
           <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
             style="height: 120px; width: 120px; object-fit: cover; border-radius:5px;">
           <p class="custom-contents">{{ file.name }}</p>
