@@ -4,8 +4,12 @@
     <!-- 워크스페이스 이름, 워크스페이스 관리 -->
     <div class="header-container" @contextmenu.prevent="showContextMenu($event, 'workspace', workpsace)">
       <h1>{{ this.getWorkspaceName }}</h1>
+
+      <!-- 워크스페이스 설정 버튼 -->
       <v-btn v-if="getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn">
         <v-icon class="icon-cog" style="margin-left: 5px">mdi-cog</v-icon>
+        
+        <!-- 워크스페이스 설정 메뉴 -->
         <v-menu activator="parent">
           <v-list>
             <v-list-item @click="startEditing(this.getWorkspaceId)">
