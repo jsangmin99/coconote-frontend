@@ -341,7 +341,6 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
         );
         this.sections = response.data.result;
-        this.visibleSections = this.sections.map(section => section.sectionId);// 섹션의 토글을 모두 열도록 초기화
 
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
         if (
@@ -355,6 +354,7 @@ export default {
             firstChannel.channelName,
             firstChannel.channelInfo
           );
+          this.visibleSections.push(this.sections[0].sectionId);
         }
         await this.fetchUnreadCounts();
 
@@ -641,7 +641,6 @@ export default {
       console.log("내가 속한 채널들 확인", this.myChannels);
       return this.myChannels.some((channel) => channel === id);
     },
-
     // 수정 다이얼로그 열기
     openEditDialog(section) {
       this.editedSectionId = section.sectionId; // 수정할 섹션 ID 저장
@@ -683,7 +682,6 @@ export default {
         this.contextMenuVisible = true;
       });
     },
-
     // 우클릭 메뉴 숨기기
     hideContextMenu() {
       this.contextMenuVisible = false;
