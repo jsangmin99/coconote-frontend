@@ -295,7 +295,7 @@ export default {
       editedSectionId: null, // 수정 중인 섹션 ID
       editedSectionName: "", // 수정 중인 섹션 이름
 
-      visibleBookmark: false,
+      visibleBookmark: true,
       visibleSections: [], // 하위 채널을 보이는 섹션의 ID 저장
 
       channelId: null,
@@ -750,7 +750,6 @@ export default {
 
   .icon-cog {
     font-size: 0.8rem !important;
-    opacity: 0.5;
   }
 }
 
@@ -779,9 +778,9 @@ h1 {
 
 /* 폰트 크기에 비례한 버튼 크기 설정 */
 .small-btn {
-  min-width: 1em !important;
-  width: 1em !important;
-  height: 1em !important;
+  // min-width: 0.5em !important;
+  width: 0.8em !important;
+  height: 0.8em !important;
   padding: 0 !important;
   /* 여백 제거 */
   margin-left: 5px !important;
