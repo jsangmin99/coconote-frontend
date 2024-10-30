@@ -2,10 +2,11 @@ import { Node } from '@tiptap/core';
 // import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 // import UniqueID from '@tiptap-pro/extension-unique-id'; // UniqueID 확장 임포트
-import Component from './TipTapThreadComponent.vue';
+import TipTapThreadComponent from './TipTapThreadComponent.vue';
+import { Plugin } from "prosemirror-state";
 
 export default Node.create({
-  name: 'vueComponent',
+  name: 'tiptapthreadComponent',
   group: 'block',
   atom: true,
 
@@ -23,7 +24,7 @@ export default Node.create({
   parseHTML() {
     return [
       {
-        tag: 'div.vue-component',
+        tag: 'div.tiptap-thread',
         getAttrs: (element) => {
           const content = element.querySelector('span.text')?.innerHTML || '';
           return {
@@ -38,7 +39,7 @@ export default Node.create({
   renderHTML({ HTMLAttributes }) {
     // ID와 콘텐츠를 사용하여 HTML 문자열을 구성
     const elementString = `
-      <div class="vue-component" data-id="${HTMLAttributes.id}">
+      <div class="tiptap-thread" data-id="${HTMLAttributes.id}">
         <label>쓰레드</label>
         <span class="content">
           <span class="text">${HTMLAttributes.content}</span>
@@ -54,7 +55,42 @@ export default Node.create({
     return wrapper.firstChild; // 생성된 DOM 요소를 반환
   },
 
+  addOptions() {
+    return {
+      onNodeChange: (options) => {
+        const node = options?.nodes[0];
+        const event = new CustomEvent("nodeChange", { detail: node });
+        window.dispatchEvent(event);
+      },
+    }
+  },
+
   addNodeView() {
-    return VueNodeViewRenderer(Component);
+    return VueNodeViewRenderer(TipTapThreadComponent);
+  },
+
+  addProseMirrorPlugins() {
+    const onNodeChange = this.options.onNodeChange;
+
+    return [
+      new Plugin({
+        view: () => {
+          return {
+            update: (view, prevState) => {
+              if (view.state.doc !== prevState.doc) {
+                const { from, to } = view.state.selection;
+                const nodes = [];
+                view.state.doc.nodesBetween(from, to, (node, pos) => {
+                  nodes.push({ node, pos });
+                });
+
+                // `onNodeChange` 호출
+                onNodeChange({ nodes, editor: this.editor });
+              }
+            },
+          };
+        },
+      }),
+    ];
   },
 });

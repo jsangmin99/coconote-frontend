@@ -1187,7 +1187,6 @@ export default {
             alert("캔버스 끼리는 drop 할 수 없습니다.");
           } else if (parsedData?.type === "thread") {
             console.error("thread drop");
-            // <vue-component count="0"></vue-component>
             this.addThreadInTipTap(parsedData);
           } else {
             alert("옳지 않은 drop 방식 입니다.");
@@ -1206,7 +1205,7 @@ export default {
       console.error(threadData);
 
       let elementString = `
-        <div class="vue-component" data-id="${threadData.id}">
+        <div class="tiptap-thread" data-id="${threadData.id}">
           <label>쓰레드</label>
           <span class="content"><span class="text">${threadData.content}</span><button>${threadData.id}로 이동하기 </button>
           </span>
