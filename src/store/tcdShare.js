@@ -35,7 +35,6 @@ const tcdShare = {
     actions: {
         setTcdStateAllDataActions({ commit }, data) {
             commit('setTcdStateAllData', data);
-            console.error("tcd test.. ", data)
         },
         setIsTcdDragStatusActions({ commit }, data) {
             commit('setIsTcdDragStatus', data);

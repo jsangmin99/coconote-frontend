@@ -291,7 +291,7 @@ export default {
         this.draggedType = type;
 
         // 드래그 시작 시 전송할 데이터 로그 출력
-        console.error("드래그 시작 - 전송할 데이터 folder :", dataToTransfer);
+        // console.error("드래그 시작 - 전송할 데이터 folder :", dataToTransfer);
         const setInfoObj = {
           isDragStatus: true,
           dragStartPage: "drive",
