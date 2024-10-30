@@ -6,7 +6,7 @@
       <h1>{{ this.getWorkspaceName }}</h1>
       <v-btn v-if="getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn">
         <v-icon class="icon-cog">mdi-cog</v-icon>
-        <v-menu activator="parent">
+        <v-menu activator="parent" class="small-menu">
           <v-list>
             <v-list-item @click="startEditing(this.getWorkspaceId)">
               수정
@@ -723,6 +723,7 @@ export default {
 </style>
 
 <style lang="scss">
+
 .section-title {
   cursor: pointer;
 
