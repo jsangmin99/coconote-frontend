@@ -17,7 +17,7 @@
           append-icon="mdi-magnify"
         ></v-text-field>
       </div>
-      <div class="member-list">
+      <div class="member-list" style="position: relative;">
         <!-- 현재 채널에 있는 멤버 목록 -->
         <h4>현재 채널 멤버</h4>
         <div v-if="isLoadingMembers">로딩 중...</div>
@@ -28,11 +28,17 @@
               <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}<v-icon v-if="member.channelRole === 'MANAGER'" color="#ffbb00">mdi-crown</v-icon></v-list-item-title>
             </div>
             <div>
-               <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown(member.id)">
-          </v-icon>
+              <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown(member.id)"></v-icon>
+              <v-menu activator="parent">
+                <v-list>
+                  <v-list-item @click="(channelRoleDialog = true)">권한 변경하기</v-list-item>
+                  <v-list-item @click="removeMember">회원 내보내기</v-list-item>
+                  </v-list>
+              </v-menu>
             </div>
           </div>
         </div>    
+
 
         <v-divider class="my-3"></v-divider>
 
@@ -53,12 +59,7 @@
           </div>
         </div>
 
-    <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
-      <ul>
-        <li @click="(channelRoleDialog = true)">권한 변경하기</li>
-        <li @click="removeMember">회원 내보내기</li>
-      </ul>
-    </div>
+    
 
   <v-dialog v-model="channelRoleDialog" width="auto" class="channelRoleDialog">
   <v-card max-width="400">
@@ -101,7 +102,6 @@ export default {
       channelMembers: [], // 채널 멤버 목록 추가
       isLoading: false,
       isLoadingMembers: false, // 채널 멤버 로딩 상태
-      isDropdownOpen: false, // 드롭다운 상태 관리
       currentMemberId: null,
       channelRoleDialog: false,
       currentMemberRole: null,
@@ -109,6 +109,7 @@ export default {
       { text: '채널 매니저', value: 'MANAGER' },
       { text: '일반 회원', value: 'USER' },
     ],
+    contextMenuPosition: { x: 0, y: 0 },
     };
   },
   computed: {
@@ -233,7 +234,6 @@ export default {
     toggleDropdown(chMemberId) {
       // 드롭다운이 열리고 닫히는지 로그 확인
       console.log("Dropdown toggle");
-      this.isDropdownOpen = !this.isDropdownOpen;
       this.currentMemberId = chMemberId;
     },
   },
@@ -313,15 +313,6 @@ export default {
   border-radius: 10px;
 }
 
-/* .member-info {
-  flex-grow: 1;
-  margin-left: 10px;
-}
-
-.member-info p {
-  margin: 0;
-} */
-
 /* 초대 버튼과 가입됨 표시 스타일 */
 .invite-button-wrap {
   display: flex;
@@ -348,6 +339,33 @@ export default {
   border: 1px solid #ccc; /* 테두리 설정 */
   border-radius: 4px; /* 모서리 둥글기 */
   outline: none; /* 포커스 시 기본 테두리 제거 */
+}
+
+.member-dropdown-menu {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  z-index: 100;
+  /* top: 75px;
+  right: 40px;  */
+}
+
+.member-dropdown-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.member-dropdown-menu ul li {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.member-dropdown-menu ul li:hover {
+  background-color: #f3f3f3;
 }
 
 </style>
