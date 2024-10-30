@@ -28,7 +28,8 @@
               <v-list-item-title>{{ member.memberInfo.memberName || '이름 없음' }}<v-icon v-if="member.channelRole === 'MANAGER'" color="#ffbb00">mdi-crown</v-icon></v-list-item-title>
             </div>
             <div>
-               <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown(member.id)"></v-icon>
+               <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown(member.id)">
+          </v-icon>
             </div>
           </div>
         </div>    
@@ -52,26 +53,12 @@
           </div>
         </div>
 
-    <!-- <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
+    <div v-if="isDropdownOpen" class="dropdown-menu" @click.stop>
       <ul>
         <li @click="(channelRoleDialog = true)">권한 변경하기</li>
         <li @click="removeMember">회원 내보내기</li>
       </ul>
-    </div> -->
-
-    <v-menu v-model="isDropdownOpen">
-      <!-- <template v-slot:activator="{ on, attrs }">
-        <button v-bind="attrs" v-on="on">메뉴 열기</button>
-      </template> -->
-      <v-list>
-        <v-list-item @click="channelRoleDialog = true">
-          <v-list-item-title>권한 변경하기</v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="removeMember">
-          <v-list-item-title>회원 내보내기</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+    </div>
 
   <v-dialog v-model="channelRoleDialog" width="auto" class="channelRoleDialog">
   <v-card max-width="400">
