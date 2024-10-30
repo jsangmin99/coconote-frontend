@@ -723,7 +723,6 @@ export default {
 </style>
 
 <style lang="scss">
-
 .section-title {
   cursor: pointer;
 
