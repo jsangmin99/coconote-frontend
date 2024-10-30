@@ -183,6 +183,9 @@ export default {
   display: flex;
   flex: 1;
   overflow: hidden;
+  .channelInsideContainer{
+    height: calc(100vh - 224px);
+  }
 }
 
 .leftPane,

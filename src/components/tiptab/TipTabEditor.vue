@@ -89,12 +89,12 @@
       </div>
       <editor-content :editor="editor" />
     </div>
-    <!-- <div style="width: 100%; margin-top: 30px">
+    <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
-    </div> -->
+    </div>
     <div
       class="tcd-drop-area"
       v-if="tcdDroppedData"
@@ -110,7 +110,6 @@
 import axios from "axios";
 import StarterKit from "@tiptap/starter-kit";
 import { Editor, EditorContent } from "@tiptap/vue-3";
-import CustomBlock from "@/components/tiptab/CustomBlock"; // CustomBlock 가져오기
 
 import UniqueID from "@tiptap-pro/extension-unique-id";
 import DragHandle from "@tiptap-pro/extension-drag-handle";
@@ -125,6 +124,9 @@ import Focus from "@tiptap/extension-focus";
 
 // 코드 내 들여쓰기 용
 import { Indent } from "@/components/tiptab/indent";
+
+// Thread drag&drop 용
+import TipTapThread from "@/components/tiptab/thread/TipTapThreadExtension.js";
 
 import { mapGetters, mapActions } from "vuex";
 
@@ -206,7 +208,7 @@ export default {
     },
     getAllTcdState: {
       handler(newVal) {
-        console.error("tcd 값 감지. canvas >>>> ", newVal);
+        // console.error("tcd 값 감지. canvas >>>> ", newVal);
         if (newVal.isDragStatus) {
           this.tcdDroppedData = newVal; // 드래그 데이터 저장
         } else {
@@ -230,7 +232,7 @@ export default {
           orderedList: true,
           listItem: true,
         }),
-        CustomBlock,
+        TipTapThread,
         DraggableItem,
         UniqueID.configure({
           types: [
@@ -315,17 +317,14 @@ export default {
       // autofocus: true,
       onUpdate: () => {
         if (this.isRecvUpdate) {
-          console.error("흠...........................2222222222");
           this.isRecvUpdate = false;
           return false;
         }
         if (this.currentEvent != null) {
           this.currentEvent = null;
-          console.error("흠...........................3333333");
           return false;
         }
         const selectedNode = this.editor.state.selection;
-        console.error("흠...........................", selectedNode);
         let isReturn = true;
 
         if (!selectedNode) {
@@ -1166,7 +1165,10 @@ export default {
       if (droppedData && droppedData.trim() !== "") {
         try {
           const parsedData = JSON.parse(droppedData);
-          console.log("드롭된 데이터(parsed):", parsedData);
+          console.log(
+            "드롭된 데이터(parsed): canvas <<<<<<<<<<<<<<<<<<<<",
+            parsedData
+          );
 
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             const dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
@@ -1185,6 +1187,8 @@ export default {
             alert("캔버스 끼리는 drop 할 수 없습니다.");
           } else if (parsedData?.type === "thread") {
             console.error("thread drop");
+            // <vue-component count="0"></vue-component>
+            this.addThreadInTipTap(parsedData);
           } else {
             alert("옳지 않은 drop 방식 입니다.");
           }
@@ -1196,6 +1200,29 @@ export default {
       }
 
       this.tcdDroppedData = null;
+    },
+    // tiptap에 thread drag 요소 추가하는 용도
+    addThreadInTipTap(threadData) {
+      console.error(threadData);
+
+      let elementString = `
+        <div class="vue-component" data-id="${threadData.id}">
+          <label>쓰레드</label>
+          <span class="content"><span class="text">${threadData.content}</span><button>${threadData.id}로 이동하기 </button>
+          </span>
+        </div>`;
+      this.editor.commands.insertContent(elementString);
+
+      // 노드 데이터로 구성된 객체 생성
+      // const nodeData = {
+      //   id: threadData.id || null, // threadData에서 ID를 가져오거나 null
+      //   content: threadData.content || '쓰레드 내용', // 내용 가져오기
+      // };
+
+      // this.editor.commands.insertContent({
+      //   type: 'vueComponent', // 사용하고 있는 노드 이름
+      //   attrs: nodeData,
+      // });
     },
   },
   beforeUnmount() {
