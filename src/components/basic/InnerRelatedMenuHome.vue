@@ -5,7 +5,7 @@
     <div class="header-container" @contextmenu.prevent="showContextMenu($event, 'workspace', workpsace)">
       <h1>{{ this.getWorkspaceName }}</h1>
       <v-btn v-if="getWsRole !== 'USER'" elevation="0" icon color="#32446e" class="small-btn">
-        <v-icon class="icon-cog">mdi-cog</v-icon>
+        <v-icon class="icon-cog" style="margin-left: 5px">mdi-cog</v-icon>
         <v-menu activator="parent">
           <v-list>
             <v-list-item @click="startEditing(this.getWorkspaceId)">

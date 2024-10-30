@@ -19,9 +19,9 @@
         <!-- +, 프로필이미지, 채널 설정 아이콘 -->
         <div class="col">
           <!-- + 아이콘 -->
-          <div class="icon-container">
+          <div class="icon-container"  @click="openChannelMemberInviteModal">
             <!-- + 아이콘 -->
-            <v-icon icon="mdi-plus" class="plus-icon" @click="openChannelMemberInviteModal"></v-icon>
+            <v-icon icon="mdi-plus" class="plus-icon"></v-icon>
             <!-- 첫 번째 프로필 이미지 -->
             <div v-if="channelMembers.length > 0" class="circle blue-circle">
               <img :src="channelMembers[0].memberInfo.profileImage || require(`@/assets/images/profile/profile${channelMembers[0].memberInfo.workspaceMemberId % 10}.jpg`)" alt="Profile" />
@@ -31,6 +31,7 @@
               <img :src="channelMembers[1].memberInfo.profileImage || require(`@/assets/images/profile/profile${channelMembers[1].memberInfo.workspaceMemberId % 10}.jpg`)" alt="Profile" />
             </div>
           </div>
+
           <!-- 클릭 이벤트로 드롭다운 토글 -->
           <v-icon v-if="getChannelRole === 'MANAGER'" icon="mdi-dots-vertical" @click="toggleDropdown">
             <span @click="console.log('dots clicked')"></span>
