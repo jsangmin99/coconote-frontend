@@ -131,7 +131,7 @@
                               </v-col>
                               <v-col cols="9" class="member-info-list">
                                 <div class="member-info">등급</div>
-                                <div v-if="workspaceMemberInfo.wsRole === 'PMANAGER'">워크스페이스 최고 관리자</div>
+                                <div v-if="workspaceMemberInfo.wsRole === 'PMANAGER'">워크스페이스 소유자</div>
                                 <div v-if="workspaceMemberInfo.wsRole === 'SMANAGER'">워크스페이스 관리자</div>
                                 <div v-if="workspaceMemberInfo.wsRole === 'USER'">일반 회원</div>
                               </v-col>
