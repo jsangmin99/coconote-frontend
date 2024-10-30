@@ -556,11 +556,14 @@ export default {
         const filterEl = document.querySelector(`[data-id="${updateBlockID}"]`);
         if (filterEl) {
           const filterElOuterHtml = filterEl.outerHTML;
+          const isInsideATag = filterEl.querySelector('a');
           if (
-            !this.isFirstAndNullContent &&
-            filterElOuterHtml == updateElOuterHtml
+            (!this.isFirstAndNullContent &&
+            filterElOuterHtml == updateElOuterHtml)
           ) {
-            isReturn = false; // 값이 동일하다면 보내지 않음
+            if(!isInsideATag){
+              isReturn = false; // 값이 동일하다면 보내지 않음
+            }
           }
         }
 
