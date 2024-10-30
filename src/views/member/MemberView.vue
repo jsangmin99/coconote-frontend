@@ -50,7 +50,7 @@
                 <v-list-item @click="removeMember">회원 내보내기</v-list-item>
               </v-list>
             </v-menu>
-            </h2>
+          </h2>
           <v-icon @click="workspaceMemberModal=false" class="close-button" style="position: absolute; top: 20px; right: 18px;">mdi-close</v-icon>
         </v-card-title>
         <v-card-text>
