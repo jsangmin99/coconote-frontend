@@ -4,7 +4,7 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-        <img v-if="isDifferentMember" :src="thread.image ? thread.image : require('@/assets/images/profileImage.png')" alt="image" class="profile-image">
+        <img v-if="isDifferentMember" :src="thread.image ? thread.image : require(`@/assets/images/profile/profile${thread.memberId % 10}.jpg`)" alt="image" class="profile-image">
       </div>
     </div>
     
