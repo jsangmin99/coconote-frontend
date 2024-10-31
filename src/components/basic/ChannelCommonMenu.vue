@@ -183,7 +183,7 @@ export default {
     },
     getTcdSplitTab: {
       handler(newVal) {
-        console.error("tcd tab 변경~!~!~! >>> ", newVal)
+        // console.error("tcd tab 변경~!~!~! >>> ", newVal)
         this.tcdTabs = newVal;
       },
       deep: true,
@@ -193,7 +193,7 @@ export default {
     this.loadChannelMembers(); // 컴포넌트가 마운트되면 채널 멤버를 불러옴
     this.fetchRootFolderId(); // 루트 폴더 ID 가져오기
     document.addEventListener("click", this.handleClickOutside); //드롭다운 메뉴 외부 클릭 시 닫기
-    console.log("splitActiveTab 확인용 >> ", this.splitActiveTab);
+    // console.log("splitActiveTab 확인용 >> ", this.splitActiveTab);
   },
   beforeUnmount() {
     document.removeEventListener("click", this.handleClickOutside);
@@ -280,7 +280,7 @@ export default {
         }
         routerUrl = `/channel/${this.getChannelId}/canvas/view${routeQuery}`;
       } else if (this.splitActiveTab[objKey] == "drive") {
-        if(this.tcdTabs.driveFolderId){
+        if(this.tcdTabs && this.tcdTabs.driveFolderId){
           routeQuery = `/${this.tcdTabs.driveFolderId}`;
         }
         routerUrl = `/channel/${this.getChannelId}/drive/view${routeQuery}`;

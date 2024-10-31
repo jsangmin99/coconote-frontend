@@ -108,9 +108,20 @@
     </div>
     <!-- 입력 그룹 -->
     <div class="input-group" @dragover.prevent @drop="handleDrop">
+
+      <div class="canvas-group">
+        <div class="canvas" v-for="(canvas,index) in canvasList" :key="index">
+          <v-icon>mdi-file-document</v-icon>
+          <div class="title">{{canvas.title}}</div>
+          <div class="subtitle">캔버스</div>
+        </div>
+      </div>
+
       <div class="image-group">
         <div v-for="(file, index) in fileList" :key="index" style="position: relative;">
-          <button class="more-btn-file" type="button" @click="deleteImage(index)"><v-icon color="error">mdi-trash-can</v-icon></button>
+          <button class="more-btn-file" type="button" @click="deleteImage(index)">
+            <v-icon>mdi-trash-can</v-icon>
+          </button>
           <img :src="file.imageUrl" @error="e => e.target.src = require('@/assets/images/file.png')"
             style="height: 120px; width: 120px; object-fit: cover; border-radius:5px;">
           <p class="custom-contents">{{ file.name }}</p>
@@ -194,7 +205,7 @@ export default {
   watch: {
     getAllTcdState: {
       handler(newVal) {
-        console.error("tcd 값 감지. thread >>>> ", newVal);
+        // console.error("tcd 값 감지. thread >>>> ", newVal);
         if(newVal.isDragStatus && newVal.dragStartPage != "thread"){
           this.tcdDroppedData = newVal; // 드래그 데이터 저장
         }else{
@@ -903,13 +914,13 @@ export default {
       const droppedData = event.dataTransfer.getData("items");
 
       // 드롭된 데이터 로그 출력
-      console.log("드롭된 데이터(raw):", droppedData);
+      // console.log("드롭된 데이터(raw):", droppedData);
 
       // 드롭된 데이터가 유효한지 확인합니다.
       if (droppedData && droppedData.trim() !== "") {
         try {
           const parsedData = JSON.parse(droppedData);
-          console.log("드롭된 데이터(parsed)222222222222:", parsedData);
+          // console.log("드롭된 데이터(parsed)222222222222:", parsedData);
 
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             
@@ -965,7 +976,7 @@ export default {
         // this.draggedType = type;
 
         // 드래그 시작 시 전송할 데이터 로그 출력
-        console.error("드래그 시작 - 전송할 데이터 thread:", dataToTransfer);
+        // console.error("드래그 시작 - 전송할 데이터 thread:", dataToTransfer);
         const setInfoObj = {
           isDragStatus: true,
           dragStartPage: "thread",

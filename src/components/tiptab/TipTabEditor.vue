@@ -89,12 +89,12 @@
       </div>
       <editor-content :editor="editor" />
     </div>
-    <!-- <div style="width: 100%; margin-top: 30px">
+    <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
-    </div> -->
+    </div>
     <div
       class="tcd-drop-area"
       v-if="tcdDroppedData"
@@ -110,7 +110,6 @@
 import axios from "axios";
 import StarterKit from "@tiptap/starter-kit";
 import { Editor, EditorContent } from "@tiptap/vue-3";
-import CustomBlock from "@/components/tiptab/CustomBlock"; // CustomBlock 가져오기
 
 import UniqueID from "@tiptap-pro/extension-unique-id";
 import DragHandle from "@tiptap-pro/extension-drag-handle";
@@ -125,6 +124,11 @@ import Focus from "@tiptap/extension-focus";
 
 // 코드 내 들여쓰기 용
 import { Indent } from "@/components/tiptab/indent";
+
+// Thread drag&drop 용
+import TipTapThread from "@/components/tiptab/thread/TipTapThreadExtension.js";
+// import CustomLink from '@/components/tiptab/thread/CustomLink.js'
+import Link from "@tiptap/extension-link";
 
 import { mapGetters, mapActions } from "vuex";
 
@@ -206,7 +210,7 @@ export default {
     },
     getAllTcdState: {
       handler(newVal) {
-        console.error("tcd 값 감지. canvas >>>> ", newVal);
+        // console.error("tcd 값 감지. canvas >>>> ", newVal);
         if (newVal.isDragStatus) {
           this.tcdDroppedData = newVal; // 드래그 데이터 저장
         } else {
@@ -230,7 +234,24 @@ export default {
           orderedList: true,
           listItem: true,
         }),
-        CustomBlock,
+        TipTapThread.configure({
+          onNodeChange: async (options) => {
+            this.isRecvUpdate = false;
+
+            const node = options?.nodes[0];
+            const nodeDataId = node?.node?.attrs?.id;
+            console.error("tiptapThread >>> ", options, nodeDataId, )
+          },
+        }),
+        
+        Link.configure({
+          openOnClick: true,
+          HTMLAttributes: {
+            class: 'tiptap-link',
+            'data-thread-id': null, // 초기값은 null
+          },
+        }),
+        // CustomLink,
         DraggableItem,
         UniqueID.configure({
           types: [
@@ -315,17 +336,14 @@ export default {
       // autofocus: true,
       onUpdate: () => {
         if (this.isRecvUpdate) {
-          console.error("흠...........................2222222222");
           this.isRecvUpdate = false;
           return false;
         }
         if (this.currentEvent != null) {
           this.currentEvent = null;
-          console.error("흠...........................3333333");
           return false;
         }
         const selectedNode = this.editor.state.selection;
-        console.error("흠...........................", selectedNode);
         let isReturn = true;
 
         if (!selectedNode) {
@@ -368,7 +386,18 @@ export default {
           }
         }
 
-        const updateBlockID = selectedNode?.$head?.path[3]?.attrs?.id;
+        console.error("😭😭😭😭",selectedNode, selectedNode?.node?.type, selectedNode?.node?.type?.name)
+        
+        let tempUpdateBId = null
+        if(selectedNode?.node?.type?.name == "tiptapthreadComponent"){
+          tempUpdateBId = selectedNode.node?.attrs?.id
+        }else{
+          tempUpdateBId = selectedNode?.$head?.path[3]?.attrs?.id;
+        }
+        const updateBlockID = tempUpdateBId;
+
+        console.error("😭😭😭😭222",updateBlockID)
+
         if (!updateBlockID) {
           return false;
         }
@@ -527,11 +556,14 @@ export default {
         const filterEl = document.querySelector(`[data-id="${updateBlockID}"]`);
         if (filterEl) {
           const filterElOuterHtml = filterEl.outerHTML;
+          const isInsideATag = filterEl.querySelector('a');
           if (
-            !this.isFirstAndNullContent &&
-            filterElOuterHtml == updateElOuterHtml
+            (!this.isFirstAndNullContent &&
+            filterElOuterHtml == updateElOuterHtml)
           ) {
-            isReturn = false; // 값이 동일하다면 보내지 않음
+            if(!isInsideATag){
+              isReturn = false; // 값이 동일하다면 보내지 않음
+            }
           }
         }
 
@@ -601,6 +633,8 @@ export default {
     //   }
     window.addEventListener("indentExecuted", this.onIndentExecuted);
     window.addEventListener("outdentExecuted", this.onOutdentExecuted);
+
+    console.error("this.defaultContent >>> ",this.defaultContent, this.defaultContent.join(""))
 
     if (this.defaultContent.length > 1) {
       setTimeout(() => {
@@ -1166,7 +1200,10 @@ export default {
       if (droppedData && droppedData.trim() !== "") {
         try {
           const parsedData = JSON.parse(droppedData);
-          console.log("드롭된 데이터(parsed):", parsedData);
+          console.log(
+            "드롭된 데이터(parsed): canvas <<<<<<<<<<<<<<<<<<<<",
+            parsedData
+          );
 
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             const dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
@@ -1185,6 +1222,7 @@ export default {
             alert("캔버스 끼리는 drop 할 수 없습니다.");
           } else if (parsedData?.type === "thread") {
             console.error("thread drop");
+            this.addThreadInTipTap(parsedData);
           } else {
             alert("옳지 않은 drop 방식 입니다.");
           }
@@ -1196,6 +1234,14 @@ export default {
       }
 
       this.tcdDroppedData = null;
+    },
+    // tiptap에 thread drag 요소 추가하는 용도
+    addThreadInTipTap(threadData) {
+      const threadId = threadData.id; // threadData에서 ID 가져오기
+      const content = `<p><a href="/channel/${this.$store.getters.getChannelId}/thread/view?threadId=${threadId}" data-thread-id="${threadId}">${threadData.content}</a></p>`; // HTML 문자열 생성
+
+      // Tiptap의 `commands`를 사용하여 HTML을 삽입
+      this.editor.commands.insertContent(content);
     },
   },
   beforeUnmount() {
