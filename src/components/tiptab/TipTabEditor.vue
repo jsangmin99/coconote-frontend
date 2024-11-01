@@ -137,12 +137,12 @@
       </div>
       <editor-content :editor="editor" />
     </div>
-    <div style="width: 100%; margin-top: 30px">
+    <!-- <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
-    </div>
+    </div> -->
     <div
       class="tcd-drop-area"
       v-if="tcdDroppedData"
@@ -221,6 +221,7 @@ export default {
 
       // 처음로딩 + 내용없음
       isFirstAndNullContent: false,
+      isFontStyleUpdated: false, // fontupdate를 한 update event인지
 
       isRecvUpdate: false, // socket 메시지인지 아닌지 확인 용
 
@@ -660,12 +661,17 @@ export default {
       if (filterEl) {
         const filterElOuterHtml = filterEl.outerHTML;
         const isInsideATag = filterEl.querySelector("a");
+        console.error(this.isFirstAndNullContent, filterElOuterHtml, updateElOuterHtml)
         if (
           !this.isFirstAndNullContent &&
           filterElOuterHtml == updateElOuterHtml
         ) {
           if (!isInsideATag) {
             isReturn = false; // 값이 동일하다면 보내지 않음
+          }
+          if(this.isFontStyleUpdated){
+            this.isFontStyleUpdated = false;
+            isReturn = true;
           }
         }
       }
@@ -1179,6 +1185,7 @@ export default {
 
     toggleTriggerTiptapEvent(callback) {
       // 전달받은 callback 함수가 존재할 경우 호출
+      this.isFontStyleUpdated = true;
       if (typeof callback === "function") {
         callback();
       }
