@@ -63,9 +63,7 @@ export default {
         if (newVal == "LIST&DETAIL" || newVal == "LIST") {
           this.getCanvasAllInfo_inList = this.getCanvasAllInfo;
           if (this.getCanvasAllInfo_inList.method == "CREATE_CANVAS") {
-            setTimeout(() => {
-              this.addCanvasData(this.getCanvasAllInfo_inList);
-            }, 1000);
+            this.addCanvasData(this.getCanvasAllInfo_inList);
           } else if (this.getCanvasAllInfo_inList.method == "UPDATE_CANVAS") {
             this.onCanvasInfoChanged();
           } else if (
@@ -185,7 +183,9 @@ export default {
         prevCanvasId: null,
         title: storeData.canvasTitle
       }
-      this.chatrooms.push(addCanvasData);
+      this.chatrooms = [...this.chatrooms, addCanvasData];
+      // this.$set(this.chatrooms, this.chatrooms.length, addCanvasData);
+      // this.chatrooms.push(addCanvasData);
       this.canvasName = storeData.canvasTitle;
     },
     changeCanvasId(canvasId) {
