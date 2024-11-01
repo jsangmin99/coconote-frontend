@@ -133,7 +133,6 @@ export default {
 
     // 채널 정보를 가져오는 메소드
     async getMyFirstChannelInWorkspace() {
-      console.log("대신 얘가 호출되고 있는 거임?");
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/${this.workspaceId}/channel/first` // 채널 정보 API
       );
@@ -149,7 +148,6 @@ export default {
       this.$store.dispatch("setActiveInnerMenuActions", 'home');
     },
     async getMyChannelInWorkspace() {
-      console.log("얘가 호출돼야 하는 게 맞는데");
       const response = await axios.get(
         `${process.env.VUE_APP_API_BASE_URL}/channel/detail/${this.channelId}` // 채널 정보 API
       );
