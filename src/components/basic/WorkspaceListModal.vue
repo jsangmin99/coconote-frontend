@@ -53,7 +53,7 @@ export default {
         console.log(e);
       }
     },
-        async selectWorkspace(workspaceId) {
+    async selectWorkspace(workspaceId) {
       console.error("selectWorkspace >> ", workspaceId)
       try {
         const wsInfo = await axios.get(

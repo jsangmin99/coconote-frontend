@@ -251,7 +251,7 @@ export default {
     },
     getWorkspaceId: {
       handler() {
-        this.getSectionData();
+        this.getNewSectionData();
         this.getMyBookmarks();
       },
       deep: true,
@@ -314,6 +314,8 @@ export default {
       clickedChannelId: null, // 클릭한 채널의 ID를 저장
       unreadCounts: {}, // 각 채널의 읽지 않은 알림 수를 저장
 
+      workspaceIdLog: null, // 직전 워크스페이스 아이디
+
     };
   },
   methods: {
@@ -359,7 +361,33 @@ export default {
               this.getChannelName,
               this.getChannelDesc
             );
-          } else {
+          } 
+          this.visibleSections.push(this.sections[0].sectionId);
+        }
+        await this.fetchUnreadCounts();
+
+        // this.getChannelMemberInfo(this.channelId);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async getNewSectionData() {
+      try {
+        if (
+          !this.getWorkspaceId ||
+          this.getWorkspaceId == undefined ||
+          this.getWorkspaceId == ""
+        ) {
+          return false;
+        }
+        const response = await axios.get(
+          `${process.env.VUE_APP_API_BASE_URL}/section/list/${this.getWorkspaceId}`
+        );
+        this.sections = response.data.result;
+
+        // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
+        if (this.sections.length > 0 && this.sections[0].channelList.length > 0) 
+        {
           const firstChannel = this.sections[0].channelList[0];
           this.channelId = firstChannel;
           this.changeChannel(
@@ -367,7 +395,6 @@ export default {
             firstChannel.channelName,
             firstChannel.channelInfo
             );
-          }
           this.visibleSections.push(this.sections[0].sectionId);
         }
         await this.fetchUnreadCounts();

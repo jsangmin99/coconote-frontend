@@ -55,14 +55,9 @@ export default {
         console.error("workspaceSearch 이동 3333", lsWsName)
         await this.setWorkspaceInfoActions(lsWsId);
         await this.setWorkspaceNameInfoActions(lsWsName);
+        await this.getMyFirstChannelInWorkspace();
         await this.getWorkspaceMemberInfo(this.workspaceId);
-        const lsChId = localStorage.getItem("channelId");
-        if (lsChId != "" && lsChId != undefined && lsChId != null) { // 값이 있다면
-          this.channelId = lsChId;
-          await this.getMyChannelInWorkspace();
-        }else {
-          await this.getMyFirstChannelInWorkspace();
-        }
+        await this.getMyFirstChannelInWorkspace();
       } else {
         console.error("새로운 workspace~~");
         this.getMyFirstWorkspace();
@@ -144,17 +139,6 @@ export default {
       //   path: `/channel/${response.data.result.channelId}`,
       //   query: { t: response.data.result.channelId }, // 새로운 query 추가로 새로운 key처럼 작동
       // });
-      
-      this.$store.dispatch("setActiveInnerMenuActions", 'home');
-    },
-    async getMyChannelInWorkspace() {
-      const response = await axios.get(
-        `${process.env.VUE_APP_API_BASE_URL}/channel/detail/${this.channelId}` // 채널 정보 API
-      );
-      await this.setChannelInfoActions(response.data.result.channelId);
-      await this.setChannelNameInfoActions(response.data.result.channelName);
-      await this.setChannelDescInfoActions(response.data.result.channelInfo);
-      this.channelId = response.data.result.channelId;
       
       this.$store.dispatch("setActiveInnerMenuActions", 'home');
     },
