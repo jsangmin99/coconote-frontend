@@ -217,6 +217,8 @@ export default {
       "getWorkspaceName",
       "getWsRole",
       "getChannelId", // 알림용 Vuex getter
+      "getChannelName",
+      "getChannelDesc",
       "allNotificationsVer"
     ]),
   },
@@ -347,17 +349,25 @@ export default {
         this.sections = response.data.result;
 
         // 첫 번째 섹션과 채널이 존재하면 첫 번째 채널을 자동 선택
-        if (
-          this.sections.length > 0 &&
-          this.sections[0].channelList.length > 0
-        ) {
+        if (this.sections.length > 0 && this.sections[0].channelList.length > 0) 
+        {
+          const lsChId = localStorage.getItem("channelId");
+          if (lsChId != "" && lsChId != undefined && lsChId != null) { // 값이 있다면
+            this.channelId = lsChId;
+            this.changeChannel(
+              this.getChannelId,
+              this.getChannelName,
+              this.getChannelDesc
+            );
+          } else {
           const firstChannel = this.sections[0].channelList[0];
           this.channelId = firstChannel;
           this.changeChannel(
             firstChannel.channelId,
             firstChannel.channelName,
             firstChannel.channelInfo
-          );
+            );
+          }
           this.visibleSections.push(this.sections[0].sectionId);
         }
         await this.fetchUnreadCounts();
@@ -642,7 +652,6 @@ export default {
     },
     isMember(id) {
       this.myChannels.some((channel) => channel === id);
-      console.log("내가 속한 채널들 확인", this.myChannels);
       return this.myChannels.some((channel) => channel === id);
     },
     // 수정 다이얼로그 열기
