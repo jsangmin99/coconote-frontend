@@ -266,6 +266,7 @@ export default {
         () => {
           this.ws.subscribe(`/sub/canvas/room/${this.channelId}`, (message) => {
             const recv = JSON.parse(message.body);
+            console.error("this.ws.subscribe ")
             this.recvCanvasMessage(recv);
           });
         },
@@ -301,6 +302,7 @@ export default {
 
     // socket에서 메시지를 전달받는 부분
     async recvCanvasMessage(recv) {
+      console.error("socket 메시지 받음 @@@ >> ", recv)
       let setInfoObj = {};
       const pageReset = {
         page: "",
@@ -308,6 +310,7 @@ export default {
       await this.$store.dispatch("setInfoMultiTargetAction", pageReset); // 값을 보내기 위해 page null로 초기화
 
       if (recv.method == "CREATE_CANVAS") {
+        console.error("recv.method>>> ",recv.method)
         setInfoObj = {
           postMessageType: "CANVAS", // 현 이벤트가 canvas 인지 block인지 구분
           page: "LIST", // 이 이벤트를 받아야하는 타겟 페이지

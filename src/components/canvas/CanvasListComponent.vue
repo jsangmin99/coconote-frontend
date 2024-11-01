@@ -6,8 +6,8 @@
       :data-id="item.id"
       @click="changeCanvasId(item.id)"
       :class="{
-        active: canvasIdInList === item.id,
-        dragging: draggingId === item.id,
+        active: canvasIdInList == item.id,
+        dragging: draggingId == item.id,
       }"
       class="canvasListItem"
       prepend-icon="mdi-note-text-outline"
@@ -64,8 +64,7 @@ export default {
           this.getCanvasAllInfo_inList = this.getCanvasAllInfo;
           if (this.getCanvasAllInfo_inList.method == "CREATE_CANVAS") {
             setTimeout(() => {
-              this.findAllRoom();
-              this.canvasName = "";
+              this.addCanvasData(this.getCanvasAllInfo_inList);
             }, 1000);
           } else if (this.getCanvasAllInfo_inList.method == "UPDATE_CANVAS") {
             this.onCanvasInfoChanged();
@@ -135,8 +134,10 @@ export default {
               this.$route.params.canvasId &&
               this.$route.params.canvasId > 0
             ) {
+              this.canvasIdInList = this.$route.params.canvasId;
               this.changeCanvasId(this.$route.params.canvasId); // url id 선택
             } else {
+              this.canvasIdInList = response.data.result.content[0].id;
               this.changeCanvasId(response.data.result.content[0].id); // 첫번째 id 자동선택
             }
             this.isFirst = false;
@@ -177,32 +178,39 @@ export default {
         }
       }
     },
+    addCanvasData(storeData){
+      const addCanvasData = {
+        childCanvas: [],
+        id: storeData.canvasId,
+        prevCanvasId: null,
+        title: storeData.canvasTitle
+      }
+      this.chatrooms.push(addCanvasData);
+      this.canvasName = storeData.canvasTitle;
+    },
     changeCanvasId(canvasId) {
-      const sender = "테스트유저 " + Date.now();
-      if (sender) {
-        this.canvasIdInList = canvasId;
-        this.$emit("updateCanvasId", canvasId);
-        
-        const payload = {
-          canvasId: this.canvasIdInList,
-        };
+      this.canvasIdInList = canvasId;
+      this.$emit("updateCanvasId", canvasId);
+      
+      const payload = {
+        canvasId: this.canvasIdInList,
+      };
 
-        // Vuex action 호출
-        this.setTcdTabInfoMultiTargetAction(payload);
-        if (
-          this.$route.name == "CanvasView" ||
-          this.$route.name == "CanvasEmptyView"
-        ) {
-          if (this.$route?.query?.blockFeId) {
-            this.$router.push({
-              path: `/channel/${this.getChannelId}/canvas/view/${canvasId}`,
-              query: { blockFeId: this.$route?.query?.blockFeId },
-            });
-          } else {
-            this.$router.push(
-              `/channel/${this.getChannelId}/canvas/view/${canvasId}`
-            );
-          }
+      // Vuex action 호출
+      this.setTcdTabInfoMultiTargetAction(payload);
+      if (
+        this.$route.name == "CanvasView" ||
+        this.$route.name == "CanvasEmptyView"
+      ) {
+        if (this.$route?.query?.blockFeId) {
+          this.$router.push({
+            path: `/channel/${this.getChannelId}/canvas/view/${canvasId}`,
+            query: { blockFeId: this.$route?.query?.blockFeId },
+          });
+        } else {
+          this.$router.push(
+            `/channel/${this.getChannelId}/canvas/view/${canvasId}`
+          );
         }
       }
     },
