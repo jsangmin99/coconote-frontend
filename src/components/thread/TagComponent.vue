@@ -218,7 +218,7 @@ export default {
   display: none;
   position: absolute;
   top: -7px;
-  right: -14px;
+  right: -10px;
   background: transparent;
   border: none;
   cursor: pointer;
