@@ -135,7 +135,9 @@
       <div class="placeholder editorPlaceholder" id="editorPlaceholder">
         내용을 입력하세요.
       </div>
-      <editor-content :editor="editor" />
+      <div class="editorInside">
+        <editor-content :editor="editor" />
+      </div>
     </div>
     <!-- <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
@@ -160,9 +162,9 @@ import StarterKit from "@tiptap/starter-kit";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 
 import UniqueID from "@tiptap-pro/extension-unique-id";
-import DragHandle from "@tiptap-pro/extension-drag-handle";
 import NodeRange from "@tiptap-pro/extension-node-range";
 // import { isChangeOrigin } from "@tiptap/extension-collaboration";
+import DragHandle from "@tiptap-pro/extension-drag-handle";
 import DraggableItem from "@/components/tiptab/DraggableItem";
 import Image from "@tiptap/extension-image"; // 이미지 추가용
 // import { NodePos } from '@tiptap/core';
