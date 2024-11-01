@@ -307,7 +307,7 @@ import axios from '@/services/axios';
         console.log("this.thread.files: ", this.thread.files);
         
         
-        if((!this.thread.content || !this.thread.content.trim()) && (!this.thread.files || this.thread.files.length === 1)){
+        if((!this.thread.content || !this.thread.content.trim()) && (!this.thread.files || this.thread.files.length === 1) && !this.thread.canvasTitle){
           this.deleteMessage(this.thread.id);
         }else{
           this.deleteFile(this.thread.id,fileId);
