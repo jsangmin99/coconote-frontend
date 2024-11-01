@@ -43,13 +43,15 @@
         <v-card-title class="text-h5" style="padding : 24px; position: relative;">
           <h2>프로필 
           <v-icon color="grey" v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)" size="20">mdi-cog</v-icon>
-          <v-icon v-if="getWsRole !== 'USER' && workspaceMemberInfo.wsRole !== 'PMANAGER'" icon="mdi-dots-vertical" size="30" style="color: #a4a4a4;"></v-icon>
+          <v-btn v-if="getWsRole !== 'USER' && workspaceMemberInfo.wsRole !== 'PMANAGER'" elevation="0" icon>
+          <v-icon size="30" style="color: #a4a4a4;">mdi-dots-vertical</v-icon>
             <v-menu activator="parent">
               <v-list style="max-width: 120px;">
                 <v-list-item @click="(workspaceRoleDialog = true)">권한 변경하기</v-list-item>
                 <v-list-item @click="removeMember">회원 내보내기</v-list-item>
               </v-list>
             </v-menu>
+            </v-btn>
           </h2>
           <v-icon @click="workspaceMemberModal=false" class="close-button" style="position: absolute; top: 20px; right: 18px;">mdi-close</v-icon>
         </v-card-title>
