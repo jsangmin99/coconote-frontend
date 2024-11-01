@@ -3,76 +3,124 @@
     <div class="control-group">
       <div class="button-group">
         <button
-          @click="editor.chain().focus().toggleBold().run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleBold().run()
+            )
+          "
           :disabled="!editor.can().chain().focus().toggleBold().run()"
           :class="{ 'is-active': editor.isActive('bold') }"
         >
           Bold
         </button>
         <button
-          @click="editor.chain().focus().toggleItalic().run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleItalic().run()
+            )
+          "
           :disabled="!editor.can().chain().focus().toggleItalic().run()"
           :class="{ 'is-active': editor.isActive('italic') }"
         >
           Italic
         </button>
         <button
-          @click="editor.chain().focus().toggleStrike().run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleStrike().run()
+            )
+          "
           :disabled="!editor.can().chain().focus().toggleStrike().run()"
           :class="{ 'is-active': editor.isActive('strike') }"
         >
           Strike
         </button>
         <button
-          @click="editor.chain().focus().setParagraph().run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().setParagraph().run()
+            )
+          "
           :class="{ 'is-active': editor.isActive('paragraph') }"
         >
           Paragraph
         </button>
         <button
-          @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+            )
+          "
           :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
         >
           H1
         </button>
         <button
-          @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            )
+          "
           :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
         >
           H2
         </button>
         <button
-          @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            )
+          "
           :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
         >
           H3
         </button>
         <button
-          @click="editor.chain().focus().toggleHeading({ level: 4 }).run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleHeading({ level: 4 }).run()
+            )
+          "
           :class="{ 'is-active': editor.isActive('heading', { level: 4 }) }"
         >
           H4
         </button>
         <button
-          @click="editor.chain().focus().toggleHeading({ level: 5 }).run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleHeading({ level: 5 }).run()
+            )
+          "
           :class="{ 'is-active': editor.isActive('heading', { level: 5 }) }"
         >
           H5
         </button>
         <button
-          @click="editor.chain().focus().toggleHeading({ level: 6 }).run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleHeading({ level: 6 }).run()
+            )
+          "
           :class="{ 'is-active': editor.isActive('heading', { level: 6 }) }"
         >
           H6
         </button>
         <button
-          @click="editor.chain().focus().toggleBulletList().run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleBulletList().run()
+            )
+          "
           :class="{ 'is-active': editor.isActive('bulletList') }"
         >
           Bullet list
         </button>
         <button
-          @click="editor.chain().focus().toggleOrderedList().run()"
+          @click="
+            toggleTriggerTiptapEvent(() =>
+              editor.chain().focus().toggleOrderedList().run()
+            )
+          "
           :class="{ 'is-active': editor.isActive('orderedList') }"
         >
           Ordered list
@@ -87,14 +135,16 @@
       <div class="placeholder editorPlaceholder" id="editorPlaceholder">
         내용을 입력하세요.
       </div>
-      <editor-content :editor="editor" />
+      <div class="editorInside">
+        <editor-content :editor="editor" />
+      </div>
     </div>
-    <div style="width: 100%; margin-top: 30px">
+    <!-- <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localHTML }}</pre>
     </div>
     <div style="width: 100%; margin-top: 30px">
       <pre style="white-space: break-spaces">{{ localJSON }}</pre>
-    </div>
+    </div> -->
     <div
       class="tcd-drop-area"
       v-if="tcdDroppedData"
@@ -112,9 +162,9 @@ import StarterKit from "@tiptap/starter-kit";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 
 import UniqueID from "@tiptap-pro/extension-unique-id";
-import DragHandle from "@tiptap-pro/extension-drag-handle";
 import NodeRange from "@tiptap-pro/extension-node-range";
 // import { isChangeOrigin } from "@tiptap/extension-collaboration";
+import DragHandle from "@tiptap-pro/extension-drag-handle";
 import DraggableItem from "@/components/tiptab/DraggableItem";
 import Image from "@tiptap/extension-image"; // 이미지 추가용
 // import { NodePos } from '@tiptap/core';
@@ -173,6 +223,7 @@ export default {
 
       // 처음로딩 + 내용없음
       isFirstAndNullContent: false,
+      isFontStyleUpdated: false, // fontupdate를 한 update event인지
 
       isRecvUpdate: false, // socket 메시지인지 아닌지 확인 용
 
@@ -240,15 +291,15 @@ export default {
 
             const node = options?.nodes[0];
             const nodeDataId = node?.node?.attrs?.id;
-            console.error("tiptapThread >>> ", options, nodeDataId, )
+            console.error("tiptapThread >>> ", options, nodeDataId);
           },
         }),
-        
+
         Link.configure({
           openOnClick: true,
           HTMLAttributes: {
-            class: 'tiptap-link',
-            'data-thread-id': null, // 초기값은 null
+            class: "tiptap-link",
+            "data-thread-id": null, // 초기값은 null
           },
         }),
         // CustomLink,
@@ -335,279 +386,7 @@ export default {
       ],
       // autofocus: true,
       onUpdate: () => {
-        if (this.isRecvUpdate) {
-          this.isRecvUpdate = false;
-          return false;
-        }
-        if (this.currentEvent != null) {
-          this.currentEvent = null;
-          return false;
-        }
-        const selectedNode = this.editor.state.selection;
-        let isReturn = true;
-
-        if (!selectedNode) {
-          return false;
-        }
-
-        // 삭제 check용
-        if (this.dragCheckSelectionNode == null) {
-          //drag 중이 아닐 때 가능
-          const updateAfterNodes = selectedNode.$anchor.path[0].content.content;
-          console.log(
-            "ㅠㅠㅠㅠㅠㅠㅠㅠㅠ",
-            this.nodeLength,
-            updateAfterNodes.length
-          );
-          if (this.nodeLength > updateAfterNodes.length) {
-            // 개수가 생성 때 보다 적어졌을 때
-            const originAllFeIds = this.getAllBlockFeIds;
-            const updateAllFeIds = updateAfterNodes.map((el) => {
-              return el.attrs.id;
-            });
-
-            // originAllFeIds에 있는데 updateAllFeIds에 없는 값 찾기
-            const removedIds = originAllFeIds.filter(
-              (id) => !updateAllFeIds.includes(id)
-            );
-            console.error("removedIds >> ", removedIds);
-            if (removedIds.length > 0) {
-              this.$parent.deleteBlock(removedIds[0]);
-              if (updateAfterNodes == 0) {
-                const plel = document.querySelector("#editorPlaceholder");
-                if (plel) {
-                  if (plel.classList.contains("hidden")) {
-                    plel.classList.remove("hidden");
-                  }
-                }
-              }
-              return false;
-            }
-          }
-        }
-
-        console.error("😭😭😭😭",selectedNode, selectedNode?.node?.type, selectedNode?.node?.type?.name)
-        
-        let tempUpdateBId = null
-        if(selectedNode?.node?.type?.name == "tiptapthreadComponent"){
-          tempUpdateBId = selectedNode.node?.attrs?.id
-        }else{
-          tempUpdateBId = selectedNode?.$head?.path[3]?.attrs?.id;
-        }
-        const updateBlockID = tempUpdateBId;
-
-        console.error("😭😭😭😭222",updateBlockID)
-
-        if (!updateBlockID) {
-          return false;
-        }
-        const updateBlockIndent = selectedNode?.$head?.path[3]?.attrs?.indent;
-
-        const updateEl = document.querySelector(`[data-id="${updateBlockID}"]`);
-        let updateElOuterHtml = "";
-        if (updateEl) {
-          // 요소 복제 (true는 자식 요소까지 모두 복제)
-          const clonedElement = updateEl.cloneNode(true);
-
-          // 복제된 요소에서 class 속성 제거
-          clonedElement.removeAttribute("class");
-
-          // 복제된 요소 안에서 <br class="ProseMirror-trailingBreak"> 태그 제거
-          const trailingBreaks = clonedElement.querySelectorAll(
-            "br.ProseMirror-trailingBreak"
-          );
-          trailingBreaks.forEach((br) => br.remove());
-
-          // 수정된 outerHTML 가져오기
-          updateElOuterHtml = clonedElement.outerHTML;
-
-          // const tagNames = ["OL", "UL", "H1", "H2", "H3", "H4", "H5", "H6"];
-          console.error("🍆🍆🍆", updateEl, updateEl.tagName.toUpperCase());
-          console.error("🍆🍆", updateElOuterHtml);
-          // const tagIncludeIndex = tagNames.indexOf(
-          //   updateEl.tagName.toUpperCase()
-          // );
-          if (
-            //update 한 element가 ol이나 ul 이라면, 기존에 생성된 p태그는 ul태그 안으로 들어감 (p 태그의 아이디 중복 발생)
-            updateEl.tagName.toUpperCase() === "OL" || // () 추가
-            updateEl.tagName.toUpperCase() === "UL"
-          ) {
-            console.error("🍆🍆🍆🍆🍆🍆 This element is an ol or ul tag.");
-            const targetElement = updateEl.querySelector(
-              `[data-id="${this.lastSendMsgObj.blockFeId}"]`
-            );
-            if (targetElement) {
-              this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // 따라서 기존 p 태그 DB상에서 삭제함
-            }
-          } else if (
-            updateEl.tagName.toUpperCase() === "P" ||
-            updateEl.tagName.toUpperCase().startsWith("H")
-          ) {
-            console.error("👀👀👀", updateEl, updateEl.tagName.toUpperCase());
-            // 바뀐게 p 태그라면, 이전 element 분기 타서 이전 것 삭제해줘야함
-            if (this.lastSendMsgObj.blockContents) {
-              const tempDiv = document.createElement("div");
-              tempDiv.innerHTML = this.lastSendMsgObj.blockContents;
-
-              // 첫 번째 자식을 가져옵니다.
-              const prevUpdateElType = tempDiv.firstElementChild;
-              if (
-                prevUpdateElType.tagName.toUpperCase() === "OL" ||
-                prevUpdateElType.tagName.toUpperCase() === "UL"
-              ) {
-                //이전에 update 한 element 가 ol이나 ul 이고 현재 update 된 태그가 p태그 라면
-                const isInsideEl = prevUpdateElType.querySelector(
-                  `[data-id="${updateBlockID}"]`
-                );
-                if (isInsideEl) {
-                  // 현재 update 하는 p태그가 이전 update 부분에 포함되어 있다면
-                  console.error(
-                    "😭😭😭😭😭",
-                    `현재 업데이트 하려는 ${updateBlockID}는 ${this.lastSendMsgObj.blockFeId}에 포함되어있다`
-                  );
-
-                  // prevUpdateElType 내 자식 요소들이 isInsideEl 값만 있는지 확인
-                  const allPTags = prevUpdateElType.querySelectorAll("p");
-
-                  if (allPTags.length === 1 && allPTags[0] === isInsideEl) {
-                    console.log(
-                      "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다.",
-                      this.lastSendMsgObj.blockFeId
-                    );
-                    this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // ul 태그 deep 삭제 보내기
-                    // p 태그 생성하기
-                  } else {
-                    console.log(
-                      "❌ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 있습니다."
-                    );
-                    // ul태그 [현재 상태값] update로 값 보내기
-                    const nowListStatusHtml = document.querySelector(
-                      `[data-id="${this.lastSendMsgObj.blockFeId}"]`
-                    );
-                    if (nowListStatusHtml) {
-                      const nowListStatusHtmlOuter =
-                        nowListStatusHtml.outerHTML;
-                      this.$parent.patchBlock(
-                        this.lastSendMsgObj.blockFeId,
-                        nowListStatusHtmlOuter
-                      );
-                    }
-                    // p 태그 생성하기
-                  }
-                  // 위 if에서 임시로 저장해서 다 끝나고 보내기 p태그 create. ⭐⭐⭐⭐⭐⭐⭐⭐
-                  this.updateDataEditorAfterEvent(
-                    updateBlockID,
-                    updateElOuterHtml,
-                    updateBlockIndent
-                  );
-                  // 이 값들은 다른 장소에서 update 보내주도록 함
-                  return false;
-                }
-              } else if (
-                // 이전 값이 h태그 이거나 p 태그이고
-                (prevUpdateElType.tagName.toUpperCase().startsWith("H") ||
-                  prevUpdateElType.tagName.toUpperCase() === "P") &&
-                prevUpdateElType.tagName != updateEl.tagName // 이전 태그와 현재 태그가 다를 때
-              ) {
-                const prevChangeTagEl = document.querySelector(
-                  `[data-id="${this.lastSendMsgObj.blockFeId}"]`
-                );
-                console.error("오나용...", prevChangeTagEl);
-                if (!prevChangeTagEl) {
-                  console.error("오나용...222222ㅠㅠ");
-                  //이전값이 없으면, 다른 동기화 화면에서도 지우고 h태그 생성되도록 진행
-
-                  this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // 이전 태그 deep 삭제 보내기
-
-                  this.updateDataEditorAfterEvent(
-                    updateBlockID,
-                    updateElOuterHtml,
-                    updateBlockIndent
-                  );
-                  // 이 값들은 다른 장소에서 update 보내주도록 함
-                  return false;
-                }
-              }
-            }
-          }
-        }
-
-        if (
-          this.lastSendMsgObj.updateElOuterHtml == updateElOuterHtml &&
-          this.lastSendMsgObj.blockFeId == updateBlockID
-        ) {
-          return false;
-        }
-
-        console.log(
-          "⭐ Node:",
-          updateBlockID,
-          updateElOuterHtml,
-          this.editor.view?.trackWrites?.dataset?.id,
-          this.editor.view?.trackWrites?.data,
-          updateBlockIndent
-        );
-
-        if (this.localJSON.content == undefined) {
-          this.isFirstAndNullContent = true;
-          this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateElOuterHtml 값 비교 시 무조건 같은 값
-        }
-
-        const filterEl = document.querySelector(`[data-id="${updateBlockID}"]`);
-        if (filterEl) {
-          const filterElOuterHtml = filterEl.outerHTML;
-          const isInsideATag = filterEl.querySelector('a');
-          if (
-            (!this.isFirstAndNullContent &&
-            filterElOuterHtml == updateElOuterHtml)
-          ) {
-            if(!isInsideATag){
-              isReturn = false; // 값이 동일하다면 보내지 않음
-            }
-          }
-        }
-
-        // 삭제 method를 보내지 않았다면
-        if (!isReturn) {
-          return false;
-        }
-
-        this.localHTML = this.editor.getHTML();
-        this.localJSON = this.editor.getJSON();
-
-        this.nodeLength = this.localJSON.content.length;
-
-        // element 위치 감지
-        const searchElAndPrevEl = this.selectedNodePrevAndNext(
-          this.localJSON.content,
-          updateBlockID
-        );
-
-        if (searchElAndPrevEl == undefined) {
-          return false;
-        }
-
-        // const previousId = searchElAndPrevEl.prevBlockId;
-        // const targetElType = searchElAndPrevEl.type;
-
-        // console.error("➡️prev➡️➡️", previousId);
-
-        const parentId = null;
-
-        // 여기서 감지해서 보내기
-        this.$parent.updateBlock(
-          updateBlockID,
-          searchElAndPrevEl.type,
-          updateElOuterHtml,
-          searchElAndPrevEl.prevBlockId,
-          searchElAndPrevEl.nextBlockId,
-          parentId,
-          updateBlockIndent
-        );
-
-        this.lastSendMsgObj.blockFeId = updateBlockID;
-        this.lastSendMsgObj.blockIndent = updateBlockIndent;
-        this.lastSendMsgObj.blockContents = updateElOuterHtml;
+        this.updateTiptapEditor();
       },
       content:
         this.defaultContent == "" ||
@@ -634,7 +413,11 @@ export default {
     window.addEventListener("indentExecuted", this.onIndentExecuted);
     window.addEventListener("outdentExecuted", this.onOutdentExecuted);
 
-    console.error("this.defaultContent >>> ",this.defaultContent, this.defaultContent.join(""))
+    console.error(
+      "this.defaultContent >>> ",
+      this.defaultContent,
+      this.defaultContent.join("")
+    );
 
     if (this.defaultContent.length > 1) {
       setTimeout(() => {
@@ -653,6 +436,290 @@ export default {
 
       // tcd용
     ]),
+    updateTiptapEditor() {
+      if (this.isRecvUpdate) {
+        this.isRecvUpdate = false;
+        return false;
+      }
+      if (this.currentEvent != null) {
+        this.currentEvent = null;
+        return false;
+      }
+      const selectedNode = this.editor.state.selection;
+      let isReturn = true;
+
+      if (!selectedNode) {
+        return false;
+      }
+
+      // 삭제 check용
+      if (this.dragCheckSelectionNode == null) {
+        //drag 중이 아닐 때 가능
+        const updateAfterNodes = selectedNode.$anchor.path[0].content.content;
+        console.log(
+          "ㅠㅠㅠㅠㅠㅠㅠㅠㅠ",
+          this.nodeLength,
+          updateAfterNodes.length
+        );
+        if (this.nodeLength > updateAfterNodes.length) {
+          // 개수가 생성 때 보다 적어졌을 때
+          const originAllFeIds = this.getAllBlockFeIds;
+          const updateAllFeIds = updateAfterNodes.map((el) => {
+            return el.attrs.id;
+          });
+
+          // originAllFeIds에 있는데 updateAllFeIds에 없는 값 찾기
+          const removedIds = originAllFeIds.filter(
+            (id) => !updateAllFeIds.includes(id)
+          );
+          console.error("removedIds >> ", removedIds);
+          if (removedIds.length > 0) {
+            this.$parent.deleteBlock(removedIds[0]);
+            if (updateAfterNodes == 0) {
+              const plel = document.querySelector("#editorPlaceholder");
+              if (plel) {
+                if (plel.classList.contains("hidden")) {
+                  plel.classList.remove("hidden");
+                }
+              }
+            }
+            return false;
+          }
+        }
+      }
+
+      console.error(
+        "😭😭😭😭",
+        selectedNode,
+        selectedNode?.node?.type,
+        selectedNode?.node?.type?.name
+      );
+
+      let tempUpdateBId = null;
+      if (selectedNode?.node?.type?.name == "tiptapthreadComponent") {
+        tempUpdateBId = selectedNode.node?.attrs?.id;
+      } else {
+        tempUpdateBId = selectedNode?.$head?.path[3]?.attrs?.id;
+      }
+      const updateBlockID = tempUpdateBId;
+
+      console.error("😭😭😭😭222", updateBlockID);
+
+      if (!updateBlockID) {
+        return false;
+      }
+      const updateBlockIndent = selectedNode?.$head?.path[3]?.attrs?.indent;
+
+      const updateEl = document.querySelector(`[data-id="${updateBlockID}"]`);
+      let updateElOuterHtml = "";
+      if (updateEl) {
+        // 요소 복제 (true는 자식 요소까지 모두 복제)
+        const clonedElement = updateEl.cloneNode(true);
+
+        // 복제된 요소에서 class 속성 제거
+        clonedElement.removeAttribute("class");
+
+        // 복제된 요소 안에서 <br class="ProseMirror-trailingBreak"> 태그 제거
+        const trailingBreaks = clonedElement.querySelectorAll(
+          "br.ProseMirror-trailingBreak"
+        );
+        trailingBreaks.forEach((br) => br.remove());
+
+        // 수정된 outerHTML 가져오기
+        updateElOuterHtml = clonedElement.outerHTML;
+
+        // const tagNames = ["OL", "UL", "H1", "H2", "H3", "H4", "H5", "H6"];
+        console.error("🍆🍆🍆", updateEl, updateEl.tagName.toUpperCase());
+        console.error("🍆🍆", updateElOuterHtml);
+        // const tagIncludeIndex = tagNames.indexOf(
+        //   updateEl.tagName.toUpperCase()
+        // );
+        if (
+          //update 한 element가 ol이나 ul 이라면, 기존에 생성된 p태그는 ul태그 안으로 들어감 (p 태그의 아이디 중복 발생)
+          updateEl.tagName.toUpperCase() === "OL" || // () 추가
+          updateEl.tagName.toUpperCase() === "UL"
+        ) {
+          console.error("🍆🍆🍆🍆🍆🍆 This element is an ol or ul tag.");
+          const targetElement = updateEl.querySelector(
+            `[data-id="${this.lastSendMsgObj.blockFeId}"]`
+          );
+          if (targetElement) {
+            this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // 따라서 기존 p 태그 DB상에서 삭제함
+          }
+        } else if (
+          updateEl.tagName.toUpperCase() === "P" ||
+          updateEl.tagName.toUpperCase().startsWith("H")
+        ) {
+          console.error("👀👀👀", updateEl, updateEl.tagName.toUpperCase());
+          // 바뀐게 p 태그라면, 이전 element 분기 타서 이전 것 삭제해줘야함
+          if (this.lastSendMsgObj.blockContents) {
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = this.lastSendMsgObj.blockContents;
+
+            // 첫 번째 자식을 가져옵니다.
+            const prevUpdateElType = tempDiv.firstElementChild;
+            if (
+              prevUpdateElType.tagName.toUpperCase() === "OL" ||
+              prevUpdateElType.tagName.toUpperCase() === "UL"
+            ) {
+              //이전에 update 한 element 가 ol이나 ul 이고 현재 update 된 태그가 p태그 라면
+              const isInsideEl = prevUpdateElType.querySelector(
+                `[data-id="${updateBlockID}"]`
+              );
+              if (isInsideEl) {
+                // 현재 update 하는 p태그가 이전 update 부분에 포함되어 있다면
+                console.error(
+                  "😭😭😭😭😭",
+                  `현재 업데이트 하려는 ${updateBlockID}는 ${this.lastSendMsgObj.blockFeId}에 포함되어있다`
+                );
+
+                // prevUpdateElType 내 자식 요소들이 isInsideEl 값만 있는지 확인
+                const allPTags = prevUpdateElType.querySelectorAll("p");
+
+                if (allPTags.length === 1 && allPTags[0] === isInsideEl) {
+                  console.log(
+                    "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다.",
+                    this.lastSendMsgObj.blockFeId
+                  );
+                  this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // ul 태그 deep 삭제 보내기
+                  // p 태그 생성하기
+                } else {
+                  console.log(
+                    "❌ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 있습니다."
+                  );
+                  // ul태그 [현재 상태값] update로 값 보내기
+                  const nowListStatusHtml = document.querySelector(
+                    `[data-id="${this.lastSendMsgObj.blockFeId}"]`
+                  );
+                  if (nowListStatusHtml) {
+                    const nowListStatusHtmlOuter = nowListStatusHtml.outerHTML;
+                    this.$parent.patchBlock(
+                      this.lastSendMsgObj.blockFeId,
+                      nowListStatusHtmlOuter
+                    );
+                  }
+                  // p 태그 생성하기
+                }
+                // 위 if에서 임시로 저장해서 다 끝나고 보내기 p태그 create. ⭐⭐⭐⭐⭐⭐⭐⭐
+                this.updateDataEditorAfterEvent(
+                  updateBlockID,
+                  updateElOuterHtml,
+                  updateBlockIndent
+                );
+                // 이 값들은 다른 장소에서 update 보내주도록 함
+                return false;
+              }
+            } else if (
+              // 이전 값이 h태그 이거나 p 태그이고
+              (prevUpdateElType.tagName.toUpperCase().startsWith("H") ||
+                prevUpdateElType.tagName.toUpperCase() === "P") &&
+              prevUpdateElType.tagName != updateEl.tagName // 이전 태그와 현재 태그가 다를 때
+            ) {
+              const prevChangeTagEl = document.querySelector(
+                `[data-id="${this.lastSendMsgObj.blockFeId}"]`
+              );
+              console.error("오나용...", prevChangeTagEl);
+              if (!prevChangeTagEl) {
+                console.error("오나용...222222ㅠㅠ");
+                //이전값이 없으면, 다른 동기화 화면에서도 지우고 h태그 생성되도록 진행
+
+                this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // 이전 태그 deep 삭제 보내기
+
+                this.updateDataEditorAfterEvent(
+                  updateBlockID,
+                  updateElOuterHtml,
+                  updateBlockIndent
+                );
+                // 이 값들은 다른 장소에서 update 보내주도록 함
+                return false;
+              }
+            }
+          }
+        }
+      }
+
+      if (
+        this.lastSendMsgObj.updateElOuterHtml == updateElOuterHtml &&
+        this.lastSendMsgObj.blockFeId == updateBlockID
+      ) {
+        return false;
+      }
+
+      console.log(
+        "⭐ Node:",
+        updateBlockID,
+        updateElOuterHtml,
+        this.editor.view?.trackWrites?.dataset?.id,
+        this.editor.view?.trackWrites?.data,
+        updateBlockIndent
+      );
+
+      if (this.localJSON.content == undefined) {
+        this.isFirstAndNullContent = true;
+        this.localJSON = this.editor.getJSON(); // 이 부분 때문에 첫 로딩 시 updateElOuterHtml 값 비교 시 무조건 같은 값
+      }
+
+      const filterEl = document.querySelector(`[data-id="${updateBlockID}"]`);
+      if (filterEl) {
+        const filterElOuterHtml = filterEl.outerHTML;
+        const isInsideATag = filterEl.querySelector("a");
+        console.error(this.isFirstAndNullContent, filterElOuterHtml, updateElOuterHtml)
+        if (
+          !this.isFirstAndNullContent &&
+          filterElOuterHtml == updateElOuterHtml
+        ) {
+          if (!isInsideATag) {
+            isReturn = false; // 값이 동일하다면 보내지 않음
+          }
+          if(this.isFontStyleUpdated){
+            this.isFontStyleUpdated = false;
+            isReturn = true;
+          }
+        }
+      }
+
+      // 삭제 method를 보내지 않았다면
+      if (!isReturn) {
+        return false;
+      }
+
+      this.localHTML = this.editor.getHTML();
+      this.localJSON = this.editor.getJSON();
+
+      this.nodeLength = this.localJSON.content.length;
+
+      // element 위치 감지
+      const searchElAndPrevEl = this.selectedNodePrevAndNext(
+        this.localJSON.content,
+        updateBlockID
+      );
+
+      if (searchElAndPrevEl == undefined) {
+        return false;
+      }
+
+      // const previousId = searchElAndPrevEl.prevBlockId;
+      // const targetElType = searchElAndPrevEl.type;
+
+      // console.error("➡️prev➡️➡️", previousId);
+
+      const parentId = null;
+
+      // 여기서 감지해서 보내기
+      this.$parent.updateBlock(
+        updateBlockID,
+        searchElAndPrevEl.type,
+        updateElOuterHtml,
+        searchElAndPrevEl.prevBlockId,
+        searchElAndPrevEl.nextBlockId,
+        parentId,
+        updateBlockIndent
+      );
+
+      this.lastSendMsgObj.blockFeId = updateBlockID;
+      this.lastSendMsgObj.blockIndent = updateBlockIndent;
+      this.lastSendMsgObj.blockContents = updateElOuterHtml;
+    },
     updateDataEditorAfterEvent(
       updateBlockID,
       updateElOuterHtml,
@@ -1116,6 +1183,16 @@ export default {
           }
         }
       }
+    },
+
+    toggleTriggerTiptapEvent(callback) {
+      // 전달받은 callback 함수가 존재할 경우 호출
+      this.isFontStyleUpdated = true;
+      if (typeof callback === "function") {
+        callback();
+      }
+      // 추가적인 로직이 필요한 경우 여기에 작성
+      console.log("Tiptap 이벤트가 트리거되었습니다.");
     },
 
     triggerFileInput() {
