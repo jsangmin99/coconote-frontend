@@ -18,11 +18,11 @@
         <!-- 태그 -->
         <div v-if="isDifferentMember" class="tag-group">
           <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
-            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+            <div><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></div>
             <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)"><strong>x</strong></button>
           </div>
-          <div class="hash-btn">
-            <button @click="toggleTagMenu">#</button>
+          <div class="hash-btn" @click="toggleTagMenu">
+            <button>#</button>
           </div>
           
           <div class="tag-toggle">
@@ -127,11 +127,11 @@
           <!-- 내용 태그 -->
           <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
             <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
-              <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+              <div><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></div>
               <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
             </div>
-            <div class="hash-btn">
-              <button @click="toggleTagMenu">#</button>
+            <div class="hash-btn"  @click="toggleTagMenu">
+              <button>#</button>
             </div>
             <div class="tag-toggle">
               <div class="tag-input-group">
@@ -654,6 +654,7 @@ import axios from '@/services/axios';
   height: 20px;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 .hash-btn:hover {
   border-radius: 5px;
