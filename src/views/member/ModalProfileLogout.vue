@@ -82,6 +82,12 @@ export default {
   cursor: pointer; /* 손 모양 커서 설정 */
 }
 
+.custom-btn:hover {
+  background-color: #ecececf2 !important; /* 호버 시 밝은 회색 배경 */
+  /* color: white !important; 호버 시 텍스트 흰색 */
+  border-radius: 5px !important;
+}
+
 .custom-card {
   background-color: white;
   border: 1px solid #ccc;

@@ -3,13 +3,14 @@
 
   <!-- MemberView 헤더 부분 -->
   <div class="memberview-header" style="margin: 20px; padding-left: 30px;">
-    <h1>모든 회원</h1>
+    <h2>모든 회원</h2>
   </div>
   
   <!-- 중간에 상자 부분 -->
   <div class="memberview-banner" style="background-color: #000435; color: white; padding: 50px; margin-top: 20px;">
     <br>
     <br>
+    <h1>COCONOTE로 팀 초대</h1>
     <p>팀 멤버를 COCONOTE에 참여시켜 더 나은 환경에서 작업할 수 있습니다. 이메일로 초대장을 보내거나 간단한 링크를 보내 공유할 수 있습니다.</p>
     <br>
     <v-btn @click="showMailSender" color="#3a8bcd" text="회원 초대"></v-btn>
@@ -39,10 +40,20 @@
 <!-- 회원 카드 상세 보기 -->
     <v-dialog v-model="workspaceMemberModal" max-width="600px" class="workspaceMemberModal">
        <v-card>
-        <v-card-title class="text-h5" style="padding : 24px;">
+        <v-card-title class="text-h5" style="padding : 24px; position: relative;">
           <h2>프로필 
-          <v-icon color="grey" v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)" size="20">mdi-cog</v-icon></h2>
-
+          <v-icon color="grey" v-if="isMe(workspaceMemberInfo.workspaceMemberId)" @click="startEditing(workspaceMemberInfo)" size="20">mdi-cog</v-icon>
+          <v-btn v-if="getWsRole !== 'USER' && workspaceMemberInfo.wsRole !== 'PMANAGER'" elevation="0" icon>
+          <v-icon size="30" style="color: #a4a4a4;">mdi-dots-vertical</v-icon>
+            <v-menu activator="parent">
+              <v-list style="max-width: 120px;">
+                <v-list-item @click="(workspaceRoleDialog = true)">권한 변경하기</v-list-item>
+                <v-list-item @click="removeMember">회원 내보내기</v-list-item>
+              </v-list>
+            </v-menu>
+            </v-btn>
+          </h2>
+          <v-icon @click="workspaceMemberModal=false" class="close-button" style="position: absolute; top: 20px; right: 18px;">mdi-close</v-icon>
         </v-card-title>
         <v-card-text>
             <v-row justify="center">
@@ -53,13 +64,6 @@
                       <img :src="workspaceMemberInfo.profileImage && workspaceMemberInfo.profileImage !== 'null' ? workspaceMemberInfo.profileImage : require(`@/assets/images/profile/profile${this.memberImageId}.jpg`)" 
                       alt="Profile Image" 
                       style="width: 100%; border-radius: 15px;"/>
-                      
-                      <div v-if="getWsRole !== 'USER' && workspaceMemberInfo.wsRole !== 'PMANAGER'">
-                      <v-btn color="#3a8bcd" text="권한" @click="(workspaceRoleDialog = true)">
-                      </v-btn>
-                      <v-btn color="red" text="강퇴" @click="removeMember">
-                      </v-btn>
-                      </div>
                     </v-col>
                     <v-col cols="7">
                       <div class="member-info-container">
@@ -129,7 +133,7 @@
                               </v-col>
                               <v-col cols="9" class="member-info-list">
                                 <div class="member-info">등급</div>
-                                <div v-if="workspaceMemberInfo.wsRole === 'PMANAGER'">워크스페이스 최고 관리자</div>
+                                <div v-if="workspaceMemberInfo.wsRole === 'PMANAGER'">워크스페이스 소유자</div>
                                 <div v-if="workspaceMemberInfo.wsRole === 'SMANAGER'">워크스페이스 관리자</div>
                                 <div v-if="workspaceMemberInfo.wsRole === 'USER'">일반 회원</div>
                               </v-col>
@@ -145,8 +149,9 @@
             </v-col>
         </v-row>
         </v-card-text>
+        <br />
 
-      <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn>
+      <!-- <v-btn class="" text="닫기" @click="workspaceMemberModal=false"></v-btn> -->
     </v-card>
 
     </v-dialog>

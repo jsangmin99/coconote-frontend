@@ -208,6 +208,9 @@ export default {
 ::v-deep .list-group {
   max-height: calc(100vh - 280px);
 }
+::v-deep .comment-group {
+  max-height: calc(100vh - 280px);
+}
 ::v-deep .drive-container {
   height: calc(100vh - 240px); /* 뷰포트 전체 높이에서 60px을 뺀 값 */
 }

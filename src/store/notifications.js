@@ -52,7 +52,8 @@ const notifications = {
                 const notification = JSON.parse(data);
                 console.log('새로운 알림:', notification);
 
-                if (notification.channelId != localStorage.getItem("channelId") && notification.userId != localStorage.getItem("memberId")) {
+                if (notification.channelId != localStorage.getItem("channelId") && notification.userId != localStorage.getItem("memberId") 
+                    &&notification.memberName != "System") {
                     // 알림을 Vuex에 추가
                     const notificationData = {
                         message: notification.message,

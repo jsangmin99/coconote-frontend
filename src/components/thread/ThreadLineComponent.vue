@@ -4,7 +4,7 @@
     <!-- 프로필 이미지 -->
     <div>
       <div class="image">
-        <img v-if="isDifferentMember" :src="thread.image ? thread.image : require('@/assets/images/profileImage.png')" alt="image" class="profile-image">
+        <img v-if="isDifferentMember" :src="thread.image ? thread.image : require(`@/assets/images/profile/profile${thread.memberId % 10}.jpg`)" alt="image" class="profile-image">
       </div>
     </div>
     
@@ -18,11 +18,11 @@
         <!-- 태그 -->
         <div v-if="isDifferentMember" class="tag-group">
           <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
-            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+            <div><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></div>
             <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)"><strong>x</strong></button>
           </div>
-          <div class="hash-btn">
-            <button @click="toggleTagMenu">#</button>
+          <div class="hash-btn" @click="toggleTagMenu">
+            <button>#</button>
           </div>
           
           <div class="tag-toggle">
@@ -48,16 +48,6 @@
               >
                 <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
               </div>
-
-              <!-- <strong 
-                class="tag-create" 
-                :class="{ 'active': focusedIndex === filteredTagList.length }"
-                @click="createTag"
-                ref="createTagRef"
-              >
-                + Create "{{tagName}}"
-              </strong> -->
-
               <span class="tag-create" @click="createTag" :class="{ 'active': focusedIndex === filteredTagList.length }" ref="createTagRef">태그 생성 : "{{tagName}}"</span>
             </div>
           </div>
@@ -66,49 +56,6 @@
 
       <!-- 내용 -->
       <div class="content-group">
-        <!-- 내용 태그 -->
-        <!-- <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
-          <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
-            <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
-            <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
-          </div> 
-          <div class="hash-btn">
-            <button @click="toggleTagMenu">#</button>
-          </div>
-          <div class="tag-toggle">
-            <input
-              v-if="isTagMenuVisible"
-              type="text"
-              class="tag-input"
-              placeholder="태그를 입력해주세요"
-              v-model="tagName"
-              v-on:input="adjustWidth"
-              @keydown="tagHandleKeydown"
-              ref="tagInput"
-              :style="{ width: inputWidth + 'px'}"
-            >
-            <div class="more-tag" v-if="isTagMenuVisible" :style="{ [tagMenuPosition]: '25px' }" tabindex="0">
-              <div 
-              v-for="(tag,index) in filteredTagList" 
-              :key="index" class="tag-list" 
-              :class="{ 'active': index === focusedIndex }" 
-              @click="addT(tag.id)"
-              ref="tagRefs"
-              >
-                <strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong>
-              </div>
-              <strong 
-                class="tag-create" 
-                :class="{ 'active': focusedIndex === filteredTagList.length }"
-                @click="createTag"
-                ref="createTagRef"
-              >
-                + Create "{{tagName}}"
-              </strong>
-            </div>
-          </div>
-        </div> 
-        <div v-if="!isUpdate" class="content" v-html="formattedContent"></div>-->
         <div v-if="isUpdate" class="update-group">
           <textarea
             type="text"
@@ -127,11 +74,11 @@
           <!-- 내용 태그 -->
           <div v-if="(isTagMenuVisible || (thread.tags && thread.tags.length!=0)) && !isDifferentMember" class="tag-group">
             <div class="tag-container" v-for="(tag,index) in thread.tags" :key="index" >
-              <button @click="addRemoveTagFilter(tag)"><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></button>
+              <div><strong class="tag" :style="{ backgroundColor: tag.color }">{{tag.name}}</strong></div>
               <button class="delete-tag" @click="deleteTag(tag.id,tag.threadTagId)">x</button>
             </div>
-            <div class="hash-btn">
-              <button @click="toggleTagMenu">#</button>
+            <div class="hash-btn"  @click="toggleTagMenu">
+              <button>#</button>
             </div>
             <div class="tag-toggle">
               <div class="tag-input-group">
@@ -356,7 +303,15 @@ import axios from '@/services/axios';
         this.deleteMessage(this.thread.id);
       },
       deleteF(fileId){
-        this.deleteFile(this.thread.id,fileId);
+        console.log("this.thread.content: ",this.thread.content);
+        console.log("this.thread.files: ", this.thread.files);
+        
+        
+        if((!this.thread.content || !this.thread.content.trim()) && (!this.thread.files || this.thread.files.length === 1) && !this.thread.canvasTitle){
+          this.deleteMessage(this.thread.id);
+        }else{
+          this.deleteFile(this.thread.id,fileId);
+        }
       },
       toggleContextMenu(event) {
         event.stopPropagation(); // 클릭 이벤트 전파 방지
@@ -654,6 +609,7 @@ import axios from '@/services/axios';
   height: 20px;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 .hash-btn:hover {
   border-radius: 5px;

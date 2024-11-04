@@ -1,6 +1,7 @@
 <template>
   <v-navigation-drawer class="innerMenu" theme="dark" permanent rail>
     <v-list density="compact" nav class="menu-container">
+      
       <!-- 현재 접속해 있는 워크스페이스 -->
       <v-list-item
         ref="workspaceListButton"
@@ -9,6 +10,7 @@
         @click="toggleDropdown"
         :class="{ 'selected-item': selectedMenu === 'workspace' }"
       ></v-list-item>
+
       <!-- 홈 하위 메뉴 버튼 -->
       <v-list-item
         prepend-icon="mdi-home"
