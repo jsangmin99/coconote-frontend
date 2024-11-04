@@ -384,16 +384,16 @@ export default {
 .memberview-memberlist-img {
   width: 100%; /* 부모 요소의 너비에 맞춤 */
   height: 200px;
-  object-fit: cover; 
-  border-radius: 15px; 
+  object-fit: cover;
+  border-radius: 15px;
+  margin: 0 !important;
 }
-
 
 .hover-card {
     transition: transform 0.2s ease;
     border-radius: 15px;
     width: 100%;
-    display: flex;
+    // display: flex;
 }
 
 .hover-card:hover {
