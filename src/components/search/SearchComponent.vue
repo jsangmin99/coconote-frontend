@@ -893,4 +893,9 @@ p {
 .moveToChannel:hover {
   background-color: #337ab7;
 }
+.result-image {
+  border-radius: 15px;
+  margin-right: 15px;
+  object-fit: cover;
+}
 </style>
