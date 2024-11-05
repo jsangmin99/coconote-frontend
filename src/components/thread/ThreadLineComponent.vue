@@ -542,7 +542,6 @@ import axios from '@/services/axios';
   gap: 10px;
 }
 .content {
-  white-space: pre-line; /* 개행을 인식하고 줄 바꿈 */
 }
 .files {
     
