@@ -131,7 +131,7 @@ export default {
 					// 이후 업로드가 완료되면
 					URL.revokeObjectURL(this.previewImage);
 
-					console.log("Profile updated and localStorage set.");
+					//console.log("Profile updated and localStorage set.");
 				} catch (error) {
 					console.error("Error updating profile:", error);
 				}

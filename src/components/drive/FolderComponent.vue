@@ -242,7 +242,7 @@ export default {
       const folderId = this.$route.params.folderId || null; // URL에서 폴더 ID 추출
       try {
         // 요청 URL을 폴더 ID가 있는 경우와 없는 경우로 분기
-        console.log("xxxc", folderId);
+        //console.log("xxxc", folderId);
         const url = folderId
           ? `${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}`
           : `${process.env.VUE_APP_API_BASE_URL}/channel/${channelId}/drive`;
@@ -657,7 +657,7 @@ export default {
             parentId: newFolderId, // 새로운 부모 폴더 ID
           }
         );
-        console.log(response.data.result.message);
+        //console.log(response.data.result.message);
         // alert("폴더가 성공적으로 이동되었습니다.");
         this.refreshFolderList();
       } catch (error) {

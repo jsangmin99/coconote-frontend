@@ -37,20 +37,20 @@ const notifications = {
 
             // SSE 연결을 설정하고 알림을 수신
             const eventSource = new EventSource(eventSourceUrl);
-            console.log('SSE 연결:', eventSource);
+            //console.log('SSE 연결:', eventSource);
             commit('SET_EVENT_SOURCE', eventSource);
 
             eventSource.onopen = () => {
-                console.log('SSE 연결이 성공적으로 열렸습니다.');
+                //console.log('SSE 연결이 성공적으로 열렸습니다.');
             };
 
             // 'notification' 이벤트 리스너 등록
             eventSource.addEventListener('notification', (event) => {
-                console.log('SSE 수신:', event);
+                //console.log('SSE 수신:', event);
                 const data = event.data;
-                console.log('수신된 데이터:', data); // 수신된 데이터 확인
+                //console.log('수신된 데이터:', data); // 수신된 데이터 확인
                 const notification = JSON.parse(data);
-                console.log('새로운 알림:', notification);
+                //console.log('새로운 알림:', notification);
 
                 if (notification.channelId != localStorage.getItem("channelId") && notification.userId != localStorage.getItem("memberId") 
                     &&notification.memberName != "System") {
@@ -65,7 +65,7 @@ const notifications = {
                         timestamp: new Date(),
                     };
                     commit('ADD_NOTIFICATION', notificationData);
-                    console.log('알림 목록:', notificationData);
+                    //console.log('알림 목록:', notificationData);
 
                     // ToastNotification 컴포넌트를 사용해 알림 표시
                     showNotificationToast(notificationData);
@@ -78,7 +78,7 @@ const notifications = {
                 commit('CLOSE_EVENT_SOURCE');
                 // 재연결 시도
                 setTimeout(() => {
-                    console.log('재연결 시도...');
+                    //console.log('재연결 시도...');
                     this.dispatch('connectToSSE', { workspaceId });
                 }, 100); // 0.1초 후 재연결 시도
             };

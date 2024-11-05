@@ -90,7 +90,7 @@ export default {
     if (localProfileImage == null || localProfileImage == 'null') {
       this.previewImage = require(`@/assets/images/profile/profile${this.getWorkspaceMemberId % 10}.jpg`);
     }
-    console.log("mounted() -> localProfileImage = this.$store.getters.getProfileImage : ", localProfileImage);
+    //console.log("mounted() -> localProfileImage = this.$store.getters.getProfileImage : ", localProfileImage);
     if (localProfileImage) {
       this.profileData.profileImage = localProfileImage;
     }

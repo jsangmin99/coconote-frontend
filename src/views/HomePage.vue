@@ -172,10 +172,10 @@ export default {
   // },
   // setup() {
   //   const onSwiper = (swiper) => {
-  //     console.log(swiper);
+  //     //console.log(swiper);
   //   };
   //   const onSlideChange = () => {
-  //     console.log("slide change");
+  //     //console.log("slide change");
   //   };
   //   return {
   //     modules: [Mousewheel, Autoplay, Pagination, Navigation],

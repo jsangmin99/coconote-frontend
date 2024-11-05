@@ -39,7 +39,7 @@ export default {
   computed: {
     showHeaderAndSidebar() {
       const value = this.$route.meta.showHeaderAndSidebar !== false;
-      console.log("[App.vue]showHeaderAndSidebar:", value); // 추가
+      // //console.log("[App.vue]showHeaderAndSidebar:", value); // 추가
       return value;
     },
     isHiddenPage() {
@@ -70,7 +70,7 @@ export default {
   },
   mounted() {
     this.$nextTick(() => {
-      console.log("전체화면로드 완료");
+      // //console.log("전체화면로드 완료");
       
       this.loading = false
     });

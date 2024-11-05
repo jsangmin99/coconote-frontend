@@ -211,9 +211,9 @@ export default {
 
       try {
         // 여기에 동기화된 작업을 수행합니다.
-        console.log("작업 시작");
+        //console.log("작업 시작");
         await this.performTask(message); // 비동기 작업 예시
-        console.log("작업 완료");
+        //console.log("작업 완료");
       } catch (error) {
         console.error("작업 중 오류 발생:", error);
       } finally {

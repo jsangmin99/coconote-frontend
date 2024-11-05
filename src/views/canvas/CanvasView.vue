@@ -202,7 +202,7 @@ export default {
           } else if (newVal.method == "UPDATE_INDENT_BLOCK") {
             this.sendMessageCanvas();
           } else if (newVal.method == "CHANGE_ORDER_BLOCK") {
-            console.log("CHANGE_ORDER_BLOCK 예정");
+            //console.log("CHANGE_ORDER_BLOCK 예정");
             this.sendMessageCanvas();
           } else if (newVal.method == "DELETE_BLOCK") {
             //삭제 캔버스
@@ -214,7 +214,7 @@ export default {
             console.error("잘못된 block method 입니다.", newVal);
           }
         } else {
-          console.log("잘못된 postMessageType 입니다.", newVal);
+          //console.log("잘못된 postMessageType 입니다.", newVal);
         }
       },
       deep: true, // 깊은 상태 변화를 감지
@@ -425,7 +425,7 @@ export default {
   beforeUnmount() {
     if (this.ws) {
       this.ws.disconnect(() => {
-        console.log("WebSocket ws connection closed.");
+        //console.log("WebSocket ws connection closed.");
       });
     }
     this.beforeRouteLeave();

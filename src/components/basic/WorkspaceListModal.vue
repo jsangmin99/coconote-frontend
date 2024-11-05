@@ -50,7 +50,7 @@ export default {
         );
         this.wsList = response.data.result; // 내 워크스페이스 목록 가져오기
       } catch (e) {
-        console.log(e);
+        //console.log(e);
       }
     },
     async selectWorkspace(workspaceId) {
@@ -64,12 +64,12 @@ export default {
         await this.setWorkspaceNameInfoActions(wsInfo.data.result.name);
         this.$router.push("/workspace");
       } catch (e) {
-        console.log(e);
+        //console.log(e);
       }
     },
     showWorkspaceModal() {
       (this.isDropdownOpen = false), (this.createWorkspace = true);
-      console.log(this.createWorkspace);
+      //console.log(this.createWorkspace);
     },
   },
 };

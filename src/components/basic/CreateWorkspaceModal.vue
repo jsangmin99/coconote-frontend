@@ -84,10 +84,10 @@ export default {
         this.getChannelMemberInfo();
 
         this.$emit('update:dialog', false);
-        console.log("생성 후 workspace로 이동 예정 >> ", newWorkspaceId)
+        // //console.log("생성 후 workspace로 이동 예정 >> ", newWorkspaceId)
         window.location.href = "/workspace";
       } catch (e) {
-        console.log(e);
+        // //console.log(e);
       }
     },
     async getChannelMemberInfo() {

@@ -224,7 +224,7 @@ export default {
       }
     },
     changeOrderInList() {
-      console.log("change order... ⭐");
+      //console.log("change order... ⭐");
     },
     canvasDeleteInList() {
       const targetIndex = this.chatrooms.findIndex(

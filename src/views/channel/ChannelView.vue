@@ -45,7 +45,7 @@ export default {
   },
   channelId(newVal) {
     if (newVal) {
-      console.log("channelId가 설정되었습니다:!!", newVal);
+      //console.log("channelId가 설정되었습니다:!!", newVal);
       // 여기서 채널 상태가 설정된 이후 작업을 진행
     }
   },
@@ -60,7 +60,7 @@ export default {
       this.checkMemberIsJoin();
     }
     if (!this.getChannelId) {
-      console.log("없다...");
+      //console.log("없다...");
       // 처음 로딩 시점에 channelId가 없다면 로직 실행
     }
   },
@@ -75,7 +75,7 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/channel/member/create/${this.getChannelId}`
         );
         const result = response.data.result;
-        console.log("[ChannelView] channelMemberCreate() result : ", result);
+        //console.log("[ChannelView] channelMemberCreate() result : ", result);
         this.setChannelRoleInfoActions(result.channelRole);
         this.setMemberInfoActions(
           {

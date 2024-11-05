@@ -35,7 +35,7 @@
         >
           Strike
         </button>
-        <button
+        <!-- <button
           @click="
             toggleTriggerTiptapEvent(() =>
               editor.chain().focus().setParagraph().run()
@@ -44,7 +44,7 @@
           :class="{ 'is-active': editor.isActive('paragraph') }"
         >
           Paragraph
-        </button>
+        </button> -->
         <button
           @click="
             toggleTriggerTiptapEvent(() =>
@@ -105,7 +105,7 @@
         >
           H6
         </button>
-        <button
+        <!-- <button
           @click="
             toggleTriggerTiptapEvent(() =>
               editor.chain().focus().toggleBulletList().run()
@@ -114,8 +114,8 @@
           :class="{ 'is-active': editor.isActive('bulletList') }"
         >
           Bullet list
-        </button>
-        <button
+        </button> -->
+        <!-- <button
           @click="
             toggleTriggerTiptapEvent(() =>
               editor.chain().focus().toggleOrderedList().run()
@@ -124,7 +124,7 @@
           :class="{ 'is-active': editor.isActive('orderedList') }"
         >
           Ordered list
-        </button>
+        </button> -->
         <!-- 이미지 업로드 버튼 -->
         <button @click="triggerFileInput">image</button>
       </div>
@@ -326,15 +326,15 @@ export default {
             element.addEventListener("dragstart", (event) => {
               console.log("dragstart :: ", event);
               this.dragCheckSelectionNode = this.tempDragCheckSelectionNode;
-              console.log("현 선택자 :: ", this.dragCheckSelectionNode);
+              //console.log("현 선택자 :: ", this.dragCheckSelectionNode);
               this.dragCheckEditorJson = this.selectedNodePrevAndNext(
                 this.editor.getJSON().content,
                 this.dragCheckSelectionNode?.attrs?.id
               );
-              console.log(
-                "현 선택자에 대한 이전 이후 값 >> ",
-                this.dragCheckEditorJson
-              );
+              //console.log(
+              //   "현 선택자에 대한 이전 이후 값 >> ",
+              //   this.dragCheckEditorJson
+              // );
             });
 
             // 드래그가 끝날 때
@@ -346,7 +346,7 @@ export default {
                 this.dragCheckSelectionNode?.attrs?.id
               );
 
-              console.log("종료 후 이전 이후 값 >> >> ", recentSelectorJson);
+              //console.log("종료 후 이전 이후 값 >> >> ", recentSelectorJson);
 
               this.$parent.changeOrderBlock(recentSelectorJson);
               this.dragCheckEditorJson = null;
@@ -456,11 +456,11 @@ export default {
       if (this.dragCheckSelectionNode == null) {
         //drag 중이 아닐 때 가능
         const updateAfterNodes = selectedNode.$anchor.path[0].content.content;
-        console.log(
-          "ㅠㅠㅠㅠㅠㅠㅠㅠㅠ",
-          this.nodeLength,
-          updateAfterNodes.length
-        );
+        //console.log(
+        //   "ㅠㅠㅠㅠㅠㅠㅠㅠㅠ",
+        //   this.nodeLength,
+        //   updateAfterNodes.length
+        // );
         if (this.nodeLength > updateAfterNodes.length) {
           // 개수가 생성 때 보다 적어졌을 때
           const originAllFeIds = this.getAllBlockFeIds;
@@ -577,16 +577,16 @@ export default {
                 const allPTags = prevUpdateElType.querySelectorAll("p");
 
                 if (allPTags.length === 1 && allPTags[0] === isInsideEl) {
-                  console.log(
-                    "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다.",
-                    this.lastSendMsgObj.blockFeId
-                  );
+                  //console.log(
+                  //   "✅ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 없습니다.",
+                  //   this.lastSendMsgObj.blockFeId
+                  // );
                   this.$parent.deepDeleteBlock(this.lastSendMsgObj.blockFeId); // ul 태그 deep 삭제 보내기
                   // p 태그 생성하기
                 } else {
-                  console.log(
-                    "❌ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 있습니다."
-                  );
+                  //console.log(
+                  //   "❌ prevUpdateElType에는 isInsideEl 외에 다른 자식 요소가 있습니다."
+                  // );
                   // ul태그 [현재 상태값] update로 값 보내기
                   const nowListStatusHtml = document.querySelector(
                     `[data-id="${this.lastSendMsgObj.blockFeId}"]`
@@ -645,14 +645,14 @@ export default {
         return false;
       }
 
-      console.log(
-        "⭐ Node:",
-        updateBlockID,
-        updateElOuterHtml,
-        this.editor.view?.trackWrites?.dataset?.id,
-        this.editor.view?.trackWrites?.data,
-        updateBlockIndent
-      );
+      //console.log(
+      //   "⭐ Node:",
+      //   updateBlockID,
+      //   updateElOuterHtml,
+      //   this.editor.view?.trackWrites?.dataset?.id,
+      //   this.editor.view?.trackWrites?.data,
+      //   updateBlockIndent
+      // );
 
       if (this.localJSON.content == undefined) {
         this.isFirstAndNullContent = true;
@@ -821,10 +821,10 @@ export default {
       return null; // 찾지 못했을 때
     },
     onContentChanged(newContent) {
-      console.log(
-        "부모 컴포넌트로부터 새로운 content를 받았습니다:",
-        newContent
-      );
+      //console.log(
+      //   "부모 컴포넌트로부터 새로운 content를 받았습니다:",
+      //   newContent
+      // );
       this.isRecvUpdate = newContent.isRecvMessage;
 
       this.localHTML = this.editor.getHTML();
@@ -921,12 +921,12 @@ export default {
             ? "next"
             : null;
 
-        console.log(
-          "appendType >> ",
-          appendType,
-          newContent.prevBlockId,
-          newContent.nextBlockId
-        );
+        //console.log(
+        //   "appendType >> ",
+        //   appendType,
+        //   newContent.prevBlockId,
+        //   newContent.nextBlockId
+        // );
         const targetNode = document.querySelector(
           `[data-id="${targetDataId}"]`
         );
@@ -934,11 +934,11 @@ export default {
         if (changeNode) {
           if (appendType == "prev") {
             // targetNode 뒤에 changeNode 추가
-            console.log(`${targetDataId} [뒤에] 추가`);
+            //console.log(`${targetDataId} [뒤에] 추가`);
             targetNode.insertAdjacentElement("afterend", changeNode);
           } else if (appendType == "next") {
             // targetNode 앞에 changeNode 추가
-            console.log(`${targetDataId} [앞에] 추가`);
+            //console.log(`${targetDataId} [앞에] 추가`);
             targetNode.insertAdjacentElement("beforebegin", changeNode);
           } else {
             console.error("prev, next 모두 null. 첫줄 drag 이동한 상황");
@@ -1192,7 +1192,7 @@ export default {
         callback();
       }
       // 추가적인 로직이 필요한 경우 여기에 작성
-      console.log("Tiptap 이벤트가 트리거되었습니다.");
+      //console.log("Tiptap 이벤트가 트리거되었습니다.");
     },
 
     triggerFileInput() {
@@ -1237,7 +1237,7 @@ export default {
       );
     },
     onIndentExecuted(event) {
-      console.log("Indent 실행됨:", event.detail);
+      //console.log("Indent 실행됨:", event.detail);
       const node = event.detail.selection.$anchor.path[3];
       // const node = options?.nodes[0];
       const nodeDataId = node.attrs?.id;
@@ -1251,7 +1251,7 @@ export default {
       }
     },
     onOutdentExecuted(event) {
-      console.log("Outdent 실행됨:", event);
+      //console.log("Outdent 실행됨:", event);
       const node = event.detail.selection.$anchor.path[3];
       // const node = options?.nodes[0];
       const nodeDataId = node.attrs?.id;
@@ -1271,22 +1271,22 @@ export default {
       const droppedData = event.dataTransfer.getData("items");
 
       // 드롭된 데이터 로그 출력
-      console.log("드롭된 데이터2222(raw):", droppedData);
+      //console.log("드롭된 데이터2222(raw):", droppedData);
 
       // 드롭된 데이터가 유효한지 확인합니다.
       if (droppedData && droppedData.trim() !== "") {
         try {
           const parsedData = JSON.parse(droppedData);
-          console.log(
-            "드롭된 데이터(parsed): canvas <<<<<<<<<<<<<<<<<<<<",
-            parsedData
-          );
+          //console.log(
+          //   "드롭된 데이터(parsed): canvas <<<<<<<<<<<<<<<<<<<<",
+          //   parsedData
+          // );
 
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             const dragedFile = parsedData[0]; // 배열의 첫 번째 항목 사용
             if (dragedFile.type === "drive") {
               if (dragedFile.driveType == "file") {
-                console.log("드롭된 파일 ID:", dragedFile.fileId);
+                //console.log("드롭된 파일 ID:", dragedFile.fileId);
                 // 파일 업로드나 추가 작업을 수행할 로직 작성
 
                 // 에디터에 이미지 삽입
@@ -1307,7 +1307,7 @@ export default {
           console.error("JSON 파싱 오류:", error);
         }
       } else {
-        console.log("드롭된 데이터가 없습니다.");
+        //console.log("드롭된 데이터가 없습니다.");
       }
 
       this.tcdDroppedData = null;

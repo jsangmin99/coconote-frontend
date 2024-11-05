@@ -148,7 +148,7 @@ export default {
   watch: {
     getActiveInnerMenu: {
       handler(newVal) {
-        console.log("getActiveInnerMenu 변경됨 >> ", newVal); // 값이 변경될 때마다 로그로 확인
+        // //console.log("getActiveInnerMenu 변경됨 >> ", newVal); // 값이 변경될 때마다 로그로 확인
         if (newVal && newVal != this.selectedMenu) {
           this.changeSelectedMenu(newVal)
         }
@@ -196,7 +196,7 @@ export default {
     ]),
     toggleDropdown() {
       // 드롭다운이 열리고 닫히는지 로그 확인
-      console.log("Dropdown toggle");
+      // //console.log("Dropdown toggle");
       this.isDropdownOpen = !this.isDropdownOpen;
       if (this.isDropdownOpen) {
         console.error("이벤트 추가");
@@ -213,9 +213,9 @@ export default {
         );
       
         this.workspaceList = response.data.result; // 내 워크스페이스 목록 가져오기
-        console.log(this.workspaceList);
+        // //console.log(this.workspaceList);
       } catch (e) {
-        console.log(e);
+        // //console.log(e);
       }
     },
     async selectWorkspace(workspaceId) {
@@ -229,7 +229,7 @@ export default {
         this.$router.push("/workspace");
         console.error("머지머지")
       } catch (e) {
-        console.log(e);
+        // //console.log(e);
       }
     },
     changeSelectedMenu(name) {
@@ -238,7 +238,7 @@ export default {
       }
       switch (name) {
         case "home":
-          console.log("###### home")
+          // //console.log("###### home")
           this.locationHome();
           break;
         case "member":
@@ -294,7 +294,7 @@ export default {
     },
     showWorkspaceModal() {
       (this.isDropdownOpen = false), (this.createWorkspace = true);
-      console.log(this.createWorkspace);
+      // //console.log(this.createWorkspace);
     },
   },
   beforeUnmount() {

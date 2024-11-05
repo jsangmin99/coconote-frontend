@@ -405,7 +405,7 @@ export default {
     },
 
     moveToThread(channelId, threadId, parentThreadId) {
-      console.log("parentThreadId: ", parentThreadId);
+      //console.log("parentThreadId: ", parentThreadId);
 
       window.location.href = `/channel/${channelId}/thread/view?threadId=${threadId}&parentThreadId=${parentThreadId}`;
       // this.$router.push({
@@ -416,7 +416,7 @@ export default {
 
     // 파일 위치로 이동
     async moveToFileLocation(channelId, folderId, fileId) {
-      console.log("파일 위치로 이동:", channelId, folderId, fileId);
+      //console.log("파일 위치로 이동:", channelId, folderId, fileId);
       if (!folderId || !channelId) {
         alert("파일의 위치를 찾을 수 없습니다.");
         return;

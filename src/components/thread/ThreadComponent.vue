@@ -222,7 +222,7 @@ export default {
   async created() {
     this.roomId = this.id;
     this.myId = localStorage.getItem('workspaceMemberId')
-    console.log("this.myId: ",this.myId);
+    //console.log("this.myId: ",this.myId);
     this.workspaceId = this.$store.getters.getWorkspaceId;
     if (this.threadId && this.threadId !== "null") {
       if (this.parentThreadId && this.parentThreadId !== "null") {
@@ -242,18 +242,18 @@ export default {
   },
   updated() { },
   beforeUnmount() {
-    console.log("언마운트@@@@@@");
+    //console.log("언마운트@@@@@@");
     
     if (this.$refs.messageList)
       this.$refs.messageList.removeEventListener("scroll", this.debouncedScrollPagination);
 
     if (this.subscription) {
       this.subscription.unsubscribe(); // 구독 해제
-      console.log("WebSocket subscription unsubscribed.");
+      //console.log("WebSocket subscription unsubscribed.");
     }
     if (this.ws) {
       this.ws.disconnect(() => {
-        console.log("WebSocket connection closed.");
+        //console.log("WebSocket connection closed.");
       });
     }
 
@@ -284,14 +284,14 @@ export default {
     ]),
     moveToThread(threadId) {
       // threadId가 제공된 경우에만 실행
-      console.log("@@@threadId: ",threadId);
+      //console.log("@@@threadId: ",threadId);
       
       if (threadId) {
-        console.log("threadId 찾음: ", threadId);
+        //console.log("threadId 찾음: ", threadId);
         // 스레드 요소를 찾기
         const threadElement = document.getElementById(`thread-${threadId}`);
         if (threadElement) {
-          console.log("threadElement 찾음");
+          //console.log("threadElement 찾음");
           threadElement.setAttribute("tabindex", -1);
           threadElement.focus();
           threadElement.removeAttribute("tabindex");
@@ -321,7 +321,7 @@ export default {
       this.parentThread = thread
     },
     commentOut() {
-      console.log("(this.parentThread.id: ", this.parentThread.id);
+      //console.log("(this.parentThread.id: ", this.parentThread.id);
       this.isComment = !this.isComment
       this.$nextTick(() => {
         this.moveToThread(this.parentThread.id);
@@ -400,15 +400,15 @@ export default {
         }
       } else if (recv.type === "DELETE") {
         // DELETE일 경우, messages에서 해당 id의 메시지를 제거
-        console.log("recv.parentThreadId: ", recv.parentThreadId);
+        //console.log("recv.parentThreadId: ", recv.parentThreadId);
 
         if (recv.parentThreadId) {
-          console.log("부모 있");
+          //console.log("부모 있");
 
           const parent = this.messages.find(message => message.id === recv.parentThreadId);
           parent.childThreads = parent.childThreads.filter(message => message.id !== recv.id);
         } else {
-          console.log("부모 없");
+          //console.log("부모 없");
           this.messages = this.messages.filter(message => message.id !== recv.id);
         }
       } else if (recv.type === "DELETE_FILE") {
@@ -429,17 +429,17 @@ export default {
       else {
         // 새로운 메시지일 경우 기존 로직
         if (recv.parentThreadId) {
-          console.log("부모id 받아옴");
+          //console.log("부모id 받아옴");
 
           const messageToUpdate = this.messages.find(message => message.id === recv.parentThreadId);
 
           if (messageToUpdate) {
             if (!messageToUpdate.childThreads || messageToUpdate.childThreads.length === 0) {
-              console.log("first");
+              //console.log("first");
 
               messageToUpdate.childThreads = [recv]
             } else {
-              console.log("이미 자식 존재");
+              //console.log("이미 자식 존재");
 
               messageToUpdate.childThreads.push(recv);
             }
@@ -672,8 +672,8 @@ export default {
           `${process.env.VUE_APP_API_BASE_URL}/thread/list/${this.id}`,
           { params }
         );
-        console.log("pageNumber: ", response.data.result);
-        console.log("pageNumber: ", response.data.result.pageable.pageNumber);
+        //console.log("pageNumber: ", response.data.result);
+        //console.log("pageNumber: ", response.data.result.pageable.pageNumber);
 
         this.currentTopPage++;
         this.isLastPage = response.data.result.last;
@@ -688,16 +688,16 @@ export default {
 
         // 중복되지 않은 메시지를 추가
         this.messages = [...this.messages, ...newMessages];
-        console.log("시작 메시지 추가됨");
+        //console.log("시작 메시지 추가됨");
 
       } catch (e) {
-        console.log(e);
+        //console.log(e);
       }
     },
     async getBottomMessageList() {
       if (this.currentBottomPage > 0) this.currentBottomPage--;
       else {
-        console.log("이미 마지막 페이지 입니다");
+        //console.log("이미 마지막 페이지 입니다");
         return
       }
       try {
@@ -721,10 +721,10 @@ export default {
 
         // 중복되지 않은 메시지를 추가
         this.messages = [...newMessages, ...this.messages];
-        console.log("시작 메시지 추가됨");
+        //console.log("시작 메시지 추가됨");
 
       } catch (e) {
-        console.log(e);
+        //console.log(e);
       }
     },
     async getThreadPage(threadId) {
@@ -749,14 +749,14 @@ export default {
         // 중복되지 않은 메시지를 추가
         this.messages = [...this.messages, ...newMessages];
       } catch (e) {
-        console.log(e);
+        //console.log(e);
       }
       this.$nextTick(() => {
         this.moveToThread(threadId);
       });
     },
     debouncedScrollPagination: debounce(async function () {
-      console.log("스크롤 이벤트 온");
+      //console.log("스크롤 이벤트 온");
       
       const list = document.getElementById("list-group");
       if (!list) { // debounce로 인해 다른 컴포넌트에서 늦게 실행되는 오류
@@ -770,7 +770,7 @@ export default {
         if (this.messages && this.messages.length > 0) {
           this.isLoading = true;
           let topThreadId
-          console.log("messages: ", this.messages[this.messages.length - 1].id);
+          //console.log("messages: ", this.messages[this.messages.length - 1].id);
           topThreadId = this.messages[this.messages.length - 1].id
 
           await this.getTopMessageList();
@@ -787,7 +787,7 @@ export default {
       }
     }, 200),
     scrollToBottom() {
-      console.log("밑으로");
+      //console.log("밑으로");
 
       this.$nextTick(() => {
         const container = document.getElementById("list-group");
@@ -795,11 +795,11 @@ export default {
 
         if (container) {
           container.scrollTop = container.scrollHeight; 
-          console.log("밑으로111");
+          //console.log("밑으로111");
         }
         if (container2) {
           container2.scrollTop = container2.scrollHeight; 
-          console.log("밑으로222");
+          //console.log("밑으로222");
         }
       });
     },
@@ -842,17 +842,17 @@ export default {
       this.ws.connect(
         { Authorization: authToken },
         (frame) => {
-          console.log("frame: ", frame);
+          //console.log("frame: ", frame);
           this.ws.subscribe(`/sub/chat/room/${this.roomId}`, (message) => {
             const recv = JSON.parse(message.body);
             this.recvMessage(recv);
           });
         },
         (error) => {
-          console.log(error);
+          //console.log(error);
           if (this.reconnect++ <= 5) {
             setTimeout(() => {
-              console.log("connection reconnect");
+              //console.log("connection reconnect");
               this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
               this.ws = Stomp.over(this.sock);
               this.connect();
@@ -919,13 +919,13 @@ export default {
       const droppedData = event.dataTransfer.getData("items");
 
       // 드롭된 데이터 로그 출력
-      // console.log("드롭된 데이터(raw):", droppedData);
+      // //console.log("드롭된 데이터(raw):", droppedData);
 
       // 드롭된 데이터가 유효한지 확인합니다.
       if (droppedData && droppedData.trim() !== "") {
         try {
           const parsedData = JSON.parse(droppedData);
-          // console.log("드롭된 데이터(parsed)222222222222:", parsedData);
+          // //console.log("드롭된 데이터(parsed)222222222222:", parsedData);
 
           if (Array.isArray(parsedData) && parsedData.length > 0) {
             
@@ -933,7 +933,7 @@ export default {
             
             if (this.dragedFile.type === "drive") {
               if(this.dragedFile.driveType =="file"){
-                console.log("드롭된 파일 ID:", this.dragedFile.fileId);
+                //console.log("드롭된 파일 ID:", this.dragedFile.fileId);
                 // 파일 업로드나 추가 작업을 수행할 로직 작성
                 parsedData.map(dragedFile =>this.fileList.push({
                   fileId: dragedFile.fileId,
@@ -945,10 +945,10 @@ export default {
               }
             }
           } else if(parsedData?.type === "canvas"){
-            console.log("캔버스 파일 드롭");
+            //console.log("캔버스 파일 드롭");
             this.canvasList=[];
             this.canvasList.push(parsedData);
-            console.log("this.canvasList: ",this.canvasList);
+            //console.log("this.canvasList: ",this.canvasList);
             
           } else if(parsedData?.type === "thread"){
             alert("쓰레드 끼리는 drop 할 수 없습니다.")
@@ -959,7 +959,7 @@ export default {
           console.error("JSON 파싱 오류:", error);
         }
       } else {
-        console.log("드롭된 데이터가 없습니다.");
+        //console.log("드롭된 데이터가 없습니다.");
       }
 
       this.tcdDroppedData = null;
@@ -991,7 +991,7 @@ export default {
       }
     },
     handleDragEnd() {
-      console.log("드래그 종료");
+      //console.log("드래그 종료");
       
       this.draggingId = null;
 

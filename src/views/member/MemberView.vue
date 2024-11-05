@@ -263,13 +263,13 @@ export default {
         );
         this.myInfo = response.data.result;
       } catch (e) {
-        console.log(e);
+        //console.log(e);
       }
     },
     async fetchWorkspaceMemberList() {
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/${this.workspaceId}/member/list`);
       this.workspaceMemberList = response.data.result; 
-      console.log(this.workspaceMemberList);
+      //console.log(this.workspaceMemberList);
     },
     async fetchWorkspaceMemberDetail(workspaceMemberId) {
   
@@ -278,14 +278,14 @@ export default {
       const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/${workspaceMemberId}`);
       this.workspaceMemberInfo = response.data.result;
       this.memberImageId = this.workspaceMemberInfo.workspaceMemberId % 10;
-      console.log("workspaceMemberInfo.workspaceMemberId 확인 >>>", workspaceMemberId);
-      console.log("this.memberImageId >>>", this.memberImageId);
+      //console.log("workspaceMemberInfo.workspaceMemberId 확인 >>>", workspaceMemberId);
+      //console.log("this.memberImageId >>>", this.memberImageId);
     },
     showMailSender() {
       this.sendMail = true;
     },
     isMe(workspaceMemberId) {
-      console.log("is Me workspaceMemberInfo : ", this.workspaceMemberInfo)
+      //console.log("is Me workspaceMemberInfo : ", this.workspaceMemberInfo)
       return this.myInfo.workspaceMemberId === workspaceMemberId;
     },
     startEditing(workspaceMember) {
@@ -310,7 +310,7 @@ export default {
         const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/workspace/member/${wsMemberId}`);
         this.workspaceMemberInfo = response.data.result;
         const wsMember = this.workspaceMemberList.find(m => m.workspaceMemberId === wsMemberId);
-        console.log(wsMember);
+        //console.log(wsMember);
         if (wsMember) {
             wsMember.memberName = this.editedMemberName;
             wsMember.nickname = this.editedNickname;
@@ -365,7 +365,7 @@ export default {
     },
         toggleDropdown() {
       // 드롭다운이 열리고 닫히는지 로그 확인
-      console.log("Dropdown toggle");
+      //console.log("Dropdown toggle");
       this.isDropdownOpen = !this.isDropdownOpen;
     },
   },

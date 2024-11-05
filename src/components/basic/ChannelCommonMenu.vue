@@ -178,7 +178,7 @@ export default {
   watch: {
     splitActiveTab: {
       handler() {
-        // console.log("splitActiveTab 변경됨 >> ", newVal); // 값이 변경될 때마다 로그로 확인
+        // //console.log("splitActiveTab 변경됨 >> ", newVal); // 값이 변경될 때마다 로그로 확인
       },
       deep: true,
     },
@@ -194,7 +194,7 @@ export default {
     this.loadChannelMembers(); // 컴포넌트가 마운트되면 채널 멤버를 불러옴
     this.fetchRootFolderId(); // 루트 폴더 ID 가져오기
     document.addEventListener("click", this.handleClickOutside); //드롭다운 메뉴 외부 클릭 시 닫기
-    // console.log("splitActiveTab 확인용 >> ", this.splitActiveTab);
+    // //console.log("splitActiveTab 확인용 >> ", this.splitActiveTab);
   },
   beforeUnmount() {
     document.removeEventListener("click", this.handleClickOutside);
@@ -256,8 +256,8 @@ export default {
       this.$router.push(`/channel/${this.getChannelId}/split-view`);
     },
     closeSplitView(splitName) {
-      console.log(splitName, " 화면 닫으려고 함!!");
-      console.log(this.tcdTabs, " 화면 닫으려고 함!!222");
+      // //console.log(splitName, " 화면 닫으려고 함!!");
+      // //console.log(this.tcdTabs, " 화면 닫으려고 함!!222");
 
       let objKey = "";
       if (splitName == "left") {
@@ -295,7 +295,7 @@ export default {
       this.isChannelMemberModalOpen = false; // 일단 false로 설정하여 초기화
       this.$nextTick(() => {
         this.isChannelMemberModalOpen = true; // 모달 열기
-        // console.log("openInviteModal");
+        // //console.log("openInviteModal");
       });
     },
     closeChannelMemberInviteModal() {
@@ -303,7 +303,7 @@ export default {
     },
     toggleDropdown() {
       // 드롭다운이 열리고 닫히는지 로그 확인
-      console.log("Dropdown toggle");
+      // //console.log("Dropdown toggle");
       this.isDropdownOpen = !this.isDropdownOpen;
     },
     async deleteChannel() {
@@ -380,7 +380,7 @@ export default {
         `${process.env.VUE_APP_API_BASE_URL}/channel/detail/${channelId}`
       );
       this.updateChannelInfo.isPublic = Number(chInfo.data.result.isPublic);
-      console.log("기존 수정 전 공개범위", Number(chInfo.data.result.isPublic));
+      // //console.log("기존 수정 전 공개범위", Number(chInfo.data.result.isPublic));
 
       const result = await fetchChannelMemberInfo(channelId); // 모듈로 함수 호출
       if (result && result.isBookmark) {
@@ -411,7 +411,7 @@ export default {
       }
     },
     isBookmark() {
-      console.log("즐겨찾기 추가/해제 확인", this.isBookmarked);
+      // //console.log("즐겨찾기 추가/해제 확인", this.isBookmarked);
       return this.isBookmarked;
     },
     async changeChannelAccessLevel() {

@@ -303,8 +303,8 @@ import axios from '@/services/axios';
         this.deleteMessage(this.thread.id);
       },
       deleteF(fileId){
-        console.log("this.thread.content: ",this.thread.content);
-        console.log("this.thread.files: ", this.thread.files);
+        //console.log("this.thread.content: ",this.thread.content);
+        //console.log("this.thread.files: ", this.thread.files);
         
         
         if((!this.thread.content || !this.thread.content.trim()) && (!this.thread.files || this.thread.files.length === 1) && !this.thread.canvasTitle){

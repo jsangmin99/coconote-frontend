@@ -54,7 +54,7 @@ export default {
       try {
         const response = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/workspace/invite/accept?token=${token}`);
         this.successMessage = response.data.status_message;
-        console.log(response)
+        //console.log(response)
         const inviteWsInfo = response.data.result
         this.setWorkspaceInfoActions(inviteWsInfo.workspaceId);
         this.setWorkspaceNameInfoActions(inviteWsInfo.name);

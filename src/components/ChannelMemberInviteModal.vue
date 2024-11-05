@@ -144,7 +144,7 @@ export default {
       try {
         const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/channel/member/list/${this.channelId}`);
         this.channelMembers = response.data.result;
-        console.log('채널 멤버 목록:', this.channelMembers);
+        // //console.log('채널 멤버 목록:', this.channelMembers);
       } catch (error) {
         console.error('채널 멤버 목록을 불러오는 중 오류 발생', error);
       } finally {
@@ -165,7 +165,7 @@ export default {
           }
         });
         this.searchResults = response.data.result.results;
-        console.log('멤버 검색 결과:', this.searchResults);
+        // //console.log('멤버 검색 결과:', this.searchResults);
       } catch (error) {
         console.error('멤버 검색 중 오류 발생', error);
       } finally {
@@ -184,12 +184,12 @@ export default {
     },
     async inviteMember(memberId) {
       try {
-        const response = await axios.post(`${process.env.VUE_APP_API_BASE_URL}/channel/member/invite/${this.channelId}`, null, {
+        await axios.post(`${process.env.VUE_APP_API_BASE_URL}/channel/member/invite/${this.channelId}`, null, {
           params: {
             workspaceMemberId: memberId
           }
         });
-        console.log('멤버 초대 응답:', response.data);
+        // //console.log('멤버 초대 응답:', response.data);
 
         alert('멤버가 성공적으로 초대되었습니다!');
 
@@ -233,7 +233,7 @@ export default {
     },
     toggleDropdown(chMemberId) {
       // 드롭다운이 열리고 닫히는지 로그 확인
-      console.log("Dropdown toggle");
+      // //console.log("Dropdown toggle");
       this.currentMemberId = chMemberId;
     },
   },

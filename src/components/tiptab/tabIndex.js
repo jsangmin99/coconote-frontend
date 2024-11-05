@@ -72,7 +72,7 @@ function updateTapIndexLevel(tr, delta) {
 
     if (nodeType.name === "paragraph" || nodeType.name === "heading") {
       tr = setNodeTapIndexMarkup(tr, pos, delta);
-      console.log(node,"tapIndex update!!!!!")
+      //console.log(node,"tapIndex update!!!!!")
       return false;
     }
     if (isListNode(node)) {

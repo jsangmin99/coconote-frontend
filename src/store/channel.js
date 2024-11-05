@@ -13,7 +13,7 @@ const channel = {
         setChannelInfo(state, channelValue) {
             state.channelId = channelValue;
             localStorage.setItem("channelId", channelValue);
-            // console.log("[channel.js] setChannelInfo().state.channelId : ", state.channelId);
+            // //console.log("[channel.js] setChannelInfo().state.channelId : ", state.channelId);
         },
         setChannelNameInfo(state, channelNameValue) {
             state.channelName = channelNameValue;
@@ -46,7 +46,7 @@ const channel = {
         getChannelId(state){
             let returnState = null;
             returnState = (state.channelId == null) ? localStorage.getItem("channelId") : state.channelId
-            console.log("getChannelName",returnState)
+            //console.log("getChannelName",returnState)
             if(returnState == null || returnState == undefined){
                 setTimeout(() => {
                     return (state.channelId == null) ? localStorage.getItem("channelId") : state.channelId
@@ -58,7 +58,7 @@ const channel = {
         getChannelName(state){
             let returnState = null;
             returnState = (state.channelName == null) ? localStorage.getItem("channelName") : state.channelName
-            console.log("getChannelName",returnState)
+            //console.log("getChannelName",returnState)
             if(returnState == null || returnState == undefined){
                 setTimeout(() => {
                     return (state.channelName == null) ? localStorage.getItem("channelName") : state.channelName
@@ -70,7 +70,7 @@ const channel = {
         getChannelDesc(state){
             let returnState = null;
             returnState = (state.channelDesc == null) ? localStorage.getItem("channelDesc") : state.channelDesc
-            console.log("getChannelName",returnState)
+            //console.log("getChannelName",returnState)
             if(returnState == null){
                 setTimeout(() => {
                     return (state.channelDesc == null) ? localStorage.getItem("channelDesc") : state.channelDesc
@@ -82,7 +82,7 @@ const channel = {
         getChannelRole(state){
             let returnState = null;
             returnState = (state.channelRole == null) ? localStorage.getItem("channelRole") : state.channelRole
-            console.log("getChannelName",returnState)
+            //console.log("getChannelName",returnState)
             if(returnState == null){
                 setTimeout(() => {
                     return (state.channelRole == null) ? localStorage.getItem("channelRole") : state.channelRole

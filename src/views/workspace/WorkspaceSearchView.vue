@@ -47,9 +47,9 @@ export default {
       // localStorage에 ws 정보 체크 후 분기처리
       const lsWsId = localStorage.getItem("workspaceId");
       console.error("workspaceSearch 이동22222222222", lsWsId)
-      // console.log("[WorkspaceSearchView] 생성 후 workspace로 이동 완료 >> ", lsWsId);
+      // //console.log("[WorkspaceSearchView] 생성 후 workspace로 이동 완료 >> ", lsWsId);
       if (lsWsId != "" && lsWsId != undefined && lsWsId != null) {
-        // console.log("[WorkspaceSearchView] 이미 workspace가 있음!!");
+        // //console.log("[WorkspaceSearchView] 이미 workspace가 있음!!");
         this.workspaceId = lsWsId;
         const lsWsName = localStorage.getItem("workspaceName");
         console.error("workspaceSearch 이동 3333", lsWsName)
@@ -95,19 +95,19 @@ export default {
     // 멤버 정보를 가져와 Vuex에 저장하는 메소드 추가
     async getWorkspaceMemberInfo(workspaceId) {
       try {
-        console.log(
-          "[WorkspaceSearchView] getWorkspaceMemberInfo()./member/me/workspace/workspaceId : "
-        );
+        //console.log(
+        //   "[WorkspaceSearchView] getWorkspaceMemberInfo()./member/me/workspace/workspaceId : "
+        // );
         if(!workspaceId || workspaceId == undefined || workspaceId == ""){
           return false;
         }
         const response = await axios.get(
           `${process.env.VUE_APP_API_BASE_URL}/member/me/workspace/${workspaceId}`
         );
-        console.log(
-          "[WorkspaceSearchView] getWorkspaceMemberInfo().response : ",
-          response
-        );
+        //console.log(
+        //   "[WorkspaceSearchView] getWorkspaceMemberInfo().response : ",
+        //   response
+        // );
         if (response.data.result) {
           const memberInfo = {
             workspaceMemberId: response.data.result.workspaceMemberId,
@@ -115,10 +115,10 @@ export default {
             nickname: response.data.result.nickname,
             wsRole: response.data.result.wsRole,
           };
-          console.log(
-            "[WorkspaceSearchView] getMemberInfo() profileImage: ",
-            response.data.result.profileImage
-          );
+          //console.log(
+          //   "[WorkspaceSearchView] getMemberInfo() profileImage: ",
+          //   response.data.result.profileImage
+          // );
           this.setMemberInfoActions(memberInfo); // Vuex에 멤버 정보 저장
         }
       } catch (error) {

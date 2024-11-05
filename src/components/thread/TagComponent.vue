@@ -159,7 +159,7 @@ export default {
 
         const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/tag/search`, { params });
         this.searchResults = response.data.result;
-        console.log("Search results:", this.searchResults);
+        //console.log("Search results:", this.searchResults);
 
         
       } catch (error) {

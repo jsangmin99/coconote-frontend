@@ -226,7 +226,7 @@ export default {
     // 라우터 파라미터 channelId의 변화를 감지
     allNotificationsVer: {
       handler(newNotifications) {
-        console.log('🍆🍆🍆🍆🍆🍆🍆 새로운 알림이 도착했습니다 :::::', newNotifications);
+        // //console.log('🍆🍆🍆🍆🍆🍆🍆 새로운 알림이 도착했습니다 :::::', newNotifications);
         // unreadCounts[channel.channelId]
         const lastNoti = newNotifications.notifications[newNotifications.notifications.length - 1];
         console.error(lastNoti)
@@ -368,7 +368,7 @@ export default {
 
         // this.getChannelMemberInfo(this.channelId);
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     async getNewSectionData() {
@@ -401,7 +401,7 @@ export default {
 
         // this.getChannelMemberInfo(this.channelId);
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     // 모든 채널의 읽지 않은 알림 수를 병렬로 가져오는 메서드
@@ -425,7 +425,7 @@ export default {
         // 모든 요청을 병렬로 실행
         await Promise.all(requests);
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     async removeUnreadCount(channelId) {
@@ -484,7 +484,7 @@ export default {
         return false;
       }
       if (id) {
-        console.log ("[InnerRelatedMenuHome] changeChannel().id : ", id);
+        // //console.log ("[InnerRelatedMenuHome] changeChannel().id : ", id);
         this.removeUnreadCount(localStorage.getItem("channelId"));
 
         this.selectedChannelMenuId = id;
@@ -533,7 +533,7 @@ export default {
         this.sectionDialog = false;
         this.getSectionData();
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     async createChannel() {
@@ -569,7 +569,7 @@ export default {
         );
         // this.getSectionData();
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     async startEditing(workspaceId) {
@@ -581,7 +581,7 @@ export default {
         this.editedWsInfo = response.data.result.wsInfo;
         this.workspaceEditModal = true;
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     async saveEditing(workspaceId) {
@@ -601,7 +601,7 @@ export default {
         this.workspaceEditModal = false;
         window.location.reload();
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     async deleteWorkspace(workspaceId) {
@@ -621,10 +621,10 @@ export default {
           window.location.href = "/workspace";
         } else {
           // "아니오" 선택
-          console.log("작업이 취소되었습니다.");
+          // //console.log("작업이 취소되었습니다.");
         }
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     async editSection() {
@@ -632,7 +632,7 @@ export default {
         return;
       }
       try {
-        const response = await axios.patch(
+        await axios.patch(
           `${process.env.VUE_APP_API_BASE_URL}/section/update/${this.editedSectionId}`,
           {
             sectionName: this.editedSectionName,
@@ -640,28 +640,28 @@ export default {
         );
         this.editDialog = false;
         this.getSectionData(); // 섹션 데이터 다시 불러오기 (수정 후 최신 데이터 반영)
-        console.log("수정 성공:", response.data.result);
+        // //console.log("수정 성공:", response.data.result);
       } catch (error) {
-        console.error("수정 실패:", error);
+        // console.error("수정 실패:", error);
       }
     },
     async deleteSection(sectionId) {
       try {
-        const response = await axios.delete(
+        await axios.delete(
           `${process.env.VUE_APP_API_BASE_URL}/section/delete/${sectionId}`
         );
         this.getSectionData(); // 섹션 데이터 다시 불러오기 (수정 후 최신 데이터 반영)
-        console.log("삭제 성공:", response.data);
+        // //console.log("삭제 성공:", response.data);
       } catch (error) {
-        console.error("삭제 실패:", error);
+        // console.error("삭제 실패:", error);
       }
     },
     async fetchMyChannels() {
       try {
-        console.log(
-          "[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ",
-          this.getWorkspaceId
-        );
+        // //console.log(
+        //   "[InnerRelatedMenuHome] fetchMyChnaaels()./member/me/workspace/this.getWorkspaceId : ",
+        //   this.getWorkspaceId
+        // );
         if (
           !this.getWorkspaceId ||
           this.getWorkspaceId == undefined ||
@@ -674,7 +674,7 @@ export default {
         );
         this.myChannels = response.data.result.channels;
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     isMember(id) {
@@ -706,7 +706,7 @@ export default {
           this.myBookmarks = response.data.result;
         }
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     // 우클릭 메뉴 보이기
@@ -738,7 +738,7 @@ export default {
           location.reload(); // URL 변경 후 페이지 새로고침
         });
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
     async leaveChannel(channelId) {
@@ -750,7 +750,7 @@ export default {
           location.reload(); // URL 변경 후 페이지 새로고침
         });
       } catch (error) {
-        console.log(error);
+        // //console.log(error);
       }
     },
   },

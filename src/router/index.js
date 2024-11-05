@@ -29,7 +29,7 @@ const routes = [
     //     meta: { showHeaderAndSidebar: false },
     //     component: LoginPage,
     //     beforeEnter(to, from, next) {
-    //         console.log("Entering LOGIN route with meta:", to.meta.showHeaderAndSidebar);
+    //         //console.log("Entering LOGIN route with meta:", to.meta.showHeaderAndSidebar);
     //         next(); // 이동할지 여부를 결정
     //     },
     // },

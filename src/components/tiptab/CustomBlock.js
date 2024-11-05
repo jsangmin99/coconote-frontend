@@ -58,7 +58,7 @@ export const CustomBlock = Node.create({
   // },
 
   parseHTML() {
-    console.log("Parsing HTML");
+    //console.log("Parsing HTML");
     return [
       { tag: 'div'},
       { tag: 'p'},
@@ -73,7 +73,7 @@ export const CustomBlock = Node.create({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    console.log("Rendering HTML");
+    //console.log("Rendering HTML");
 
     const tag = node.attrs.tag || 'div'; // 여기서 tag 정보를 사용
     return [tag, HTMLAttributes, 0]; // 변경할 태그로 반영

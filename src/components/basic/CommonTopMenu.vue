@@ -27,14 +27,14 @@ export default {
   created() {
     const workspaceId = localStorage.getItem('workspaceId');
     if (workspaceId) {
-      console.log(`SSE 연결을 시작합니다. 워크스페이스 ID: ${workspaceId}`);
+      // //console.log(`SSE 연결을 시작합니다. 워크스페이스 ID: ${workspaceId}`);
       this.connectToSSE({ workspaceId }); // workspaceId 전달
     } else {
       console.warn('워크스페이스 ID를 찾을 수 없습니다. SSE 연결을 시작할 수 없습니다.');
     }
   },
   beforeUnmount() {
-    console.log('SSE 연결을 해제합니다.');
+    // //console.log('SSE 연결을 해제합니다.');
     this.disconnectSSE();
   },
   watch: {
@@ -42,7 +42,7 @@ export default {
       deep: true,
       handler(newNotifications) {
         if (newNotifications.length > 0) {
-          console.log('새로운 알림이 도착했습니다 @@@:', newNotifications[newNotifications.length - 1]);
+          // //console.log('새로운 알림이 도착했습니다 @@@:', newNotifications[newNotifications.length - 1]);
         }
       },
     },

@@ -29,7 +29,7 @@ const blockFeIds = {
         },
         deleteBlockTargetFeId(state, targetId) {
             const index = state.defaultBlockFeIds.indexOf(targetId);
-            console.log("STORE :: deleteFeId >> ", index, " || ", state.defaultBlockFeIds)
+            //console.log("STORE :: deleteFeId >> ", index, " || ", state.defaultBlockFeIds)
             if (index > -1) {
                 state.defaultBlockFeIds.splice(index, 1);
                 return true;
