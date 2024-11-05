@@ -837,18 +837,19 @@ export default {
     connect() {
       this.sock = new SockJS(`${process.env.VUE_APP_API_BASE_URL}/ws-stomp`);
       this.ws = Stomp.over(this.sock);
+      // this.ws.debug = null;
 
       const authToken = localStorage.getItem('accessToken');
       this.ws.connect(
         { Authorization: authToken },
-        (frame) => {
+        () => {
           //console.log("frame: ", frame);
           this.ws.subscribe(`/sub/chat/room/${this.roomId}`, (message) => {
             const recv = JSON.parse(message.body);
             this.recvMessage(recv);
           });
         },
-        (error) => {
+        () => {
           //console.log(error);
           if (this.reconnect++ <= 5) {
             setTimeout(() => {
