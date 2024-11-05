@@ -27,6 +27,7 @@
           :deleteFile="deleteFile" :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag"
           :removeTag="removeTag" :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter"
           :commentIn="commentIn"
+          :myId="myId"
           :class="{
             dragging: draggingId === message.id,
           }"
@@ -86,7 +87,7 @@
       <ThreadLineComponent :thread="parentThread" :createdTime="this.getTime(parentThread.createdTime)"
         :updateMessage="updateMessage" :deleteMessage="deleteMessage" :deleteFile="deleteFile"
         :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
-        :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter" :isComment="isComment"
+        :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter" :isComment="isComment" :myId="myId"
         :isDifferentMember="true" />
       <h5 class="comentLines">{{ parentThread.childThreads && parentThread.childThreads.length > 0 ? `밑으로
         ${parentThread.childThreads.length}개의 댓글` : '밑으로 댓글' }}</h5>
@@ -97,6 +98,7 @@
           :createAndAddTag="createAndAddTag" :tagList="tagList" :addTag="addTag" :removeTag="removeTag"
           :addTagFilter="addTagFilter" :removeTagFilter="removeTagFilter" :tagFilter="tagFilter" :isComment="isComment"
           :isDifferentMember="index === 0 || message.memberId != parentThread.childThreads[index - 1].memberId" 
+          :myId="myId"
           :class="{
             dragging: draggingId === message.id,
           }"
@@ -200,6 +202,7 @@ export default {
       tcdDroppedData: null,
       draggingId: null,
       canvasList: [],
+      myId: null,
     };
   },
   watch: {
@@ -218,6 +221,8 @@ export default {
   },
   async created() {
     this.roomId = this.id;
+    this.myId = localStorage.getItem('workspaceMemberId')
+    console.log("this.myId: ",this.myId);
     this.workspaceId = this.$store.getters.getWorkspaceId;
     if (this.threadId && this.threadId !== "null") {
       if (this.parentThreadId && this.parentThreadId !== "null") {

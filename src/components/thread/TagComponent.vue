@@ -321,8 +321,8 @@ export default {
   gap: 10px;
 }
 .result-image {
-  border-radius: 50%;
   margin-right: 15px;
+  object-fit: cover;
 }
 
 .result-details {
