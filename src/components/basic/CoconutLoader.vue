@@ -8,9 +8,9 @@
       >
         <g :transform="'translate(' + position + ', 50)'">
           <circle cx="0" cy="0" r="20" fill="#4A3728" />
-          <circle cx="-5" cy="-5" r="3" fill="#2A1F18" />
-          <circle cx="5" cy="-5" r="3" fill="#2A1F18" />
-          <circle cx="0" cy="5" r="3" fill="#2A1F18" />
+          <circle cx="-5" cy="-5" r="3" fill="#FFFFFF" />
+          <circle cx="5" cy="-5" r="3" fill="#FFFFFF" />
+          <circle cx="0" cy="5" r="3" fill="#FFFFFF" />
           <path d="M-15,-5 Q-10,0 -15,5" stroke="#3A2A1E" fill="none" stroke-width="1" />
           <path d="M15,-5 Q10,0 15,5" stroke="#3A2A1E" fill="none" stroke-width="1" />
         </g>
