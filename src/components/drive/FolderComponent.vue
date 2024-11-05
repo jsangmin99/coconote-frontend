@@ -658,7 +658,7 @@ export default {
             parentId: newFolderId, // 새로운 부모 폴더 ID
           }
         );
-        console.log(response.data.result.message);
+        // console.log(response.data.result.message);
         // alert("폴더가 성공적으로 이동되었습니다.");
         this.refreshFolderList();
       } catch (error) {
