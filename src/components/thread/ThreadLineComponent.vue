@@ -131,7 +131,7 @@
             <button class="btn1" @click="downloadFile(file.fileId,file.fileName)">
               <v-icon>mdi-download</v-icon>
             </button>
-            <button class="btn2" @click="deleteF(file.fileId)">
+            <button v-if="myId == thread.memberId" class="btn2" @click="deleteF(file.fileId)">
               <v-icon color="error">mdi-trash-can</v-icon>
             </button>
           </div>
@@ -160,8 +160,8 @@
   <div v-if="isContextMenuVisible" class="context-menu" :style="{ top: [contextMenuPosition]+'px' }">
     <button class="context-btn" @click="commentIn(thread)" v-if="!isComment">댓글 쓰기</button>
     <button class="context-btn" @click="toggleTagMenu">태그 추가</button>
-    <button class="context-btn" @click="editMessage">수정</button>
-    <button class="context-btn" @click="deleteM">삭제</button>
+    <button v-if="myId == thread.memberId" class="context-btn" @click="editMessage">수정</button>
+    <button v-if="myId == thread.memberId" class="context-btn" @click="deleteM">삭제</button>
   </div>
 </div>
 </template>
@@ -169,7 +169,7 @@
 <script>
 import axios from '@/services/axios';
   export default {
-    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn','isDifferentMember','isComment'],
+    props: ['thread', 'createdTime', 'updateMessage','deleteMessage','deleteFile','createAndAddTag','tagList','addTag','removeTag','addTagFilter','removeTagFilter','tagFilter','commentIn','isDifferentMember','isComment','myId'],
     data() {
         return {
             message: "",
