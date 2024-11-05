@@ -154,14 +154,13 @@ export default {
       }
       try {
         const params = new URLSearchParams();
-        params.append('workspaceId', localStorage.getItem('workspaceId'));
-        params.append('page', 0);
-        params.append('size', 20);
-        this.selectedTags.forEach(tag => params.append('tags', tag.name));
+        params.append('channelId', localStorage.getItem('channelId'));
+        this.selectedTags.forEach(tag => params.append('tagSearchIds', tag.id));
 
-        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/search/threads/by-tags`, { params });
-        this.searchResults = response.data.result.results;
-        console.log("this.searchResults: ",this.searchResults);
+        const response = await axios.get(`${process.env.VUE_APP_API_BASE_URL}/tag/search`, { params });
+        this.searchResults = response.data.result;
+        console.log("Search results:", this.searchResults);
+
         
       } catch (error) {
         console.error('태그를 통한 검색 중 오류 발생:', error);
@@ -218,7 +217,7 @@ export default {
   display: none;
   position: absolute;
   top: -7px;
-  right: -10px;
+  right: -14px;
   background: transparent;
   border: none;
   cursor: pointer;
