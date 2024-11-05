@@ -242,7 +242,6 @@ export default {
       const folderId = this.$route.params.folderId || null; // URL에서 폴더 ID 추출
       try {
         // 요청 URL을 폴더 ID가 있는 경우와 없는 경우로 분기
-        console.log("xxxc", folderId);
         const url = folderId
           ? `${process.env.VUE_APP_API_BASE_URL}/drive/folder/${folderId}`
           : `${process.env.VUE_APP_API_BASE_URL}/channel/${channelId}/drive`;
@@ -486,6 +485,7 @@ export default {
       } catch (error) {
         console.error("Upload failed:", error);
         alert("파일 업로드 중 오류가 발생했습니다.");
+        this.uploadInProgress = false; // 업로드 실패 시 로딩 상태 해제
       }
     },
 
@@ -650,14 +650,14 @@ export default {
     async moveFolder(folderId, newFolderId) {
       try {
         // MoveFolderReqDto에 맞는 형식으로 데이터를 전송
-        const response = await axios.patch(
+        await axios.patch(
           `${process.env.VUE_APP_API_BASE_URL}/drive/folder/move`,
           {
             folderId: folderId, // 이동할 폴더 ID
             parentId: newFolderId, // 새로운 부모 폴더 ID
           }
         );
-        console.log(response.data.result.message);
+        // console.log(response.data.result.message);
         // alert("폴더가 성공적으로 이동되었습니다.");
         this.refreshFolderList();
       } catch (error) {
